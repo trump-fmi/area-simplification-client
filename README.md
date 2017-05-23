@@ -1,0 +1,1 @@
+# OpenLayers Label Plugin
