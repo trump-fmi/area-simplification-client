@@ -1,6 +1,5 @@
 ol.style.Label = function(opt_options) {
 
-
   if (!opt_options.fill) {
     opt_options.fill = new ol.style.Fill({
       color: '#FF0000'
@@ -17,7 +16,6 @@ ol.style.Label = function(opt_options) {
   }
 
   ol.style.Text.call(this, options);
-
 };
 ol.inherits(ol.style.Label, ol.style.Text);
 
