@@ -18,10 +18,8 @@ ol.inherits(ol.layer.Label, ol.layer.Vector);
 * @param {number} resolution - current resolution
 */
 ol.layer.Label.prototype.styleFunction = function(feature, resolution) {
-  var options = {};
-  options.feature = feature;
-  options.resolution = resolution;
-  return new ol.style.Label(options);
+  // Create new ol.style.Label object
+  return new ol.style.Label(feature);
 };
 
 ol.source.Label = function(org_options) {
@@ -104,23 +102,21 @@ ol.source.Label.prototype.buildQuery = function(params){
 }
 
 
-ol.style.Label = function(opt_options) {
+/*
+ * Constructor of ol.style.Label
+ * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
+ */
+ol.style.Label = function(feature) {
 
-  var options = opt_options || {};
-
-  // ol.Feature object with attributes from geojson data that represents an text label.
-  var feature = options.feature;
-  var resolution = options.resolution;
-
-  if (!feature || !resolution) {
-    // TODO: Implement a more appropriate handling when this happens
-    return null;
-  }
-  delete options.feature;
-  delete options.resolution;
-
+  // Get needed fields from feature object
   var labelText = feature.get("name");
   var t = feature.get("t");
+  var labelFactor = feature.get("lbl_fac");
+
+  var labelTextColor = '#0000FF';
+  var labelFontType = "Consolas";
+  var labelCircleColor = "red";
+
 
   // Don#t show too big labels like a capital cityname on a high zoom levels
   if(window.min_t < 0.125 && t > 12){
@@ -128,8 +124,8 @@ ol.style.Label = function(opt_options) {
   }
 
   // Calculate the label size by the given value label factor
-  var labelFactor = 1.1 * parseInt(feature.get("lbl_fac"));
-  var fontConfig = labelFactor + "px Consolas";
+  var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
+  var fontConfig = labelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n
   if (labelText.indexOf("\\") >= 0) {
@@ -137,25 +133,25 @@ ol.style.Label = function(opt_options) {
   }
 
   var maxLabelLength = this.getMaxLabelLength(labelText);
+  var circleRadius = labelFactor * maxLabelLength * 0.26;
 
-  options.image = new ol.style.Circle({
-    radius: labelFactor * maxLabelLength * 0.26,
+  this.image = new ol.style.Circle({
+    radius: circleRadius,
     stroke: new ol.style.Stroke({
-      color: "red",
-      width: 1
+      color: labelCircleColor
     })
   });
 
-  options.text = new ol.style.Text({
+  this.text = new ol.style.Text({
     text: labelText,
-    scale: 1,
     font: fontConfig,
     fill: new ol.style.Fill({
-      color: '#0000FF'
+      color: labelTextColor
     })
   });
 
-  ol.style.Style.call(this, options);
+  // Pass this Label object as options params for ol.style.Style
+  ol.style.Style.call(this, this);
 };
 ol.inherits(ol.style.Label, ol.style.Style);
 

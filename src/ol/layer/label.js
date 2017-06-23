@@ -18,8 +18,6 @@ ol.inherits(ol.layer.Label, ol.layer.Vector);
 * @param {number} resolution - current resolution
 */
 ol.layer.Label.prototype.styleFunction = function(feature, resolution) {
-  var options = {};
-  options.feature = feature;
-  options.resolution = resolution;
-  return new ol.style.Label(options);
+  // Create new ol.style.Label object
+  return new ol.style.Label(feature);
 };
