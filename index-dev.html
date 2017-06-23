@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="dist/ol-labels.css" type="text/css">
     <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
-    <script src="https://openlayers.org/en/v4.1.1/build/ol.js"></script>
+    <script src="https://openlayers.org/en/v4.1.1/build/ol-debug.js"></script>
     <script src="dist/ol-labels.js"></script>
   </head>
   <body>
@@ -32,8 +32,8 @@
         ],
         target: 'map',
         view: new ol.View({
-          center: [0, 0],
-          zoom: 2
+          center: ol.proj.fromLonLat([9.180769, 48.777106]),
+          zoom: 6
         })
       });
 

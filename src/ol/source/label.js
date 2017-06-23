@@ -8,8 +8,10 @@ ol.source.Label = function(org_options) {
     url: this.featureLoader.bind(this)
   }
 
-  ol.source.Vector.call(this, options);
+  // TODO: Search if there is a better solution than creating here a ol.View object
+  this.viewToCalcZoomLevel = new ol.View();
 
+  ol.source.Vector.call(this, options);
 };
 ol.inherits(ol.source.Label, ol.source.Vector);
 
@@ -22,9 +24,7 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
   var min = ol.proj.toLonLat(extent.slice(0, 2));
   var max = ol.proj.toLonLat(extent.slice(2, 4));
 
-  // TODO: Don´t create a temporary View object for each call od featureLoader, find another solution
-  var tempView = new ol.View();
-  var zoomLevelFromResolution = tempView.getZoomForResolution(number);
+  var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(number);
 
   // Set global variable min_t
   // TODO: Find better solution than global variable
