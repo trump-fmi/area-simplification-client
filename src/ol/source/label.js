@@ -17,6 +17,9 @@ ol.inherits(ol.source.Label, ol.source.Vector);
 
 /**
  * Feature loader function
+ * @param {Array} extent - Array that representisthe area to be loaded with: [minx, miny, maxx, maxy]
+ * @param {number} number - the number representing the resolution (map units per pixel)
+ * @param {ol.proj.Projection} projection - the projection that is used for this feature
  */
 ol.source.Label.prototype.featureLoader = function(extent, number, projection){
   // extent: [minx, miny, maxx, maxy]

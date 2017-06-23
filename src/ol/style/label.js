@@ -15,7 +15,7 @@ ol.style.Label = function(feature) {
   var labelCircleColor = "red";
 
 
-  // Don#t show too big labels like a capital cityname on a high zoom levels
+  // Don't show too big labels like a capital cityname on a high zoom levels
   if(window.min_t < 0.125 && t > 12){
     return null;
   }
