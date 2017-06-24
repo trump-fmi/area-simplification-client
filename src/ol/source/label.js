@@ -8,28 +8,58 @@ ol.source.Label = function(org_options) {
     url: this.featureLoader.bind(this)
   }
 
-  ol.source.Vector.call(this, options);
+  // TODO: Search if there is a better solution than creating here a ol.View object
+  this.viewToCalcZoomLevel = new ol.View();
 
+  ol.source.Vector.call(this, options);
 };
 ol.inherits(ol.source.Label, ol.source.Vector);
 
-ol.source.Label.prototype.featureLoader = function(extent, test, number){
+/**
+ * Feature loader function
+ * @param {Array} extent - Array that representisthe area to be loaded with: [minx, miny, maxx, maxy]
+ * @param {number} number - the number representing the resolution (map units per pixel)
+ * @param {ol.proj.Projection} projection - the projection that is used for this feature
+ */
+ol.source.Label.prototype.featureLoader = function(extent, number, projection){
+  // extent: [minx, miny, maxx, maxy]
+  //ol.proj.toLonLat takes coord-pair, so need to split
+  var min = ol.proj.toLonLat(extent.slice(0, 2));
+  var max = ol.proj.toLonLat(extent.slice(2, 4));
 
-    var min = ol.proj.toLonLat(extent.slice(0,2));
-    var max = ol.proj.toLonLat(extent.slice(2,4));
+  var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(number);
 
-    var parameters = {
-        x_min: min[0],
-        x_max: max[0],
-        y_min: min[1],
-        y_max: max[1],
-        t_min: 0.001  //TODO: use real val
-    };
+  // Set global variable min_t
+  // TODO: Find better solution than global variable
+  min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
 
-    return this.buildQuery(parameters);
+  var parameters = {
+      x_min: min[0],
+      x_max: max[0],
+      y_min: min[1],
+      y_max: max[1],
+      t_min: min_t
+  };
+
+  return this.buildQuery(parameters);
 }
 
+/*
+ * Get corresponding mint t value for a given zoom level.
+ * @param {number} zoom - current zoom level
+ */
+ol.source.Label.prototype.zoomLevelToMinT = function(zoom) {
+  if (zoom <= 3) {
+    return Number.POSITIVE_INFINITY;
+  } else {
+    return Math.pow(2, 9 - (zoom - 1));
+  }
+}
 
+/**
+ * Builds a query in the format of:
+ *    http://<label-server>/label/<label-type>?x_min=8&x_max=9&y_min=53&y_max=53.06&t_min=0.001
+ */
 ol.source.Label.prototype.buildQuery = function(params){
   if (typeof params === 'undefined' || typeof params !== 'object') {
         params = {};
