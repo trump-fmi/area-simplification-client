@@ -13,7 +13,62 @@ ol.source.Label = function(org_options) {
 
   ol.source.Vector.call(this, options);
 };
-ol.inherits(ol.source.Label, ol.source.Vector);
+
+ol.source.Label.prototype = Object.create(ol.source.Vector.prototype);
+
+ol.source.Label.prototype.addFeatureInternal = function(feature) {
+  var featureKey = feature.get('osm');
+
+  if (!this.addToIndex_(featureKey, feature)) {
+    return;
+  }
+
+  this.setupChangeEvents_(featureKey, feature);
+
+  var geometry = feature.getGeometry();
+  if (geometry) {
+    var extent = geometry.getExtent();
+    if (this.featuresRtree_) {
+      this.featuresRtree_.insert(extent, feature);
+    }
+  } else {
+    this.nullGeometryFeatures_[featureKey] = feature;
+  }
+
+  this.dispatchEvent(
+      new ol.source.Vector.Event(ol.source.VectorEventType.ADDFEATURE, feature));
+};
+
+
+ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection) {
+  // this.loader_.call(this, extent, resolution, projection);
+  console.log('test');
+  var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(resolution);
+  min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  var loadedExtentsRtree = this.loadedExtentsRtree_;
+  var extentsToLoad = this.strategy_(extent, resolution);
+  var i, ii;
+  for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
+    var extentToLoad = extentsToLoad[i];
+    var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
+        /**
+         * @param {{extent: ol.Extent}} object Object.
+         * @return {boolean} Contains.
+         */
+        function(object) {
+          // console.log(object,extentToLoad);
+          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution == object.resolution;
+        });
+    if (!alreadyLoaded) {
+      this.loader_.call(this, extentToLoad, resolution, projection);
+      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution});
+    }
+  }
+}
+
+ol.source.Label.prototype.constructor = ol.source.Label;
+
+
 
 /**
  * Feature loader function

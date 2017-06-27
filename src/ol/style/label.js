@@ -20,6 +20,14 @@ ol.style.Label = function(feature) {
     return null;
   }
 
+  console.log(t,window.min_t);
+  console.log('');
+  if(t < window.min_t){
+    // return null;
+    return;
+    // this.fill = new ol.style.Fill({color: [0,0,0,0]})
+  }
+
   // Calculate the label size by the given value label factor
   var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
   var fontConfig = labelFactor + "px " + labelFontType;
