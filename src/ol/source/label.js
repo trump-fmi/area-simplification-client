@@ -8,10 +8,17 @@ ol.source.Label = function(org_options) {
     url: this.featureLoader.bind(this)
   }
 
+
+  // overwrite needed options:
+  org_options.format = new ol.format.GeoJSON();
+  org_options.strategy = ol.loadingstrategy.bbox
+  org_options.url = this.featureLoader.bind(this);
+
+
   // TODO: Search if there is a better solution than creating here a ol.View object
   this.viewToCalcZoomLevel = new ol.View();
 
-  ol.source.Vector.call(this, options);
+  ol.source.Vector.call(this, org_options);
 };
 
 ol.source.Label.prototype = Object.create(ol.source.Vector.prototype);
@@ -42,9 +49,12 @@ ol.source.Label.prototype.addFeatureInternal = function(feature) {
 
 ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection) {
   // this.loader_.call(this, extent, resolution, projection);
-  console.log('test');
   var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(resolution);
-  min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+
+  // var min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  //
+  // console.log(zoomLevelFromResolution, min_t);
+
   var loadedExtentsRtree = this.loadedExtentsRtree_;
   var extentsToLoad = this.strategy_(extent, resolution);
   var i, ii;
@@ -86,7 +96,7 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
 
   // Set global variable min_t
   // TODO: Find better solution than global variable
-  min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  var min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
 
   var parameters = {
       x_min: min[0],
@@ -105,7 +115,7 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
  */
 ol.source.Label.prototype.zoomLevelToMinT = function(zoom) {
   if (zoom <= 3) {
-    return Number.POSITIVE_INFINITY;
+    return 0.01;
   } else {
     return Math.pow(2, 9 - (zoom - 1));
   }

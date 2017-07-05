@@ -3,24 +3,122 @@ ol.layer.Label = function(opt_options) {
   var options = opt_options || {};
 
   if(!options.style) {
-    // Set ol.style.Label as default style for ol.layer.Label
-    options.style = this.styleFunction.bind(this);
+    options.style = ol.style.Label
   }
 
   ol.layer.Vector.call(this, options);
 };
 ol.inherits(ol.layer.Label, ol.layer.Vector);
 
-/**
-* StyleFunction to generate the style for a label.
-* Doc: http://openlayers.org/en/latest/apidoc/ol.html#.StyleFunction
-* @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
-* @param {number} resolution - current resolution
-*/
-ol.layer.Label.prototype.styleFunction = function(feature, resolution) {
-  // Create new ol.style.Label object
-  return new ol.style.Label(feature);
+
+/*
+ * Constructor of ol.style.Label
+ * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
+ */
+ol.style.Label = function(feature,resolution) {
+
+  // Get needed fields from feature object
+  var labelText = feature.get("name");
+  var t = feature.get("t");
+  var labelFactor = feature.get("lbl_fac");
+
+  var labelTextColor = '#333';
+  var labelFontType = "Consolas";
+  var labelCircleColor = "red";
+
+
+  // Don't show too big labels like a capital cityname on a high zoom levels
+  //if(window.min_t > t){
+
+  //}
+  var min_t = resToMinT(resolution);
+
+  if(min_t > t){
+    // return null;
+    // console.log(labelText,window.min_t,t);
+    return null;
+  }
+
+  // Calculate the label size by the given value label factor
+  var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
+  var fontConfig = labelFactor + "px " + labelFontType;
+
+  // Remove escaped character from JSON format string: \\n to \n
+  if (labelText.indexOf("\\") >= 0) {
+    labelText = labelText.replace("\\n", "\n");
+  }
+
+  var maxLabelLength = getMaxLabelLength(labelText);
+  var circleRadius = labelFactor * maxLabelLength * 0.26;
+
+  this.image = new ol.style.Circle({
+    radius: circleRadius,
+    stroke: new ol.style.Stroke({
+      color: labelCircleColor
+    })
+  });
+
+  this.text = new ol.style.Text({
+    text: labelText,
+    font: fontConfig,
+    fill: new ol.style.Fill({
+      color: labelTextColor
+    })
+  });
+
+  if(window.min_t < 0.125 && t > 12){
+    this.text = new ol.style.Text({
+      text: labelText,
+      font: fontConfig,
+      fill: new ol.style.Fill({
+        color: [0, 0, 0, .3]
+      })
+    });
+  }
+
+  var style = new ol.style.Style({
+        image: window.debug == true ? this.image : null,
+        text: this.text
+      });
+
+  return style;
+
+  // Pass this Label object as options params for ol.style.Style
+  // ol.style.Style.call(this, this);
 };
+
+
+/**
+ * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
+ * @param {string} labelText - text of the label
+ */
+function getMaxLabelLength(labelText) {
+
+  var lines = labelText.split("\n");
+  var maxLength = 0;
+  var arrayLength = lines.length;
+  for (var i = 0; i < arrayLength; i++) {
+     if (maxLength < lines[i].length) {
+      maxLength = lines[i].length;
+    }
+  }
+  return maxLength;
+};
+
+function resToMinT(res){
+
+
+
+  var zoom = Math.log2(156543.03390625) - Math.log2(res);
+
+  console.log(res,zoom);
+
+  if (zoom <= 3) {
+    return 0.01;
+  } else {
+    return Math.pow(2, 9 - (zoom - 1));
+  }
+}
 
 ol.source.Label = function(org_options) {
 
@@ -32,12 +130,77 @@ ol.source.Label = function(org_options) {
     url: this.featureLoader.bind(this)
   }
 
+
+  // overwrite needed options:
+  org_options.format = new ol.format.GeoJSON();
+  org_options.strategy = ol.loadingstrategy.bbox
+  org_options.url = this.featureLoader.bind(this);
+
+
   // TODO: Search if there is a better solution than creating here a ol.View object
   this.viewToCalcZoomLevel = new ol.View();
 
-  ol.source.Vector.call(this, options);
+  ol.source.Vector.call(this, org_options);
 };
-ol.inherits(ol.source.Label, ol.source.Vector);
+
+ol.source.Label.prototype = Object.create(ol.source.Vector.prototype);
+
+ol.source.Label.prototype.addFeatureInternal = function(feature) {
+  var featureKey = feature.get('osm');
+
+  if (!this.addToIndex_(featureKey, feature)) {
+    return;
+  }
+
+  this.setupChangeEvents_(featureKey, feature);
+
+  var geometry = feature.getGeometry();
+  if (geometry) {
+    var extent = geometry.getExtent();
+    if (this.featuresRtree_) {
+      this.featuresRtree_.insert(extent, feature);
+    }
+  } else {
+    this.nullGeometryFeatures_[featureKey] = feature;
+  }
+
+  this.dispatchEvent(
+      new ol.source.Vector.Event(ol.source.VectorEventType.ADDFEATURE, feature));
+};
+
+
+ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection) {
+  // this.loader_.call(this, extent, resolution, projection);
+  var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(resolution);
+
+  // var min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  //
+  // console.log(zoomLevelFromResolution, min_t);
+
+  var loadedExtentsRtree = this.loadedExtentsRtree_;
+  var extentsToLoad = this.strategy_(extent, resolution);
+  var i, ii;
+  for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
+    var extentToLoad = extentsToLoad[i];
+    var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
+        /**
+         * @param {{extent: ol.Extent}} object Object.
+         * @return {boolean} Contains.
+         */
+        function(object) {
+          // console.log(object,extentToLoad);
+          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution == object.resolution;
+        });
+    if (!alreadyLoaded) {
+      this.loader_.call(this, extentToLoad, resolution, projection);
+      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution});
+    }
+  }
+}
+
+ol.source.Label.prototype.constructor = ol.source.Label;
+
+
 
 /**
  * Feature loader function
@@ -55,7 +218,7 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
 
   // Set global variable min_t
   // TODO: Find better solution than global variable
-  min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  var min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
 
   var parameters = {
       x_min: min[0],
@@ -74,7 +237,7 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
  */
 ol.source.Label.prototype.zoomLevelToMinT = function(zoom) {
   if (zoom <= 3) {
-    return Number.POSITIVE_INFINITY;
+    return 0.01;
   } else {
     return Math.pow(2, 9 - (zoom - 1));
   }
@@ -103,75 +266,3 @@ ol.source.Label.prototype.buildQuery = function(params){
     }
     return this.labelServerUrl + query;
 }
-
-
-/*
- * Constructor of ol.style.Label
- * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
- */
-ol.style.Label = function(feature) {
-
-  // Get needed fields from feature object
-  var labelText = feature.get("name");
-  var t = feature.get("t");
-  var labelFactor = feature.get("lbl_fac");
-
-  var labelTextColor = '#0000FF';
-  var labelFontType = "Consolas";
-  var labelCircleColor = "red";
-
-
-  // Don't show too big labels like a capital cityname on a high zoom levels
-  if(window.min_t < 0.125 && t > 12){
-    return null;
-  }
-
-  // Calculate the label size by the given value label factor
-  var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
-  var fontConfig = labelFactor + "px " + labelFontType;
-
-  // Remove escaped character from JSON format string: \\n to \n
-  if (labelText.indexOf("\\") >= 0) {
-    labelText = labelText.replace("\\n", "\n");
-  }
-
-  var maxLabelLength = this.getMaxLabelLength(labelText);
-  var circleRadius = labelFactor * maxLabelLength * 0.26;
-
-  this.image = new ol.style.Circle({
-    radius: circleRadius,
-    stroke: new ol.style.Stroke({
-      color: labelCircleColor
-    })
-  });
-
-  this.text = new ol.style.Text({
-    text: labelText,
-    font: fontConfig,
-    fill: new ol.style.Fill({
-      color: labelTextColor
-    })
-  });
-
-  // Pass this Label object as options params for ol.style.Style
-  ol.style.Style.call(this, this);
-};
-ol.inherits(ol.style.Label, ol.style.Style);
-
-
-/**
- * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
- * @param {string} labelText - text of the label
- */
-ol.style.Label.prototype.getMaxLabelLength = function(labelText) {
-
-  var lines = labelText.split("\n");
-  var maxLength = 0;
-  var arrayLength = lines.length;
-  for (var i = 0; i < arrayLength; i++) {
-     if (maxLength < lines[i].length) {
-      maxLength = lines[i].length;
-    }
-  }
-  return maxLength;
-};
