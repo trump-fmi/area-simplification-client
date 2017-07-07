@@ -106,9 +106,7 @@ function getMaxLabelLength(labelText) {
 };
 
 function resToMinT(res){
-
-
-
+  
   var zoom = Math.log2(156543.03390625) - Math.log2(res);
 
   console.log(res,zoom);
@@ -124,17 +122,13 @@ ol.source.Label = function(org_options) {
 
   this.labelServerUrl = org_options.url;
 
-  var options = {
-    format:new ol.format.GeoJSON(),
-    strategy:ol.loadingstrategy.bbox,
-    url: this.featureLoader.bind(this)
-  }
-
-
+  // TODO: Allow user to set own options here?!
   // overwrite needed options:
   org_options.format = new ol.format.GeoJSON();
   org_options.strategy = ol.loadingstrategy.bbox
   org_options.url = this.featureLoader.bind(this);
+  org_options.updateWhileAnimating = true;
+  org_options.updateWhileInteracting = true;
 
 
   // TODO: Search if there is a better solution than creating here a ol.View object

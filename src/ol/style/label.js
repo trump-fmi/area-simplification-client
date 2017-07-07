@@ -94,9 +94,7 @@ function getMaxLabelLength(labelText) {
 };
 
 function resToMinT(res){
-
-
-
+  
   var zoom = Math.log2(156543.03390625) - Math.log2(res);
 
   console.log(res,zoom);
