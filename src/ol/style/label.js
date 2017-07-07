@@ -3,20 +3,27 @@
  * Constructor of ol.style.Label
  * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
  */
-ol.style.Label = function(feature) {
+ol.style.Label = function(feature,resolution) {
 
   // Get needed fields from feature object
   var labelText = feature.get("name");
   var t = feature.get("t");
   var labelFactor = feature.get("lbl_fac");
 
-  var labelTextColor = '#0000FF';
+  var labelTextColor = '#333';
   var labelFontType = "Consolas";
   var labelCircleColor = "red";
 
 
   // Don't show too big labels like a capital cityname on a high zoom levels
-  if(window.min_t < 0.125 && t > 12){
+  //if(window.min_t > t){
+
+  //}
+  var min_t = resToMinT(resolution);
+
+  if(min_t > t){
+    // return null;
+    // console.log(labelText,window.min_t,t);
     return null;
   }
 
@@ -29,7 +36,7 @@ ol.style.Label = function(feature) {
     labelText = labelText.replace("\\n", "\n");
   }
 
-  var maxLabelLength = this.getMaxLabelLength(labelText);
+  var maxLabelLength = getMaxLabelLength(labelText);
   var circleRadius = labelFactor * maxLabelLength * 0.26;
 
   this.image = new ol.style.Circle({
@@ -47,17 +54,33 @@ ol.style.Label = function(feature) {
     })
   });
 
+  if(window.min_t < 0.125 && t > 12){
+    this.text = new ol.style.Text({
+      text: labelText,
+      font: fontConfig,
+      fill: new ol.style.Fill({
+        color: [0, 0, 0, .3]
+      })
+    });
+  }
+
+  var style = new ol.style.Style({
+        image: window.debug == true ? this.image : null,
+        text: this.text
+      });
+
+  return style;
+
   // Pass this Label object as options params for ol.style.Style
-  ol.style.Style.call(this, this);
+  // ol.style.Style.call(this, this);
 };
-ol.inherits(ol.style.Label, ol.style.Style);
 
 
 /**
  * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
  * @param {string} labelText - text of the label
  */
-ol.style.Label.prototype.getMaxLabelLength = function(labelText) {
+function getMaxLabelLength(labelText) {
 
   var lines = labelText.split("\n");
   var maxLength = 0;
@@ -69,3 +92,16 @@ ol.style.Label.prototype.getMaxLabelLength = function(labelText) {
   }
   return maxLength;
 };
+
+function resToMinT(res){
+  
+  var zoom = Math.log2(156543.03390625) - Math.log2(res);
+
+  console.log(res,zoom);
+
+  if (zoom <= 3) {
+    return 0.01;
+  } else {
+    return Math.pow(2, 9 - (zoom - 1));
+  }
+}

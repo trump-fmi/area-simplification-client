@@ -2,18 +2,79 @@ ol.source.Label = function(org_options) {
 
   this.labelServerUrl = org_options.url;
 
-  var options = {
-    format:new ol.format.GeoJSON(),
-    strategy:ol.loadingstrategy.bbox,
-    url: this.featureLoader.bind(this)
-  }
+  // TODO: Allow user to set own options here?!
+  // overwrite needed options:
+  org_options.format = new ol.format.GeoJSON();
+  org_options.strategy = ol.loadingstrategy.bbox
+  org_options.url = this.featureLoader.bind(this);
+  org_options.updateWhileAnimating = true;
+  org_options.updateWhileInteracting = true;
+
 
   // TODO: Search if there is a better solution than creating here a ol.View object
   this.viewToCalcZoomLevel = new ol.View();
 
-  ol.source.Vector.call(this, options);
+  ol.source.Vector.call(this, org_options);
 };
-ol.inherits(ol.source.Label, ol.source.Vector);
+
+ol.source.Label.prototype = Object.create(ol.source.Vector.prototype);
+
+ol.source.Label.prototype.addFeatureInternal = function(feature) {
+  var featureKey = feature.get('osm');
+
+  if (!this.addToIndex_(featureKey, feature)) {
+    return;
+  }
+
+  this.setupChangeEvents_(featureKey, feature);
+
+  var geometry = feature.getGeometry();
+  if (geometry) {
+    var extent = geometry.getExtent();
+    if (this.featuresRtree_) {
+      this.featuresRtree_.insert(extent, feature);
+    }
+  } else {
+    this.nullGeometryFeatures_[featureKey] = feature;
+  }
+
+  this.dispatchEvent(
+      new ol.source.Vector.Event(ol.source.VectorEventType.ADDFEATURE, feature));
+};
+
+
+ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection) {
+  // this.loader_.call(this, extent, resolution, projection);
+  var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(resolution);
+
+  // var min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  //
+  // console.log(zoomLevelFromResolution, min_t);
+
+  var loadedExtentsRtree = this.loadedExtentsRtree_;
+  var extentsToLoad = this.strategy_(extent, resolution);
+  var i, ii;
+  for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
+    var extentToLoad = extentsToLoad[i];
+    var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
+        /**
+         * @param {{extent: ol.Extent}} object Object.
+         * @return {boolean} Contains.
+         */
+        function(object) {
+          // console.log(object,extentToLoad);
+          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution == object.resolution;
+        });
+    if (!alreadyLoaded) {
+      this.loader_.call(this, extentToLoad, resolution, projection);
+      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution});
+    }
+  }
+}
+
+ol.source.Label.prototype.constructor = ol.source.Label;
+
+
 
 /**
  * Feature loader function
@@ -31,7 +92,7 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
 
   // Set global variable min_t
   // TODO: Find better solution than global variable
-  min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  var min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
 
   var parameters = {
       x_min: min[0],
@@ -50,7 +111,7 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
  */
 ol.source.Label.prototype.zoomLevelToMinT = function(zoom) {
   if (zoom <= 3) {
-    return Number.POSITIVE_INFINITY;
+    return 0.01;
   } else {
     return Math.pow(2, 9 - (zoom - 1));
   }

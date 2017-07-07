@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="dist/ol-labels.css" type="text/css">
     <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
-    <script src="https://openlayers.org/en/v4.1.1/build/ol.js"></script>
+    <script src="https://openlayers.org/en/v4.1.1/build/ol-debug.js"></script>
     <script src="dist/ol-labels.js"></script>
   </head>
   <body>
@@ -25,7 +25,7 @@
           new ol.layer.Label({
             source: new ol.source.Label({
               url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/citynames',
-              labelClasses: ['city',]
+              labelClasses: ['city',],
             }),
             style: null
           })
@@ -39,13 +39,13 @@
 
       // TODO: Implement another solution to reload label data on zoom or extent changes
       // On change event handler on view. Will be fired if center or resolution has been chnaged
-      map.getView().on('propertychange', function(e) {
-        // keys: center, resolution
-        // console.log("propertychange: ", e.key, e);
-        var vector_layer = map.getLayers().getArray()[1];
-        vector_layer.getSource().clear();
-        vector_layer.getSource().refresh();
-      });
+      // map.getView().on('propertychange', function(e) {
+      //   // keys: center, resolution
+      //   // console.log("propertychange: ", e.key, e);
+      //   var vector_layer = map.getLayers().getArray()[1];
+      //   vector_layer.getSource().clear();
+      //   vector_layer.getSource().refresh();
+      // });
 
     </script>
   </body>
