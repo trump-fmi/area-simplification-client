@@ -11,6 +11,10 @@
   </head>
   <body>
     <div id="map" class="map"></div>
+    <div class="panel">
+      <h1>Layers</h1>
+      <ul id="layer-control" class="layers"></ul>
+    </div>
     <script>
 
       var tile_url = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles/{z}/{x}/{y}.png';
@@ -20,14 +24,16 @@
           new ol.layer.Tile({
             source: new ol.source.OSM({
               url: tile_url
-            })
+            }),
+            title: 'Seeigel'
           }),
           new ol.layer.Label({
             source: new ol.source.Label({
               url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/citynames',
               labelClasses: ['city',],
             }),
-            style: null
+            style: null,
+            title: 'Citynames'
           })
         ],
         target: 'map',
@@ -35,6 +41,45 @@
           center: ol.proj.fromLonLat([9.180769, 48.777106]),
           zoom: 6
         })
+      });
+
+      var layerControl = document.getElementById('layer-control');
+
+      map.getLayers().forEach(function(element, index, array) {
+        var title = element.get('title');
+
+        var li = document.createElement('li');
+        layerControl.appendChild(li);
+
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = title;
+        checkbox.id = title;
+        checkbox.value = title;
+        checkbox.checked = true;
+        li.appendChild(checkbox);
+
+        var label = document.createElement('label');
+        label.htmlFor = title;
+        label.appendChild(document.createTextNode(title));
+        li.appendChild(label);
+      });
+
+      layerControl.addEventListener('change', function(event) {
+        var box = event.target;
+        var layerID = box.value;
+        var layers = map.getLayers().getArray();
+
+        for (var i = layers.length - 1; i >= 0; --i) {
+          var layer = layers[i];
+          if (layer.get('title') == layerID) {
+            if (box.checked) {
+              layer.setVisible(true);
+            } else {
+              layer.setVisible(false)
+            }
+          }
+        }
       });
 
       // TODO: Implement another solution to reload label data on zoom or extent changes

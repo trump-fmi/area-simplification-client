@@ -1,3 +1,11 @@
+ol.control.Menu = function(options){
+
+  
+
+}
+
+ol.inherits(ol.control.Menu, ol.control.Control);
+
 ol.layer.Label = function(opt_options) {
 
   var options = opt_options || {};
