@@ -18,6 +18,8 @@
     <script>
 
       var tile_url = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles/{z}/{x}/{y}.png';
+      var tile_url_2 = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles2/{z}/{x}/{y}.png';
+      var bike_url = 'http://b.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png';
 
       var map = new ol.Map({
         layers: [
@@ -25,7 +27,25 @@
             source: new ol.source.OSM({
               url: tile_url
             }),
-            title: 'Seeigel'
+            title: 'Seeigel',
+            type: 'tile',
+            visible: true,
+          }),
+          new ol.layer.Tile({
+            source: new ol.source.OSM({
+              url: tile_url_2
+            }),
+            title: 'Seeigel 2',
+            type: 'tile',
+            visible: false,
+          }),
+          new ol.layer.Tile({
+            source: new ol.source.OSM({
+              url: bike_url
+            }),
+            title: 'Fahrrad',
+            type: 'tile',
+            visible: false
           }),
           new ol.layer.Label({
             source: new ol.source.Label({
@@ -33,7 +53,18 @@
               labelClasses: ['city',],
             }),
             style: null,
-            title: 'Citynames'
+            title: 'Bike',
+            type: 'label'
+          }),
+          new ol.layer.Label({
+            source: new ol.source.Label({
+              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icon',
+              labelClasses: ['city',],
+            }),
+            style: null,
+            title: 'Icons',
+            type: 'label',
+            visible: false
           })
         ],
         target: 'map',
@@ -45,18 +76,29 @@
 
       var layerControl = document.getElementById('layer-control');
 
+      var tiles = [];
+      var labelLayers = [];
+
       map.getLayers().forEach(function(element, index, array) {
+        console.log(element);
         var title = element.get('title');
+        var type = element.get('type');
+
+        if(type == 'tile'){
+          tiles.push(title);
+        }else{
+          labelLayers.push(title);
+        }
 
         var li = document.createElement('li');
         layerControl.appendChild(li);
 
         var checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.name = title;
+        checkbox.type = type == 'tile' ? 'radio' : 'checkbox';
+        checkbox.name = type;
         checkbox.id = title;
         checkbox.value = title;
-        checkbox.checked = true;
+        checkbox.checked = type == 'tile' ? tiles.length == 1 : labelLayers.length == 1;
         li.appendChild(checkbox);
 
         var label = document.createElement('label');
@@ -66,20 +108,46 @@
       });
 
       layerControl.addEventListener('change', function(event) {
+        console.log(event);
         var box = event.target;
         var layerID = box.value;
+        console.log(layerID);
         var layers = map.getLayers().getArray();
 
-        for (var i = layers.length - 1; i >= 0; --i) {
-          var layer = layers[i];
-          if (layer.get('title') == layerID) {
-            if (box.checked) {
-              layer.setVisible(true);
-            } else {
-              layer.setVisible(false)
+        var type = event.target.name;
+
+
+        if(type == 'tile'){
+
+          for (var i = layers.length - 1; i >= 0; --i) {
+            var layer = layers[i];
+            if(layer.get('type') == 'tile'){
+                if(layer.get('title') == layerID){
+                  layer.setVisible(true);
+                }else{
+                  layer.setVisible(false);
+                }
+                } else {
+                  layer.setVisible(false);
+                }
             }
-          }
+
+        }else{
+           // label
+           for (var i = layers.length - 1; i >= 0; --i) {
+             var layer = layers[i];
+             if (layer.get('title') == layerID) {
+               if (box.checked) {
+                 layer.setVisible(true);
+               } else {
+                 layer.setVisible(false);
+               }
+             }
+           }
+
         }
+
+
       });
 
       // TODO: Implement another solution to reload label data on zoom or extent changes
