@@ -4,8 +4,10 @@ ol.control.LabelDebug = function(opt_options) {
 
   var className = options.className !== undefined ? options.className : 'ol-label-debug';
 
+  // window.labelDebug = false;
+
   var defaultCSS = {
-    'padding': '2px 10px' 
+    'padding': '2px 10px'
   }
 
   // Checkbox for enabling the drawing of the circles
@@ -77,31 +79,38 @@ ol.control.LabelDebug = function(opt_options) {
     background: 'lightgrey',
     bottom: '20px',
     width: '800px',
+    // display: 'none',
   });
 
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
-
 };
 ol.inherits(ol.control.LabelDebug, ol.control.Control);
 
 ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
   event.preventDefault();
-  // TODO: enable/disable circles
-  console.log('toggle draw Circles');
+  // TODO: test enable/disable circles
+  window.debugDrawCirc = document.getElementById('drawCirclesCheckbox').checked;
 };
 
 ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
   event.preventDefault();
-  // TODO: change coefficient of the labelFactor
+  // TODO: test change coefficient of the labelFactor
   var range = document.getElementById('labelfactorRange');
-  console.log(range.value);
+  window.labelFacCoeff = range.value;
 };
 
 ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
   event.preventDefault();
-  // TODO: hide the debug controls
-  console.log('hideDebug');
+  this.element.style.display = 'none';
+  // window.labelDebug = false;
 };
+
+ol.control.LabelDebug.prototype.showDebugMode_ = function(event) {
+  console.log("showDebugMode_");
+  event.preventDefault();
+  this.element.style.display = 'inline-block';
+};
+

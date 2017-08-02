@@ -29,7 +29,7 @@ ol.style.Label = function(feature,resolution) {
   }
 
   // Calculate the label size by the given value label factor
-  var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
+  var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
   var fontConfig = labelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n
@@ -78,7 +78,7 @@ ol.style.Label = function(feature,resolution) {
   }
 
   var style = new ol.style.Style({
-        image: window.debug == true ? this.image : null,
+        image: window.debugDrawCirc == true ? this.image : null,
         text: this.text
       });
 
