@@ -30,7 +30,7 @@ ol.style.Label = function(feature,resolution) {
 
   // Calculate the label size by the given value label factor
   var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
-  var fontConfig = labelFactor + "px " + labelFontType;
+  var fontConfig = calculatedlabelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n
   if (labelText.indexOf("\\") >= 0) {
@@ -38,7 +38,7 @@ ol.style.Label = function(feature,resolution) {
   }
 
   var maxLabelLength = getMaxLabelLength(labelText);
-  var circleRadius = labelFactor * maxLabelLength * 0.26;
+  var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
 
   this.image = new ol.style.Circle({
     radius: circleRadius,

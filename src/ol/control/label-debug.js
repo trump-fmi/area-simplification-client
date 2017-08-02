@@ -4,8 +4,6 @@ ol.control.LabelDebug = function(opt_options) {
 
   var className = options.className !== undefined ? options.className : 'ol-label-debug';
 
-  // window.labelDebug = false;
-
   var defaultCSS = {
     'padding': '2px 10px'
   }
@@ -27,6 +25,8 @@ ol.control.LabelDebug = function(opt_options) {
 
   ol.events.listen(drawCirclesCheckbox, ol.events.EventType.CHANGE,
     ol.control.LabelDebug.prototype.toggleDrawCircles_.bind(this));
+
+  window.debugDrawCirc = false;
 
   // Slider for coefficient of labelfactor
   var labelfactorSlider = document.createElement('div');
@@ -50,6 +50,8 @@ ol.control.LabelDebug = function(opt_options) {
 
   ol.events.listen(labelfactorRange, ol.events.EventType.CHANGE,
     ol.control.LabelDebug.prototype.changeLabelFactor_.bind(this));
+
+  window.labelFacCoeff = 1.1;
 
   // Hide Button
   var hideButton = document.createElement('button');
@@ -79,19 +81,20 @@ ol.control.LabelDebug = function(opt_options) {
     background: 'lightgrey',
     bottom: '20px',
     width: '800px',
-    // display: 'none',
+    display: 'none',
   });
 
   ol.control.Control.call(this, {
     element: element,
     target: options.target
   });
+
+  window.showDebugMode = ol.control.LabelDebug.prototype.showDebugMode_.bind(this);
 };
 ol.inherits(ol.control.LabelDebug, ol.control.Control);
 
 ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
   event.preventDefault();
-  // TODO: test enable/disable circles
   window.debugDrawCirc = document.getElementById('drawCirclesCheckbox').checked;
 };
 
@@ -105,12 +108,8 @@ ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
 ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
   event.preventDefault();
   this.element.style.display = 'none';
-  // window.labelDebug = false;
 };
 
-ol.control.LabelDebug.prototype.showDebugMode_ = function(event) {
-  console.log("showDebugMode_");
-  event.preventDefault();
+ol.control.LabelDebug.prototype.showDebugMode_ = function() {
   this.element.style.display = 'inline-block';
 };
-
