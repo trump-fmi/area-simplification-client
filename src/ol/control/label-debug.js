@@ -5,12 +5,18 @@ ol.control.LabelDebug = function(opt_options) {
   var className = options.className !== undefined ? options.className : 'ol-label-debug';
 
   var defaultCSS = {
-    'padding': '2px 10px'
+    'padding': '15px 10px 0px',
+  }
+
+  var rangeCSS = {
+    'width': '200px',
   }
 
   // Checkbox for enabling the drawing of the circles
   var drawCirclesCheckboxDiv = document.createElement('div');
-  Object.assign(drawCirclesCheckboxDiv.style, defaultCSS);
+  Object.assign(drawCirclesCheckboxDiv.style, {
+    'padding': '10px 10px 0px',
+  });
 
   var drawCirclesCheckbox = document.createElement('input');
   drawCirclesCheckbox.setAttribute('type', 'checkbox');
@@ -18,9 +24,9 @@ ol.control.LabelDebug = function(opt_options) {
 
   var drawCircleLabel = document.createElement('label');
   drawCircleLabel.htmlFor = 'drawCirclesCheckbox';
+  drawCircleLabel.appendChild(drawCirclesCheckbox);
   drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels.'))
 
-  drawCirclesCheckboxDiv.appendChild(drawCirclesCheckbox);
   drawCirclesCheckboxDiv.appendChild(drawCircleLabel);
 
   ol.events.listen(drawCirclesCheckbox, ol.events.EventType.CHANGE,
@@ -33,11 +39,12 @@ ol.control.LabelDebug = function(opt_options) {
   Object.assign(labelfactorSlider.style, defaultCSS);
 
   var labelfactorRange = document.createElement('input');
+  Object.assign(labelfactorRange.style, rangeCSS);
   labelfactorRange.setAttribute('type', 'range');
-  labelfactorRange.id = 'labelfactorRange';
-  labelfactorRange.min = '0.0';
-  labelfactorRange.max = '3.0';
-  labelfactorRange.step = '0.1';
+  labelfactorRange.setAttribute('id', 'labelfactorRange');
+  labelfactorRange.setAttribute('min', '0.0');
+  labelfactorRange.setAttribute('max', '3.0');
+  labelfactorRange.setAttribute('step', '0.1');
   labelfactorRange.defaultValue = '1.1';
 
   var sliderLabel = document.createElement('label');
@@ -59,11 +66,12 @@ ol.control.LabelDebug = function(opt_options) {
   Object.assign(minTFactorSlider.style, defaultCSS);
 
   var minTFactorRange = document.createElement('input');
+  Object.assign(minTFactorRange.style, rangeCSS);
   minTFactorRange.setAttribute('type', 'range');
-  minTFactorRange.id = 'minTFactorRange';
-  minTFactorRange.min = '0.0';
-  minTFactorRange.max = '20';
-  minTFactorRange.step = '0.5';
+  minTFactorRange.setAttribute('id', 'minTFactorRange');
+  minTFactorRange.setAttribute('min', '0.0');
+  minTFactorRange.setAttribute('max', '20');
+  minTFactorRange.setAttribute('step', '0.5');
   minTFactorRange.defaultValue = '9';
 
   var minTLabel = document.createElement('label');
@@ -77,11 +85,12 @@ ol.control.LabelDebug = function(opt_options) {
   window.minTFac = 9;
 
   var minTCoeffRange = document.createElement('input');
+  Object.assign(minTCoeffRange.style, rangeCSS);
   minTCoeffRange.setAttribute('type', 'range');
-  minTCoeffRange.id = 'minTCoeffRange';
-  minTCoeffRange.min = '0.0';
-  minTCoeffRange.max = '5';
-  minTCoeffRange.step = '0.1';
+  minTCoeffRange.setAttribute('id', 'minTCoeffRange');
+  minTCoeffRange.setAttribute('min', '0.0');
+  minTCoeffRange.setAttribute('max', '5');
+  minTCoeffRange.setAttribute('step', '0.1');
   minTCoeffRange.defaultValue = '1.0';
 
   var minTCoeffLabel = document.createElement('label');
@@ -93,7 +102,7 @@ ol.control.LabelDebug = function(opt_options) {
     ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
 
   window.minTCoeff = 1.0;
- 
+
   minTFactorSlider.appendChild(minTLabel);
   minTFactorSlider.appendChild(document.createElement('br'));
   minTFactorSlider.appendChild(minTFactorRange);
@@ -106,10 +115,12 @@ ol.control.LabelDebug = function(opt_options) {
   var hideButton = document.createElement('button');
   Object.assign(hideButton.style, {
     'padding': '15px 32px',
-    'margin': '2px 10px',
+    'margin': '10px 10px',
     'width': 'auto',
+    'float': 'right',
+    'line-height': '0.0',
   });
-  var hideButtonText = document.createTextNode('Hide debug mode');
+  var hideButtonText = document.createTextNode('Hide');
   hideButton.appendChild(hideButtonText);
   ol.events.listen(hideButton, ol.events.EventType.CLICK,
     ol.control.LabelDebug.prototype.hideDebugMode_.bind(this));
@@ -120,19 +131,19 @@ ol.control.LabelDebug = function(opt_options) {
   var element = document.createElement('div');
   var br = document.createElement('br');
   element.className = cssClasses;
-  element.appendChild(drawCirclesCheckboxDiv);
-  element.appendChild(document.createElement('br'));
-  element.appendChild(labelfactorSlider);
-  element.appendChild(document.createElement('br'));
-  element.appendChild(minTFactorSlider);
-  element.appendChild(document.createElement('br'));
   element.appendChild(hideButton);
+  element.appendChild(drawCirclesCheckboxDiv);
+  // element.appendChild(document.createElement('br'));
+  element.appendChild(labelfactorSlider);
+  // element.appendChild(document.createElement('br'));
+  element.appendChild(minTFactorSlider);
 
   Object.assign(element.style, {
     background: 'lightgrey',
+    left: '20px',
     bottom: '20px',
     width: '800px',
-    display: 'none',
+    // display: 'none',
   });
 
   ol.control.Control.call(this, {
@@ -152,21 +163,21 @@ ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
 ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
   event.preventDefault();
   var range = document.getElementById('labelfactorRange');
-  document.getElementById('sliderLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')'; 
+  document.getElementById('sliderLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
   window.labelFacCoeff = range.value;
 };
 
 ol.control.LabelDebug.prototype.changeMinTFactor_ = function(event) {
   event.preventDefault();
   var range = document.getElementById('minTFactorRange');
-  document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')'; 
+  document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')';
   window.minTFac = range.value;
 };
 
 ol.control.LabelDebug.prototype.changeMinTCoeff_ = function(event) {
   event.preventDefault();
   var range = document.getElementById('minTCoeffRange');
-  document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')'; 
+  document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')';
   window.minTCoeff = range.value;
 };
 
