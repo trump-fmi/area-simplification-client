@@ -115,6 +115,6 @@ function resToMinT(res){
   if (zoom <= 3) {
     return 0.01;
   } else {
-    return Math.pow(2, 9 - (zoom - 1));
+    return window.minTCoeff * Math.pow(2, window.minTFac - (zoom - 1));
   }
 }

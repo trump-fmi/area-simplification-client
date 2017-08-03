@@ -41,8 +41,9 @@ ol.control.LabelDebug = function(opt_options) {
   labelfactorRange.defaultValue = '1.1';
 
   var sliderLabel = document.createElement('label');
+  sliderLabel.id = 'sliderLabel';
   sliderLabel.htmlFor = 'sliderLabel';
-  sliderLabel.appendChild(document.createTextNode('Set the coefficient of the labelFactor.'))
+  sliderLabel.appendChild(document.createTextNode('Set the coefficient of the labelFactor. (1.1)'))
 
   labelfactorSlider.appendChild(sliderLabel);
   labelfactorSlider.appendChild(document.createElement('br'));
@@ -52,6 +53,54 @@ ol.control.LabelDebug = function(opt_options) {
     ol.control.LabelDebug.prototype.changeLabelFactor_.bind(this));
 
   window.labelFacCoeff = 1.1;
+
+  // Slider for controlling the calculation of the min_t value
+  var minTFactorSlider = document.createElement('div');
+  Object.assign(minTFactorSlider.style, defaultCSS);
+
+  var minTFactorRange = document.createElement('input');
+  minTFactorRange.setAttribute('type', 'range');
+  minTFactorRange.id = 'minTFactorRange';
+  minTFactorRange.min = '0.0';
+  minTFactorRange.max = '20';
+  minTFactorRange.step = '0.5';
+  minTFactorRange.defaultValue = '9';
+
+  var minTLabel = document.createElement('label');
+  minTLabel.id = 'minTLabel';
+  minTLabel.htmlFor = 'minTLabel';
+  minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t. (9)'))
+
+  ol.events.listen(minTFactorRange, ol.events.EventType.CHANGE,
+    ol.control.LabelDebug.prototype.changeMinTFactor_.bind(this));
+
+  window.minTFac = 9;
+
+  var minTCoeffRange = document.createElement('input');
+  minTCoeffRange.setAttribute('type', 'range');
+  minTCoeffRange.id = 'minTCoeffRange';
+  minTCoeffRange.min = '0.0';
+  minTCoeffRange.max = '5';
+  minTCoeffRange.step = '0.1';
+  minTCoeffRange.defaultValue = '1.0';
+
+  var minTCoeffLabel = document.createElement('label');
+  minTCoeffLabel.id = 'minTCoeffLabel';
+  minTCoeffLabel.htmlFor = 'minTCoeffLabel';
+  minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t. (1.0)'))
+
+  ol.events.listen(minTCoeffRange, ol.events.EventType.CHANGE,
+    ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
+
+  window.minTCoeff = 1.0;
+ 
+  minTFactorSlider.appendChild(minTLabel);
+  minTFactorSlider.appendChild(document.createElement('br'));
+  minTFactorSlider.appendChild(minTFactorRange);
+  minTFactorSlider.appendChild(document.createElement('br'));
+  minTFactorSlider.appendChild(minTCoeffLabel);
+  minTFactorSlider.appendChild(document.createElement('br'));
+  minTFactorSlider.appendChild(minTCoeffRange);
 
   // Hide Button
   var hideButton = document.createElement('button');
@@ -74,6 +123,8 @@ ol.control.LabelDebug = function(opt_options) {
   element.appendChild(drawCirclesCheckboxDiv);
   element.appendChild(document.createElement('br'));
   element.appendChild(labelfactorSlider);
+  element.appendChild(document.createElement('br'));
+  element.appendChild(minTFactorSlider);
   element.appendChild(document.createElement('br'));
   element.appendChild(hideButton);
 
@@ -100,9 +151,23 @@ ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
 
 ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
   event.preventDefault();
-  // TODO: test change coefficient of the labelFactor
   var range = document.getElementById('labelfactorRange');
+  document.getElementById('sliderLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')'; 
   window.labelFacCoeff = range.value;
+};
+
+ol.control.LabelDebug.prototype.changeMinTFactor_ = function(event) {
+  event.preventDefault();
+  var range = document.getElementById('minTFactorRange');
+  document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')'; 
+  window.minTFac = range.value;
+};
+
+ol.control.LabelDebug.prototype.changeMinTCoeff_ = function(event) {
+  event.preventDefault();
+  var range = document.getElementById('minTCoeffRange');
+  document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')'; 
+  window.minTCoeff = range.value;
 };
 
 ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
