@@ -29,8 +29,8 @@ ol.style.Label = function(feature,resolution) {
   }
 
   // Calculate the label size by the given value label factor
-  var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
-  var fontConfig = labelFactor + "px " + labelFontType;
+  var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
+  var fontConfig = calculatedlabelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n
   if (labelText.indexOf("\\") >= 0) {
@@ -38,7 +38,7 @@ ol.style.Label = function(feature,resolution) {
   }
 
   var maxLabelLength = getMaxLabelLength(labelText);
-  var circleRadius = labelFactor * maxLabelLength * 0.26;
+  var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
 
   this.image = new ol.style.Circle({
     radius: circleRadius,
@@ -78,7 +78,7 @@ ol.style.Label = function(feature,resolution) {
   }
 
   var style = new ol.style.Style({
-        image: window.debug == true ? this.image : null,
+        image: window.debugDrawCirc == true ? this.image : null,
         text: this.text
       });
 
@@ -115,6 +115,6 @@ function resToMinT(res){
   if (zoom <= 3) {
     return 0.01;
   } else {
-    return Math.pow(2, 9 - (zoom - 1));
+    return window.minTCoeff * Math.pow(2, window.minTFac - (zoom - 1));
   }
 }
