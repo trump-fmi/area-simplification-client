@@ -97,17 +97,11 @@ ol.source.Label.prototype.featureLoader = function(extent, resolution, projectio
  * @param {number} resolution - current resolution
  */
 function resolutionToMinT(resolution) {
-
   var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
-
   if (zoom <= 3) {
     return 0.01;
   } else {
-    
-    /* TODO: Find a better solaution than a global variable.
-     * It must be possible to use the label source without the debug mode. */
-    return window.minTCoeff * Math.pow(2, window.minTFac - (zoom - 1));
-    // return Math.pow(2, 9 - (zoom - 1));
+    return Math.pow(2, 9 - (zoom - 1));
   }
 }
 

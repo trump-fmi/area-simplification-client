@@ -1,5 +1,17 @@
 ol.control.LabelDebug = function(opt_options) {
 
+  // Override function resolutionToMinT if debug mode is active
+  resolutionToMinT =  function resolutionToMinT(resolution) {
+    var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
+    if (zoom <= 3) {
+      return 0.01;
+    } else {
+      /* TODO: Find a better solaution than a global variable.
+       * It must be possible to use the label source without the debug mode. */
+      return window.minTCoeff * Math.pow(2, window.minTFac - (zoom - 1));
+    }
+  }
+
   var options = opt_options ? opt_options : {};
 
   var className = options.className !== undefined ? options.className : 'ol-label-debug';
