@@ -1,5 +1,5 @@
 
-/*
+/**
  * Constructor of ol.style.Label
  * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
  */
