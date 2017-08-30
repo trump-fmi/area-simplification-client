@@ -6,11 +6,6 @@ ol.style.IconLabel = function(feature, resolution) {
 
   // Get needed fields from feature object
   var labelText = feature.get("name");
-  if (!labelText.includes('icon:')) {
-    return null;
-  }
-  labelText = labelText.replace('icon:', '');
-  window.icon_names.add(labelText);
   var t = feature.get("t");
   var labelFactor = feature.get("lbl_fac");
 
@@ -19,6 +14,11 @@ ol.style.IconLabel = function(feature, resolution) {
   var labelFontType = "Consolas";
   var labelCircleColor = "red";
 
+  // check if this is an icon and replace the icon tag, if so
+  if (!labelText.includes('icon:')) {
+    return null;
+  }
+  labelText = labelText.replace('icon:', '');
 
   // Don't show too big labels like a capital cityname on a high zoom levels
   //if(window.min_t > t){
