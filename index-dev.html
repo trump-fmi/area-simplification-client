@@ -49,6 +49,85 @@
       //   vector_layer.getSource().refresh();
       // });
 
+      function demoModeStep() {
+        var view = map.getView();
+
+        var currentCenter = view.getCenter();
+        view.setCenter(getRandomCenterInGermany());
+
+        var currentZoom = view.getZoom();
+
+        var currentRotation = view.getRotation();
+      }
+
+      function changeCenter() {
+        var view = map.getView();
+
+        var currentCenter = view.getCenter();
+        var newCenter = getRandomCenterInGermany();
+
+        var longVal = 1000;
+        if (newCenter[0] < currentCenter[0]) {
+          longVal = -1000;
+        }
+
+        var latVal = 1000;
+        if (newCenter[1] < currentCenter[1]) {
+          latVal = -1000;
+        }
+
+        var longDone = false;
+        var latDone = false;
+        changeCenterRecursive();
+        function changeCenterRecursive() {
+
+          if (!longDone) {
+            currentCenter[0] = currentCenter[0] + longVal;
+          }
+          if (longVal > 0 && currentCenter[0] >= newCenter[0]) {
+            longDone = true;
+          } else if (longVal < 0 && currentCenter[0] <= newCenter[0]) {
+            longDone = true;
+          }
+
+
+          if (!latDone) {
+            currentCenter[1] = currentCenter[1] + latVal;
+          }
+          if (latVal > 0 && currentCenter[1] >= newCenter[1]) {
+            latDone = true;
+          } else if (latVal < 0 && currentCenter[1] <= newCenter[1]) {
+            latDone = true;
+          }
+          map.getView().setCenter(currentCenter);
+          setTimeout(function() {
+            console.log("new center: ", currentCenter, view.getCenter());
+            if (!longDone || !latDone) {
+              changeCenterRecursive();
+            } else {
+              console.log("center done");
+            }
+          }, 100);
+        }
+
+      }
+
+      function getRandomRotation() {
+        return (Math.random() * (Math.PI * 2));
+      }
+
+      function getRandomZoom() {
+        return Math.round(Math.random() * 20);
+      }
+
+      function getRandomCenterInGermany() {
+        var rangeLong = [8.0, 12.0]; // More exactly = [6.0, 15.0]
+        var rangeLat = [48.0, 54.0]; // More exactly = [47.5, 54.8]
+
+        var randomLong = (Math.random() * (rangeLong[1] - rangeLong[0] + 1)) + rangeLong[0];
+        var randomLat = (Math.random() * (rangeLat[1] - rangeLat[0] + 1)) + rangeLat[0];
+        return ol.proj.fromLonLat([randomLong, randomLat]);
+      }
     </script>
   </body>
 </html>
