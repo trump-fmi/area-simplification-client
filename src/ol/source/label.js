@@ -10,10 +10,6 @@ ol.source.Label = function(org_options) {
   org_options.updateWhileAnimating = true;
   org_options.updateWhileInteracting = true;
 
-
-  // TODO: Search if there is a better solution than creating here a ol.View object
-  this.viewToCalcZoomLevel = new ol.View();
-
   ol.source.Vector.call(this, org_options);
 };
 
@@ -44,12 +40,6 @@ ol.source.Label.prototype.addFeatureInternal = function(feature) {
 
 
 ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection) {
-  // this.loader_.call(this, extent, resolution, projection);
-  var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(resolution);
-
-  // var min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
-  //
-  // console.log(zoomLevelFromResolution, min_t);
 
   var loadedExtentsRtree = this.loadedExtentsRtree_;
   var extentsToLoad = this.strategy_(extent, resolution);
@@ -79,20 +69,17 @@ ol.source.Label.prototype.constructor = ol.source.Label;
 /**
  * Feature loader function
  * @param {Array} extent - Array that representisthe area to be loaded with: [minx, miny, maxx, maxy]
- * @param {number} number - the number representing the resolution (map units per pixel)
+ * @param {number} resolution - the number representing the resolution (map units per pixel)
  * @param {ol.proj.Projection} projection - the projection that is used for this feature
  */
-ol.source.Label.prototype.featureLoader = function(extent, number, projection){
+ol.source.Label.prototype.featureLoader = function(extent, resolution, projection){
   // extent: [minx, miny, maxx, maxy]
   //ol.proj.toLonLat takes coord-pair, so need to split
   var min = ol.proj.toLonLat(extent.slice(0, 2));
   var max = ol.proj.toLonLat(extent.slice(2, 4));
 
-  var zoomLevelFromResolution = this.viewToCalcZoomLevel.getZoomForResolution(number);
-
-  // Set global variable min_t
-  // TODO: Find better solution than global variable
-  var min_t = window.min_t = this.zoomLevelToMinT(zoomLevelFromResolution);
+  // Calculate mint_t value for label request
+  var min_t = resolutionToMinT(resolution);
 
   var parameters = {
       x_min: min[0],
@@ -105,17 +92,19 @@ ol.source.Label.prototype.featureLoader = function(extent, number, projection){
   return this.buildQuery(parameters);
 }
 
-/*
- * Get corresponding mint t value for a given zoom level.
- * @param {number} zoom - current zoom level
+/**
+ * Calculate the min_t value from the resolution.
+ * @param {number} resolution - current resolution
  */
-ol.source.Label.prototype.zoomLevelToMinT = function(zoom) {
+function resolutionToMinT(resolution) {
+  var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
   if (zoom <= 3) {
     return 0.01;
   } else {
-    return window.minTCoeff * Math.pow(2, window.minTFac - (zoom - 1));
+    return Math.pow(2, 9 - (zoom - 1));
   }
 }
+
 
 /**
  * Builds a query in the format of:
@@ -124,7 +113,6 @@ ol.source.Label.prototype.zoomLevelToMinT = function(zoom) {
 ol.source.Label.prototype.buildQuery = function(params){
   if (typeof params === 'undefined' || typeof params !== 'object') {
         params = {};
-        return params;
     }
     var query = '?';
     var index = 0;
