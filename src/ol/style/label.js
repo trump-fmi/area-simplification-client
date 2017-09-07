@@ -3,7 +3,7 @@
  * Constructor of ol.style.Label
  * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
  */
-ol.style.Label = function(feature,resolution) {
+ol.style.Label = function(feature, resolution) {
 
   // Get needed fields from feature object
   var labelText = feature.get("name");
@@ -15,22 +15,16 @@ ol.style.Label = function(feature,resolution) {
   var labelFontType = "Consolas";
   var labelCircleColor = "red";
 
-
-  // Don't show too big labels like a capital cityname on a high zoom levels
-  //if(window.min_t > t){
-
-  //}
-  var min_t = resToMinT(resolution);
+  var min_t = resolutionToMinT(resolution);
 
   if(min_t > t){
-    // return null;
-    // console.log(labelText,window.min_t,t);
+    // console.log(labelText, window.min_t, t);
     return null;
   }
 
   // Calculate the label size by the given value label factor
-  var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
-  var fontConfig = labelFactor + "px " + labelFontType;
+  var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
+  var fontConfig = calculatedlabelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n
   if (labelText.indexOf("\\") >= 0) {
@@ -38,7 +32,7 @@ ol.style.Label = function(feature,resolution) {
   }
 
   var maxLabelLength = getMaxLabelLength(labelText);
-  var circleRadius = labelFactor * maxLabelLength * 0.26;
+  var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
 
   this.image = new ol.style.Circle({
     radius: circleRadius,
@@ -59,7 +53,7 @@ ol.style.Label = function(feature,resolution) {
     })
   });
 
-  if(window.min_t < 1.1 && t > 12){
+  if(min_t < 1.1 && t > 12){
     this.text = new ol.style.Text({
       text: labelText,
       font: fontConfig,
@@ -73,14 +67,14 @@ ol.style.Label = function(feature,resolution) {
     });
   }
 
-  if(window.min_t < .3 && t > 12){
+  if(min_t < 0.3 && t > 12){
     return null;
   }
 
   var style = new ol.style.Style({
-        image: window.debug == true ? this.image : null,
-        text: this.text
-      });
+    image: window.debugDrawCirc == true ? this.image : null,
+    text: this.text
+  });
 
   return style;
 
@@ -105,16 +99,3 @@ function getMaxLabelLength(labelText) {
   }
   return maxLength;
 };
-
-function resToMinT(res){
-
-  var zoom = Math.log2(156543.03390625) - Math.log2(res);
-
-  console.log(res,zoom);
-
-  if (zoom <= 3) {
-    return 0.01;
-  } else {
-    return Math.pow(2, 9 - (zoom - 1));
-  }
-}
