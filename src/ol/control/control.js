@@ -35,7 +35,13 @@ ol.control.defaults = function(opt_options) {
   var labelDebugControl = options.labelDebug !== undefined ?
     options.labelDebug : true;
   if (labelDebugControl) {
-    controls.push(new ol.control.LabelDebug(options.labelDebugOptions));
+    // controls.push(new ol.control.LabelDebug(options.labelDebugOptions));
+  }
+
+  var layerMenuControl = options.layerMenu !== undefined ?
+    options.layerMenu : true;
+  if(layerMenuControl){
+    controls.push(new ol.control.LayerMenu(options.layerMenuOptions));
   }
 
   return controls;
