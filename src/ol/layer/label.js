@@ -6,7 +6,7 @@ ol.layer.Label = function(opt_options) {
 		if (options.title == 'Icons') {
 			options.style = ol.style.IconLabel;
 		} else {
-			options.style = ol.style.Label;
+			options.style = ol.style.TextLabel;
 		}
 	}
 

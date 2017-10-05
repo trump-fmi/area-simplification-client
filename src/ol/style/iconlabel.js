@@ -3,122 +3,61 @@
  * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
  */
 ol.style.IconLabel = function(feature, resolution) {
+  ol.style.Label.call(this, feature, resolution);
+};
 
-  // Get needed fields from feature object
-  var labelText = feature.get("name");
-  var t = feature.get("t");
-  var labelFactor = feature.get("lbl_fac");
+ol.style.IconLabel.prototype = Object.create(ol.style.Label.prototype);
+ol.style.IconLabel.prototype.constructor = ol.style.IconLabel;
 
-  var labelTextColor = '#fff';
-  var labelBorderColor = '#333';
-  var labelFontType = "Consolas";
-  var labelCircleColor = "red";
+/**
+ * Check if the labelText contains an icon tag and remove it from the name,
+ * if so. If there is no icon tag, return zero. This will not display the
+ * label.
+ * @param {string} labelText - text of the label
+ */
+ol.style.IconLabel.prototype.checkForValidText = function(labelText) {
 
   // check if this is an icon and replace the icon tag, if so
   if (!labelText.includes('icon:')) {
     return null;
   }
   labelText = labelText.replace('icon:', '');
+  return labelText;
+};
 
-  // Don't show too big labels like a capital cityname on a high zoom levels
-  //if(window.min_t > t){
+/**
+ * Calculate the configuration string for the font of the label.
+ * @param {string} labelFactor - label specific size factor
+ * @param {string} labelFontType - general font type
+ */
+ol.style.IconLabel.prototype.calcFontConfig = function(labelFactor, 
+  labelFontType) {
+  return 4 * labelFactor + "px " + labelFontType;
+};
 
-  //}
-  var min_t = resToMinT(resolution);
-
-  if (min_t > t) {
-    // return null;
-    // console.log(labelText,window.min_t,t);
-    return null;
-  }
-
-  // Calculate the label size by the given value label factor
-  var calculatedlabelFactor = 1.1 * parseInt(labelFactor);
-  var fontConfig = 4 * labelFactor + "px " + labelFontType;
-
-  // Remove escaped character from JSON format string: \\n to \n
-  if (labelText.indexOf("\\") >= 0) {
-    labelText = labelText.replace("\\n", "\n");
-  }
-
-  var maxLabelLength = getMaxLabelLength(labelText);
-  var circleRadius = labelFactor * maxLabelLength * 0.26;
-
-  var iconSrc = iconMapping[labelText];
+/**
+ * Get the image style that should be displayed.
+ * @param {string} labelText - text of the label
+ * @param {string} circleRadius - radius of the circle
+ * @param {string} labelCircleColor - color of the circle
+ */
+ol.style.IconLabel.prototype.getImageStyle = function(labelText, circleRadius,
+  labelCircleColor) {
+  iconSrc = this.iconMapping[labelText];
   if(!iconSrc) {
     console.log(labelText);
-    iconSrc = iconMapping['undefined'];
+    iconSrc = this.iconMapping['undefined'];
   }
-
-  this.image = new ol.style.Icon({
+  return new ol.style.Icon({
     // anchor: [0.5, 46],
     // anchorXUnits: 'fraction',
     // anchorYUnits: 'pixels',
     src: iconSrc,
     scale: 1,
   });
-
-  this.text = new ol.style.Text({
-    text: labelText,
-    font: fontConfig,
-    stroke: new ol.style.Stroke({
-      color: labelBorderColor,
-      width: 4
-    }),
-    fill: new ol.style.Fill({
-      color: labelTextColor
-    })
-  });
-
-  if (window.min_t < 1.1 && t > 12) {
-    this.text = new ol.style.Text({
-      text: labelText,
-      font: fontConfig,
-      stroke: new ol.style.Stroke({
-        color: [255, 255, 255, .6],
-        width: 2
-      }),
-      fill: new ol.style.Fill({
-        color: [0, 0, 0, .5]
-      })
-    });
-  }
-
-  if (window.min_t < .3 && t > 12) {
-    return null;
-  }
-
-  var style = new ol.style.Style({
-    image: this.image,
-    // text: this.text
-  });
-
-  return style;
-
-  // Pass this Label object as options params for ol.style.Style
-  // ol.style.Style.call(this, this);
 };
 
-
-/**
- * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
- * @param {string} labelText - text of the label
- */
-function getMaxLabelLength(labelText) {
-
-  var lines = labelText.split("\n");
-  var maxLength = 0;
-  var arrayLength = lines.length;
-  for (var i = 0; i < arrayLength; i++) {
-    if (maxLength < lines[i].length) {
-      maxLength = lines[i].length;
-    }
-  }
-  return maxLength;
-};
-
-function resToMinT(res) {
-
+ol.style.IconLabel.prototype.resToMinT = function(res){
   var zoom = Math.log2(156543.03390625) - Math.log2(res);
 
   console.log(res, zoom);
@@ -130,7 +69,7 @@ function resToMinT(res) {
   }
 };
 
-var iconMapping = {
+ol.style.IconLabel.iconMapping = {
 
   // 'undefined': 'http://vignette3.wikia.nocookie.net/utau/images/c/cf/Unknown-icon.png',
   // 'aboriginal': 'https://cdn1.iconfinder.com/data/icons/hawcons/32/698879-icon-14-flag-128.png',
