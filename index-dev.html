@@ -51,13 +51,16 @@
       });
       zoomslider = new ol.control.ZoomSlider();
       map.addControl(zoomslider);
+
+      // TODO: Label doesn't work correctly without the debug menu
+      map.addControl(new ol.control.LabelDebug({map: map}));
+
+
       // ol.MOUSEWHEELZOOM_MAXDELTA = 0.5;
       // map.addControl(new ol.control.Zoom({delta: 0.5}));
-
-
-      map.on("moveend", function(e) {
-        console.log('Zoom level', map.getView().getZoom());
-      });
+      // map.on("moveend", function(e) {
+      //   console.log('Zoom level', map.getView().getZoom());
+      // });
 
       // TODO: Implement another solution to reload label data on zoom or extent changes
       // On change event handler on view. Will be fired if center or resolution has been chnaged

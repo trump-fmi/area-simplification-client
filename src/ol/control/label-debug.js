@@ -74,8 +74,8 @@ ol.control.LabelDebug = function(opt_options) {
   window.labelFacCoeff = 1.1;
 
   // Slider for controlling the calculation of the min_t value
-  var minTFactorSlider = document.createElement('div');
-  Object.assign(minTFactorSlider.style, defaultCSS);
+  var controlElementsContainer = document.createElement('div');
+  Object.assign(controlElementsContainer.style, defaultCSS);
 
   var minTFactorRange = document.createElement('input');
   Object.assign(minTFactorRange.style, rangeCSS);
@@ -117,34 +117,86 @@ ol.control.LabelDebug = function(opt_options) {
 
   /* Zoom level ****************************************/
 
-  var zoomSliderInput = document.createElement('input');
-  Object.assign(minTCoeffRange.style, {
-    'width': '400px',
+  var zoomLevelDelta = document.createElement('input');
+  Object.assign(zoomLevelDelta.style, {
+    'margin-left': '10px',
+    'width': '50px'
   });
-  minTCoeffRange.setAttribute('type', 'range');
-  minTCoeffRange.setAttribute('id', 'zoomSliderInput');
-  minTCoeffRange.setAttribute('min', '0.0');
-  minTCoeffRange.setAttribute('max', '5');
-  minTCoeffRange.setAttribute('step', '0.1');
-  minTCoeffRange.defaultValue = '1.0';
+  zoomLevelDelta.setAttribute('type', 'number');
+  zoomLevelDelta.setAttribute('id', 'zoomLevelDelta');
+  zoomLevelDelta.setAttribute('min', '0.1');
+  zoomLevelDelta.setAttribute('max', '10.0');
+  zoomLevelDelta.setAttribute('step', '0.1');
+  zoomLevelDelta.setAttribute('value', '1.0');
 
-  var minTCoeffLabel = document.createElement('label');
-  minTCoeffLabel.id = 'minTCoeffLabel';
-  minTCoeffLabel.htmlFor = 'minTCoeffLabel';
-  minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t. (1.0)'))
+  var zoomSliderInput = document.createElement('input');
+  Object.assign(zoomSliderInput.style, {
+    'width': '600px',
+    'margin-top': '10px'
+  });
+  zoomSliderInput.setAttribute('type', 'range');
+  zoomSliderInput.setAttribute('id', 'zoomSliderInput');
+  zoomSliderInput.setAttribute('min', 0.0);
+  zoomSliderInput.setAttribute('max', 28.0);
+  zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
+  zoomSliderInput.defaultValue = options.map.getView().getZoom();
+  console.log("zoomSliderInput.defaultValue", zoomSliderInput.defaultValue);
 
-  ol.events.listen(minTCoeffRange, ol.events.EventType.CHANGE,
-    ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
+  var zoomSliderLabel = document.createElement('label');
+  zoomSliderLabel.id = 'zoomSliderLabel';
+  zoomSliderLabel.htmlFor = 'zoomSliderLabel';
+  zoomSliderLabel.appendChild(document.createTextNode('Use the slider to change the zoom level with the defined zoom delta:'))
+
+  var zoomLevelLabel = document.createElement('label');
+  Object.assign(zoomLevelLabel.style, {
+    'margin-left': '10px',
+    'position': 'relative',
+    'top': '-6px'
+  });
+  zoomLevelLabel.id = 'zoomLevelLabel';
+  zoomLevelLabel.htmlFor = 'zoomLevelLabel';
+  zoomLevelLabel.appendChild(document.createTextNode("zoom: " + options.map.getView().getZoom()));
+
+  // Add onchange listener for zoomLevelDelta
+  ol.events.listen(zoomLevelDelta, ol.events.EventType.CHANGE, zoomDeltaChange);
+  function zoomDeltaChange() {
+    console.log(zoomLevelDelta.value);
+    zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
+  }
+
+  // Add onchange listener for zoomSliderInput
+  ol.events.listen(zoomSliderInput, ol.events.EventType.MOUSEMOVE, changeZoomLevel);
+  function changeZoomLevel() {
+    document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + zoomSliderInput.value;
+    options.map.getView().setZoom(zoomSliderInput.value);
+  }
+
+  // Add listener on view to detect changes on zoom level
+  map.on("moveend", function(e) {
+    // Get zoom level and round to 3 decimal places
+    var newZoomLevel =  map.getView().getZoom();
+    newZoomLevel = Math.round(newZoomLevel * 1000) / 1000;
+    console.log('Zoom level',newZoomLevel);
+    document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + newZoomLevel;
+    document.getElementById('zoomSliderInput').value = newZoomLevel;
+  });
 
   /****************************************************/
 
-  minTFactorSlider.appendChild(minTLabel);
-  minTFactorSlider.appendChild(document.createElement('br'));
-  minTFactorSlider.appendChild(minTFactorRange);
-  minTFactorSlider.appendChild(document.createElement('br'));
-  minTFactorSlider.appendChild(minTCoeffLabel);
-  minTFactorSlider.appendChild(document.createElement('br'));
-  minTFactorSlider.appendChild(minTCoeffRange);
+  controlElementsContainer.appendChild(minTLabel);
+  controlElementsContainer.appendChild(document.createElement('br'));
+  controlElementsContainer.appendChild(minTFactorRange);
+  controlElementsContainer.appendChild(document.createElement('br'));
+  controlElementsContainer.appendChild(minTCoeffLabel);
+  controlElementsContainer.appendChild(document.createElement('br'));
+  controlElementsContainer.appendChild(minTCoeffRange);
+  controlElementsContainer.appendChild(document.createElement('br'));
+  // Add zoom slider
+  controlElementsContainer.appendChild(zoomSliderLabel);
+  controlElementsContainer.appendChild(zoomLevelDelta);
+  controlElementsContainer.appendChild(document.createElement('br'));
+  controlElementsContainer.appendChild(zoomSliderInput);
+  controlElementsContainer.appendChild(zoomLevelLabel);
 
   // Hide Button
   var hideButton = document.createElement('button');
@@ -171,7 +223,7 @@ ol.control.LabelDebug = function(opt_options) {
   // element.appendChild(document.createElement('br'));
   element.appendChild(labelfactorSlider);
   // element.appendChild(document.createElement('br'));
-  element.appendChild(minTFactorSlider);
+  element.appendChild(controlElementsContainer);
 
   Object.assign(element.style, {
     background: 'lightgrey',
