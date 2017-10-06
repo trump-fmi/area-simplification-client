@@ -159,6 +159,29 @@ ol.control.LabelDebug = function(opt_options) {
 
   window.minTCoeff = 1.0;
 
+  /* Zoom level ****************************************/
+
+  var zoomSliderInput = document.createElement('input');
+  Object.assign(minTCoeffRange.style, {
+    'width': '400px',
+  });
+  minTCoeffRange.setAttribute('type', 'range');
+  minTCoeffRange.setAttribute('id', 'zoomSliderInput');
+  minTCoeffRange.setAttribute('min', '0.0');
+  minTCoeffRange.setAttribute('max', '5');
+  minTCoeffRange.setAttribute('step', '0.1');
+  minTCoeffRange.defaultValue = '1.0';
+
+  var minTCoeffLabel = document.createElement('label');
+  minTCoeffLabel.id = 'minTCoeffLabel';
+  minTCoeffLabel.htmlFor = 'minTCoeffLabel';
+  minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t. (1.0)'))
+
+  ol.events.listen(minTCoeffRange, ol.events.EventType.CHANGE,
+    ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
+
+  /****************************************************/
+
   minTFactorSlider.appendChild(minTLabel);
   minTFactorSlider.appendChild(document.createElement('br'));
   minTFactorSlider.appendChild(minTFactorRange);
