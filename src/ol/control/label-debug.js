@@ -4,7 +4,7 @@ ol.control.LabelDebug = function(opt_options) {
   resolutionToMinT =  function resolutionToMinT(resolution) {
     var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
     if (zoom <= 3) {
-      return 0.01;
+      return 10000;
     } else {
       /* TODO: Find a better solaution than a global variable.
        * It must be possible to use the label source without the debug mode. */
