@@ -13,7 +13,6 @@ ol.control.LabelDebug = function(opt_options) {
   }
 
   var options = opt_options ? opt_options : {};
-
   var className = options.className !== undefined ? options.className : 'ol-label-debug';
 
   var defaultCSS = {
@@ -164,8 +163,8 @@ ol.control.LabelDebug = function(opt_options) {
     zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
   }
 
-  // Add onchange listener for zoomSliderInput
-  ol.events.listen(zoomSliderInput, ol.events.EventType.MOUSEMOVE, changeZoomLevel);
+  // Add on input listener for zoomSliderInput
+  ol.events.listen(zoomSliderInput, "input", changeZoomLevel);
   function changeZoomLevel() {
     document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + zoomSliderInput.value;
     options.map.getView().setZoom(zoomSliderInput.value);
@@ -174,7 +173,7 @@ ol.control.LabelDebug = function(opt_options) {
   // Add listener on view to detect changes on zoom level
   map.on("moveend", function(e) {
     // Get zoom level and round to 3 decimal places
-    var newZoomLevel =  map.getView().getZoom();
+    var newZoomLevel = map.getView().getZoom();
     newZoomLevel = Math.round(newZoomLevel * 1000) / 1000;
     document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + newZoomLevel;
     document.getElementById('zoomSliderInput').value = newZoomLevel;
@@ -244,6 +243,10 @@ ol.inherits(ol.control.LabelDebug, ol.control.Control);
 ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
   event.preventDefault();
   window.debugDrawCirc = document.getElementById('drawCirclesCheckbox').checked;
+  // Refresh layers after updating the draw circle settings
+  this.getMap().getLayers().forEach(function(layer) {
+    layer.getSource().refresh();
+  });
 };
 
 ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
