@@ -289,7 +289,9 @@ ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
   window.debugDrawCirc = document.getElementById('drawCirclesCheckbox').checked;
   // Refresh layers after updating the draw circle settings
   this.getMap().getLayers().forEach(function(layer) {
-    layer.getSource().refresh();
+    if (layer instanceof ol.layer.Label) {
+      layer.getSource().refresh();
+    }
   });
 };
 
