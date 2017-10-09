@@ -142,7 +142,6 @@ ol.control.LabelDebug = function(opt_options) {
   zoomSliderInput.setAttribute('max', 28.0);
   zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
   zoomSliderInput.defaultValue = options.map.getView().getZoom();
-  console.log("zoomSliderInput.defaultValue", zoomSliderInput.defaultValue);
 
   var zoomSliderLabel = document.createElement('label');
   zoomSliderLabel.id = 'zoomSliderLabel';
@@ -162,7 +161,6 @@ ol.control.LabelDebug = function(opt_options) {
   // Add onchange listener for zoomLevelDelta
   ol.events.listen(zoomLevelDelta, ol.events.EventType.CHANGE, zoomDeltaChange);
   function zoomDeltaChange() {
-    console.log(zoomLevelDelta.value);
     zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
   }
 
@@ -178,7 +176,6 @@ ol.control.LabelDebug = function(opt_options) {
     // Get zoom level and round to 3 decimal places
     var newZoomLevel =  map.getView().getZoom();
     newZoomLevel = Math.round(newZoomLevel * 1000) / 1000;
-    console.log('Zoom level',newZoomLevel);
     document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + newZoomLevel;
     document.getElementById('zoomSliderInput').value = newZoomLevel;
   });
