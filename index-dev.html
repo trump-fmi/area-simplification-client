@@ -21,14 +21,6 @@
       var tile_url = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles/{z}/{x}/{y}.png';
 
       var map = new ol.Map({
-        // interactions: ol.interaction.defaults({
-        //   mouseWheelZoom: true
-        // }),
-        // .extend([
-        //   new ol.interaction.MouseWheelZoom({
-        //     zoomDelta: 2
-        //   })
-        // ]),
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({
@@ -54,23 +46,6 @@
 
       // TODO: Label doesn't work correctly without the debug menu
       map.addControl(new ol.control.LabelDebug({map: map}));
-
-
-      // ol.MOUSEWHEELZOOM_MAXDELTA = 0.5;
-      // map.addControl(new ol.control.Zoom({delta: 0.5}));
-      // map.on("moveend", function(e) {
-      //   console.log('Zoom level', map.getView().getZoom());
-      // });
-
-      // TODO: Implement another solution to reload label data on zoom or extent changes
-      // On change event handler on view. Will be fired if center or resolution has been chnaged
-      // map.getView().on('propertychange', function(e) {
-      //   // keys: center, resolution
-      //   // console.log("propertychange: ", e.key, e);
-      //   var vector_layer = map.getLayers().getArray()[1];
-      //   vector_layer.getSource().clear();
-      //   vector_layer.getSource().refresh();
-      // });
 
       function demoModeStep() {
         var view = map.getView();
@@ -188,10 +163,6 @@
         },
         callback);
       }
-
-      // onClick('fly-to-bern', function() {
-      //   flyTo(getRandomCenterInGermany(), function() {});
-      // });
 
       function startFly() {
         flyTo(getRandomCenterInGermany(), function() {});
