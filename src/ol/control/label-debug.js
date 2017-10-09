@@ -67,7 +67,7 @@ ol.control.LabelDebug = function(opt_options) {
   labelfactorSlider.appendChild(document.createElement('br'));
   labelfactorSlider.appendChild(labelfactorRange);
 
-  ol.events.listen(labelfactorRange, ol.events.EventType.CHANGE,
+  ol.events.listen(labelfactorRange, "input",
     ol.control.LabelDebug.prototype.changeLabelFactor_.bind(this));
 
   window.labelFacCoeff = 1.1;
@@ -90,7 +90,7 @@ ol.control.LabelDebug = function(opt_options) {
   minTLabel.htmlFor = 'minTLabel';
   minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t. (9)'))
 
-  ol.events.listen(minTFactorRange, ol.events.EventType.CHANGE,
+  ol.events.listen(minTFactorRange, "input",
     ol.control.LabelDebug.prototype.changeMinTFactor_.bind(this));
 
   window.minTFac = 9;
@@ -109,7 +109,7 @@ ol.control.LabelDebug = function(opt_options) {
   minTCoeffLabel.htmlFor = 'minTCoeffLabel';
   minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t. (1.0)'))
 
-  ol.events.listen(minTCoeffRange, ol.events.EventType.CHANGE,
+  ol.events.listen(minTCoeffRange, "input",
     ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
 
   window.minTCoeff = 1.0;
@@ -158,7 +158,7 @@ ol.control.LabelDebug = function(opt_options) {
   zoomLevelLabel.appendChild(document.createTextNode("zoom: " + options.map.getView().getZoom()));
 
   // Add onchange listener for zoomLevelDelta
-  ol.events.listen(zoomLevelDelta, ol.events.EventType.CHANGE, zoomDeltaChange);
+  ol.events.listen(zoomLevelDelta, "input", zoomDeltaChange);
   function zoomDeltaChange() {
     zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
   }
@@ -243,12 +243,7 @@ ol.inherits(ol.control.LabelDebug, ol.control.Control);
 ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
   event.preventDefault();
   window.debugDrawCirc = document.getElementById('drawCirclesCheckbox').checked;
-  // Refresh layers after updating the draw circle settings
-  this.getMap().getLayers().forEach(function(layer) {
-    if (layer instanceof ol.layer.Label) {
-      layer.getSource().refresh();
-    }
-  });
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
@@ -256,6 +251,7 @@ ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
   var range = document.getElementById('labelfactorRange');
   document.getElementById('sliderLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
   window.labelFacCoeff = range.value;
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.changeMinTFactor_ = function(event) {
@@ -263,6 +259,7 @@ ol.control.LabelDebug.prototype.changeMinTFactor_ = function(event) {
   var range = document.getElementById('minTFactorRange');
   document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')';
   window.minTFac = range.value;
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.changeMinTCoeff_ = function(event) {
@@ -270,6 +267,7 @@ ol.control.LabelDebug.prototype.changeMinTCoeff_ = function(event) {
   var range = document.getElementById('minTCoeffRange');
   document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')';
   window.minTCoeff = range.value;
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
@@ -280,3 +278,13 @@ ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
 ol.control.LabelDebug.prototype.showDebugMode_ = function() {
   this.element.style.display = 'inline-block';
 };
+
+ol.control.LabelDebug.prototype.updateLabelLayer_ = function() {
+  // Refresh layers after updating the draw circle settings
+  this.getMap().getLayers().forEach(function(layer) {
+    if (layer instanceof ol.layer.Label) {
+      layer.getSource().refresh();
+    }
+  });
+  console.log("updateLabelLayer");
+}
