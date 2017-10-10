@@ -32,14 +32,7 @@ ol.control.defaults = function(opt_options) {
     controls.push(new ol.control.Attribution(options.attributionOptions));
   }
 
-  // var labelDebugControl = options.labelDebug !== undefined ?
-  //   options.labelDebug : true;
-  // if (labelDebugControl) {
-  //   controls.push(new ol.control.LabelDebug(options.labelDebugOptions));
-  // }
-
   return controls;
-
 };
 
 ol.control.LabelDebug = function(opt_options) {
