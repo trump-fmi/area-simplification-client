@@ -1,3 +1,15 @@
+ol.layer.Label = function(opt_options) {
+
+  var options = opt_options || {};
+
+  if(!options.style) {
+    options.style = ol.style.Label
+  }
+
+  ol.layer.Vector.call(this, options);
+};
+ol.inherits(ol.layer.Label, ol.layer.Vector);
+
 /**
  * Set of controls included in maps by default. Unless configured otherwise,
  * this returns a collection containing an instance of each of the following
@@ -257,36 +269,28 @@ ol.control.LayerMenu = function(opt_options) {
   var options = opt_options || {};
 
   this.state = {
-    open: false
+    open: false,
+    layers: []
   };
 
-  this.tiles = options.tiles;
-  this.labels = options.labels;
-
-  var btn = document.createElement('button');
-  btn.innerHTML = '&#9776;';
+  this.btn = document.createElement('button');
+  this.btn.innerHTML = '&#9776;';
 
   var this_ = this;
 
-  // btn.addEventListener('click', this.renderLayerMenu, false);
-  // btn.addEventListener('touchstart', this.renderLayerMenu, false);
+  ol.events.listen(this.btn, ol.events.EventType.CLICK, this.toggleMenu, this);
 
-  ol.events.listen(btn, ol.events.EventType.CLICK, this.toggleMenu, this);
+  this.container = document.createElement('div');
+  this.container.className = 'ol-layer-menu ol-control ol-collapsed';
 
-  var element = document.createElement('div');
-  element.className = 'layer-menu-toggle ol-unselectable ol-control';
-  element.appendChild(btn);
+  this.menu = document.createElement('div');
+  this.menu.className = 'layer-menu';
 
-  var container = document.createElement('div');
-  container.className = 'layer-menu-container';
-  container.appendChild(element);
-
-  var menu = document.createElement('div');
-  menu.className = 'layer-menu';
-  container.appendChild(menu);
+  this.container.appendChild(this.menu);
+  this.container.appendChild(this.btn);
 
   ol.control.Control.call(this, {
-    element: container,
+    element: this.container,
     target: options.target
   });
 }
@@ -303,20 +307,63 @@ ol.control.LayerMenu.prototype.toggleMenu = function(){
   this.state.open = !this.state.open;
 }
 
+ol.control.LayerMenu.prototype.activateLayerLabel = function(event){
+
+  if(event.target.value == undefined){
+    return
+  }
+
+  selectedOpt = event.target.value;
+  checked = event.target.checked;
+
+  this.state.layers.getArray()
+    .filter(layer => layer instanceof ol.layer.Label)
+    .forEach(
+      layer => {
+        const title = layer.get('title');
+        if(title == selectedOpt){
+          layer.setVisible(true);
+        }else{
+          layer.setVisible(false);
+        }
+      }
+    )
+}
+
+ol.control.LayerMenu.prototype.activateLayer = function(event){
+
+  if(event.target.value == undefined){
+    return
+  }
+
+  selectedOpt = event.target.value;
+  checked = event.target.checked;
+
+  this.state.layers.getArray()
+    .filter(layer => !(layer instanceof ol.layer.Label))
+    .forEach(
+      layer => {
+        const title = layer.get('title');
+        if(title == selectedOpt){
+          layer.setVisible(true);
+        }else{
+          layer.setVisible(false);
+        }
+      }
+    )
+}
+
 ol.control.LayerMenu.prototype.openMenu = function(){
 
   var map = this.getMap();
   var layers = map.getLayers();
 
-  // this.element.style.display = 'none';
+  this.btn.innerHTML = 'X';
 
-  var toggle = this.element.querySelector('.layer-menu-toggle button');
-  toggle.innerHTML = 'X';
+  this.container.classList.remove('ol-collapsed');
 
-  var menu = this.element.querySelector('.layer-menu');
-  menu.style.display = 'block';
 
-  if(menu.innerHTML == ''){
+  if(this.menu.innerHTML == ''){
     this.renderMenuContents();
   };
 
@@ -327,82 +374,88 @@ ol.control.LayerMenu.prototype.closeMenu = function(){
   var map = this.getMap();
   var layers = map.getLayers();
 
-  // this.element.style.display = 'none';
+  this.container.classList.add('ol-collapsed');
 
-  var toggle = this.element.querySelector('.layer-menu-toggle button');
-  toggle.innerHTML = '&#9776;';
-
-  var menu = this.element.querySelector('.layer-menu');
-  menu.style.display = 'none';
+  this.btn.innerHTML = '&#9776;';
 
 }
 
 ol.control.LayerMenu.prototype.renderMenuContents = function(){
-  // var map = this.getMap();
-  // var layers = map.getLayers()
-
-  var menu = this.element.querySelector('.layer-menu');
 
   var tilesContainer = document.createElement('div');
-  tilesContainer.innerHTML = '<b>TILES:</b>';
+  tilesContainer.innerHTML = '<h5>Tiles</h5>';
+  var tileList = document.createElement('ul');
 
-  // render available Tile endpoints
-  this.tiles.map(function(e,idx){
+  this.state.layers = map.getLayers();
+
+  this.state.layers.forEach(function(layer, index, array) {
+
+    if(layer instanceof ol.layer.Label || layer.get('title') == undefined){
+      return;
+    }
+
+    var title = layer.get('title');
+    var visible = layer.getVisible();
+
+    var li = document.createElement('li')
     var label = document.createElement('label')
     var element = document.createElement('input');
     element.setAttribute('type', 'radio');
     element.setAttribute('name', 'tiles');
-    element.setAttribute('value', 'TEst');
+    element.setAttribute('value', title);
+
+    element.checked = visible;
+
     label.appendChild(element);
     var name = document.createElement('span');
-    name.innerHTML = e;
+    name.innerHTML = title;
     label.appendChild(name);
-    tilesContainer.appendChild(label);
+    li.appendChild(label);
+    tileList.appendChild(li);
+
   })
 
-  menu.appendChild(tilesContainer);
+  tilesContainer.appendChild(tileList);
+
+  this.menu.appendChild(tilesContainer);
+  ol.events.listen(tilesContainer, ol.events.EventType.CLICK, this.activateLayer, this);
 
   var labelContainer = document.createElement('div');
-  labelContainer.innerHTML = '<b>LABELS:</b>';
+  labelContainer.innerHTML = '<h5>Labels</h5>';
+  var labelList = document.createElement('ul');
 
   // render available Tile endpoints
-  this.labels.map(function(e,idx){
-    var label = document.createElement('label')
+  this.state.layers.forEach(function(layer,idx){
+
+    if(!(layer instanceof ol.layer.Label) || layer.get('title') == undefined){
+      return;
+    }
+
+    var title = layer.get('title');
+    var visible = layer.getVisible();
+    // console.log(title, visible);
+    var li = document.createElement('li');
+    var label = document.createElement('label');
     var element = document.createElement('input');
     element.setAttribute('type', 'radio');
     element.setAttribute('name', 'labels');
-    element.setAttribute('value', 'TEst');
+    element.setAttribute('value', title);
+
+    element.checked = visible;
+
     label.appendChild(element);
     var name = document.createElement('span');
-    name.innerHTML = e;
+    name.innerHTML = title;
     label.appendChild(name);
-    labelContainer.appendChild(label);
-  })
+    li.appendChild(label);
+    labelList.appendChild(li);
+  });
 
-  menu.appendChild(labelContainer);
+  labelContainer.appendChild(labelList);
+
+  this.menu.appendChild(labelContainer);
+  ol.events.listen(labelContainer, ol.events.EventType.CLICK, this.activateLayerLabel, this);
 }
-
-
-ol.control.LayerMenu.prototype.dummyFunction = function(){
-
-  var map = this.getMap();
-  var view = map.getView();
-  var layers = map.getLayers();
-
-  
-}
-
-ol.layer.Label = function(opt_options) {
-
-  var options = opt_options || {};
-
-  if(!options.style) {
-    options.style = ol.style.Label
-  }
-
-  ol.layer.Vector.call(this, options);
-};
-ol.inherits(ol.layer.Label, ol.layer.Vector);
 
 ol.source.Label = function(org_options) {
 

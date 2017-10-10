@@ -9,26 +9,6 @@
     <script src="https://openlayers.org/en/v4.1.1/build/ol-debug.js"></script>
     <script src="dist/ol-labels.js"></script>
     <style>
-      .layer-menu-toggle {
-        top: .5em;
-        right: .5em;
-      }
-      .ol-touch .layer-menu-toggle {
-        top: 80px;
-      }
-
-      .layer-menu-container{
-        position: absolute;
-        right:0;
-        top:0;
-        width:400px;
-        height:200px;
-      }
-
-      .layer-menu {
-        background: grey;
-        display:none;
-      }
 
     </style>
   </head>
@@ -39,29 +19,51 @@
       var labelCollectionUrl = "http://seeigel.informatik.uni-stuttgart.de:8080/labelCollections";
 
       var tile_url = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles/{z}/{x}/{y}.png';
+      var tile_url_2 = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles2/{z}/{x}/{y}.png';
+      var bike_url = 'http://b.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png';
 
       var map = new ol.Map({
         controls: ol.control.defaults({
           attributionOptions: /** @type {olx.control.AttributionOptions} */ ({
             collapsible: true
-          }),
-          layerMenuOptions: {
-            tiles: ['Radwege', 'Autokarte'],
-            labels: ['a','b','c']
-          }
+          })
         }),
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({
               url: tile_url
-            })
+            }),
+            title: 'Seeigel'
+          }),
+          new ol.layer.Tile({
+            source: new ol.source.OSM({
+              url: tile_url_2
+            }),
+            title: 'Seeigel 2',
+            visible: false
+          }),
+          new ol.layer.Tile({
+            source: new ol.source.OSM({
+              url: bike_url
+            }),
+            title: 'Fahrrad',
+            visible: false
           }),
           new ol.layer.Label({
             source: new ol.source.Label({
               url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/citynames',
-              labelClasses: ['city',],
             }),
-            style: null
+            style: null,
+            title: 'City',
+            visible: false
+          }),
+          new ol.layer.Label({
+            source: new ol.source.Label({
+              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icons',
+            }),
+            style: null,
+            title: 'Icons',
+            visible: false
           })
         ],
         target: 'map',
