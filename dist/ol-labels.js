@@ -32,14 +32,7 @@ ol.control.defaults = function(opt_options) {
     controls.push(new ol.control.Attribution(options.attributionOptions));
   }
 
-  var labelDebugControl = options.labelDebug !== undefined ?
-    options.labelDebug : true;
-  if (labelDebugControl) {
-    controls.push(new ol.control.LabelDebug(options.labelDebugOptions));
-  }
-
   return controls;
-
 };
 
 ol.control.LabelDebug = function(opt_options) {
@@ -48,7 +41,7 @@ ol.control.LabelDebug = function(opt_options) {
   resolutionToMinT =  function resolutionToMinT(resolution) {
     var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
     if (zoom <= 3) {
-      return 0.01;
+      return 10000;
     } else {
       /* TODO: Find a better solaution than a global variable.
        * It must be possible to use the label source without the debug mode. */
@@ -57,7 +50,6 @@ ol.control.LabelDebug = function(opt_options) {
   }
 
   var options = opt_options ? opt_options : {};
-
   var className = options.className !== undefined ? options.className : 'ol-label-debug';
 
   var defaultCSS = {
@@ -112,7 +104,7 @@ ol.control.LabelDebug = function(opt_options) {
   labelfactorSlider.appendChild(document.createElement('br'));
   labelfactorSlider.appendChild(labelfactorRange);
 
-  ol.events.listen(labelfactorRange, ol.events.EventType.CHANGE,
+  ol.events.listen(labelfactorRange, "input",
     ol.control.LabelDebug.prototype.changeLabelFactor_.bind(this));
 
   window.labelFacCoeff = 1.1;
@@ -127,7 +119,7 @@ ol.control.LabelDebug = function(opt_options) {
   minTFactorRange.setAttribute('id', 'minTFactorRange');
   minTFactorRange.setAttribute('min', '0.0');
   minTFactorRange.setAttribute('max', '20');
-  minTFactorRange.setAttribute('step', '0.5');
+  minTFactorRange.setAttribute('step', '0.1');
   minTFactorRange.defaultValue = '9';
 
   var minTLabel = document.createElement('label');
@@ -135,7 +127,7 @@ ol.control.LabelDebug = function(opt_options) {
   minTLabel.htmlFor = 'minTLabel';
   minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t. (9)'))
 
-  ol.events.listen(minTFactorRange, ol.events.EventType.CHANGE,
+  ol.events.listen(minTFactorRange, "input",
     ol.control.LabelDebug.prototype.changeMinTFactor_.bind(this));
 
   window.minTFac = 9;
@@ -154,10 +146,77 @@ ol.control.LabelDebug = function(opt_options) {
   minTCoeffLabel.htmlFor = 'minTCoeffLabel';
   minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t. (1.0)'))
 
-  ol.events.listen(minTCoeffRange, ol.events.EventType.CHANGE,
+  ol.events.listen(minTCoeffRange, "input",
     ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
 
   window.minTCoeff = 1.0;
+
+  /* Zoom level ****************************************/
+  var zoomSliderContainer = document.createElement('div');
+  Object.assign(zoomSliderContainer.style, defaultCSS);
+
+  var zoomLevelDelta = document.createElement('input');
+  Object.assign(zoomLevelDelta.style, {
+    'margin-left': '10px',
+    'width': '50px'
+  });
+  zoomLevelDelta.setAttribute('type', 'number');
+  zoomLevelDelta.setAttribute('id', 'zoomLevelDelta');
+  zoomLevelDelta.setAttribute('min', '0.0');
+  zoomLevelDelta.setAttribute('max', '10.0');
+  zoomLevelDelta.setAttribute('step', '0.1');
+  zoomLevelDelta.setAttribute('value', '1.0');
+
+  var zoomSliderInput = document.createElement('input');
+  Object.assign(zoomSliderInput.style, {
+    'width': '600px',
+    'margin-top': '10px'
+  });
+  zoomSliderInput.setAttribute('type', 'range');
+  zoomSliderInput.setAttribute('id', 'zoomSliderInput');
+  zoomSliderInput.setAttribute('min', 0.0);
+  zoomSliderInput.setAttribute('max', 28.0);
+  zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
+  zoomSliderInput.defaultValue = options.map.getView().getZoom();
+
+  var zoomSliderLabel = document.createElement('label');
+  zoomSliderLabel.id = 'zoomSliderLabel';
+  zoomSliderLabel.htmlFor = 'zoomSliderLabel';
+  zoomSliderLabel.appendChild(document.createTextNode('Use the slider to change the zoom level with the defined zoom delta:'))
+
+  var zoomLevelLabel = document.createElement('label');
+  Object.assign(zoomLevelLabel.style, {
+    'margin-left': '10px',
+    'position': 'relative',
+    'top': '-6px'
+  });
+  zoomLevelLabel.id = 'zoomLevelLabel';
+  zoomLevelLabel.htmlFor = 'zoomLevelLabel';
+  zoomLevelLabel.appendChild(document.createTextNode("zoom: " + options.map.getView().getZoom()));
+
+  // Add onchange listener for zoomLevelDelta
+  ol.events.listen(zoomLevelDelta, "input", zoomDeltaChange);
+  function zoomDeltaChange() {
+    zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
+  }
+
+  // Add on input listener for zoomSliderInput
+  ol.events.listen(zoomSliderInput, "input", changeZoomLevel);
+  function changeZoomLevel() {
+    document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + zoomSliderInput.value;
+    options.map.getView().setZoom(zoomSliderInput.value);
+  }
+
+  // Add listener on view to detect changes on zoom level
+  map.on("moveend", function(e) {
+    // Get zoom level and round to 3 decimal places
+    var newZoomLevel = map.getView().getZoom();
+    newZoomLevel = Math.round(newZoomLevel * 1000) / 1000;
+    document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + newZoomLevel;
+    document.getElementById('zoomSliderInput').value = newZoomLevel;
+  });
+
+  /****************************************************/
 
   minTFactorSlider.appendChild(minTLabel);
   minTFactorSlider.appendChild(document.createElement('br'));
@@ -166,6 +225,13 @@ ol.control.LabelDebug = function(opt_options) {
   minTFactorSlider.appendChild(minTCoeffLabel);
   minTFactorSlider.appendChild(document.createElement('br'));
   minTFactorSlider.appendChild(minTCoeffRange);
+  minTFactorSlider.appendChild(document.createElement('br'));
+  // Add zoom slider
+  minTFactorSlider.appendChild(zoomSliderLabel);
+  minTFactorSlider.appendChild(zoomLevelDelta);
+  minTFactorSlider.appendChild(document.createElement('br'));
+  minTFactorSlider.appendChild(zoomSliderInput);
+  minTFactorSlider.appendChild(zoomLevelLabel);
 
   // Hide Button
   var hideButton = document.createElement('button');
@@ -214,6 +280,7 @@ ol.inherits(ol.control.LabelDebug, ol.control.Control);
 ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
   event.preventDefault();
   window.debugDrawCirc = document.getElementById('drawCirclesCheckbox').checked;
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
@@ -221,6 +288,7 @@ ol.control.LabelDebug.prototype.changeLabelFactor_ = function(event) {
   var range = document.getElementById('labelfactorRange');
   document.getElementById('sliderLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
   window.labelFacCoeff = range.value;
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.changeMinTFactor_ = function(event) {
@@ -228,6 +296,7 @@ ol.control.LabelDebug.prototype.changeMinTFactor_ = function(event) {
   var range = document.getElementById('minTFactorRange');
   document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')';
   window.minTFac = range.value;
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.changeMinTCoeff_ = function(event) {
@@ -235,6 +304,7 @@ ol.control.LabelDebug.prototype.changeMinTCoeff_ = function(event) {
   var range = document.getElementById('minTCoeffRange');
   document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')';
   window.minTCoeff = range.value;
+  this.updateLabelLayer_();
 };
 
 ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
@@ -245,6 +315,15 @@ ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
 ol.control.LabelDebug.prototype.showDebugMode_ = function() {
   this.element.style.display = 'inline-block';
 };
+
+ol.control.LabelDebug.prototype.updateLabelLayer_ = function() {
+  // Refresh layers after updating the draw circle settings
+  this.getMap().getLayers().forEach(function(layer) {
+    if (layer instanceof ol.layer.Label) {
+      layer.getSource().refresh();
+    }
+  });
+}
 
 ol.layer.Label = function(opt_options) {
 
@@ -359,7 +438,7 @@ ol.source.Label.prototype.featureLoader = function(extent, resolution, projectio
 function resolutionToMinT(resolution) {
   var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
   if (zoom <= 3) {
-    return 0.01;
+    return 10000;
   } else {
     return Math.pow(2, 9 - (zoom - 1));
   }
@@ -414,6 +493,7 @@ ol.style.Label = function(feature, resolution) {
   }
 
   // Calculate the label size by the given value label factor
+  // TODO: Remove global variable here
   var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
   var fontConfig = calculatedlabelFactor + "px " + labelFontType;
 

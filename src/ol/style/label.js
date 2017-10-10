@@ -23,6 +23,7 @@ ol.style.Label = function(feature, resolution) {
   }
 
   // Calculate the label size by the given value label factor
+  // TODO: Remove global variable here
   var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
   var fontConfig = calculatedlabelFactor + "px " + labelFontType;
 
