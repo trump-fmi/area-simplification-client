@@ -119,7 +119,7 @@ ol.control.LabelDebug = function(opt_options) {
   minTFactorRange.setAttribute('id', 'minTFactorRange');
   minTFactorRange.setAttribute('min', '0.0');
   minTFactorRange.setAttribute('max', '20');
-  minTFactorRange.setAttribute('step', '0.5');
+  minTFactorRange.setAttribute('step', '0.1');
   minTFactorRange.defaultValue = '9';
 
   var minTLabel = document.createElement('label');
@@ -323,7 +323,6 @@ ol.control.LabelDebug.prototype.updateLabelLayer_ = function() {
       layer.getSource().refresh();
     }
   });
-  console.log("updateLabelLayer");
 }
 
 ol.layer.Label = function(opt_options) {
