@@ -2,3 +2,16 @@ html, body {
   font-family: sans-serif;
   font-size: 11pt;
 }
+
+.ol-label-debug {
+  bottom: 0.5em;
+  left: 0.5em;
+}
+
+.ol-label-debug .menu-toggle-button {
+  float: right;
+}
+
+.ol-label-debug .demo-mode-button {
+  display: inline-block;
+}
