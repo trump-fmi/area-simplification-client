@@ -8,7 +8,6 @@ ol.style.Label = function(feature, resolution) {
   // Get needed fields from feature object
   var labelText = feature.get("name");
   var t = feature.get("t");
-  var labelFactor = feature.get("lbl_fac");
 
   var labelTextColor = '#fff';
   var labelBorderColor = '#333';
@@ -17,15 +16,13 @@ ol.style.Label = function(feature, resolution) {
 
   var min_t = resolutionToMinT(resolution);
 
-  if(min_t > t){
-    // console.log(labelText, window.min_t, t);
+  if(min_t > t) {
     return null;
   }
 
   // Calculate the label size by the given value label factor
-  // TODO: Remove global variable here
-  var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
-  var fontConfig = calculatedlabelFactor + "px " + labelFontType;
+  var calculatedLabelFactor = calculateLabelFactor(feature);
+  var fontConfig = calculatedLabelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n
   if (labelText.indexOf("\\") >= 0) {
@@ -33,7 +30,7 @@ ol.style.Label = function(feature, resolution) {
   }
 
   var maxLabelLength = getMaxLabelLength(labelText);
-  var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
+  var circleRadius = calculatedLabelFactor * maxLabelLength * 0.26;
 
   this.image = new ol.style.Circle({
     radius: circleRadius,
@@ -72,6 +69,7 @@ ol.style.Label = function(feature, resolution) {
     return null;
   }
 
+  // TODO: Remove global variable here
   var style = new ol.style.Style({
     image: window.debugDrawCirc == true ? this.image : null,
     text: this.text
@@ -83,13 +81,17 @@ ol.style.Label = function(feature, resolution) {
   // ol.style.Style.call(this, this);
 };
 
+function calculateLabelFactor(feature) {
+  var labelFactor = feature.get("lbl_fac");
+  var calculatedLabelFactor = parseInt(labelFactor) * 1.1;
+  return calculatedLabelFactor;
+}
 
 /**
  * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
  * @param {string} labelText - text of the label
  */
 function getMaxLabelLength(labelText) {
-
   var lines = labelText.split("\n");
   var maxLength = 0;
   var arrayLength = lines.length;
