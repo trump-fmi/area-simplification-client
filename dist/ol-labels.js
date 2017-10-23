@@ -709,9 +709,26 @@ ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection
 
   var loadedExtentsRtree = this.loadedExtentsRtree_;
   var extentsToLoad = this.strategy_(extent, resolution);
+
+
+  var length = Math.log(resolution) * Math.LOG10E + 1 | 0;
+  var normalizer = Math.pow(10, length - 1);
+  var resolution_ = Math.round(resolution/normalizer)*normalizer;
+
+  console.log("original res: ", resolution," rounded res: ", resolution_, " normalizer: ", normalizer);
+
+  // var length = Math.log(extent) * Math.LOG10E + 1 | 0;
+  var normalizer_array = extent
+    .map(val => Math.log(Math.abs(val)) * Math.LOG10E + 1 | 0)
+    .map(val => Math.pow(10, val - 1));
+
+  console.log("original extent: ", extent, " normalizer(extent): ", normalizer_array);
+
   var i, ii;
   for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
-    var extentToLoad = extentsToLoad[i];
+    var extentToLoad = extentsToLoad[i]
+    .map((extent,idx) => Math.round(extent/normalizer_array[idx]) * normalizer_array[idx]);
+    console.log(extentToLoad.slice());
     var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
         /**
          * @param {{extent: ol.Extent}} object Object.
@@ -719,11 +736,11 @@ ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection
          */
         function(object) {
           // console.log(object,extentToLoad);
-          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution == object.resolution;
+          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution_ == object.resolution;
         });
     if (!alreadyLoaded) {
       this.loader_.call(this, extentToLoad, resolution, projection);
-      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution});
+      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution_});
     }
   }
 }

@@ -61,7 +61,7 @@ ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection
   var i, ii;
   for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
     var extentToLoad = extentsToLoad[i]
-    // .map((extent,idx) => Math.round(extent/normalizer_array[idx]) * normalizer_array[idx]);
+    .map((extent,idx) => Math.round(extent/normalizer_array[idx]) * normalizer_array[idx]);
     console.log(extentToLoad.slice());
     var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
         /**
@@ -70,11 +70,11 @@ ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection
          */
         function(object) {
           // console.log(object,extentToLoad);
-          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution == object.resolution;
+          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution_ == object.resolution;
         });
     if (!alreadyLoaded) {
       this.loader_.call(this, extentToLoad, resolution, projection);
-      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution});
+      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution_});
     }
   }
 }
