@@ -1,3 +1,24 @@
+ol.layer.Label = function(opt_options) {
+
+  var options = opt_options || {};
+
+  if(!options.style) {
+    options.style = ol.style.Label
+  }
+
+  // If no preffered options for update while animating or interacting are given, set them as default to true
+  if (options.updateWhileAnimating === undefined) {
+    options.updateWhileAnimating = true;
+  }
+  if (options.updateWhileInteracting === undefined) {
+    options.updateWhileInteracting = true;
+  }
+
+
+  ol.layer.Vector.call(this, options);
+};
+ol.inherits(ol.layer.Label, ol.layer.Vector);
+
 /**
  * Set of controls included in maps by default. Unless configured otherwise,
  * this returns a collection containing an instance of each of the following
@@ -37,18 +58,6 @@ ol.control.defaults = function(opt_options) {
 
 ol.control.LabelDebug = function(opt_options) {
 
-  // Override function resolutionToMinT if debug mode is active
-  resolutionToMinT =  function resolutionToMinT(resolution) {
-    var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
-    if (zoom <= 3) {
-      return 10000;
-    } else {
-      /* TODO: Find a better solaution than a global variable.
-       * It must be possible to use the label source without the debug mode. */
-      return window.minTCoeff * Math.pow(2, window.minTFac - (zoom - 1));
-    }
-  }
-
   var options = opt_options || {};
   var className = options.className !== undefined ? options.className : 'ol-label-debug';
 
@@ -79,9 +88,8 @@ ol.control.LabelDebug = function(opt_options) {
     element: this.container,
     target: options.target
   });
-
-  window.showDebugMode = ol.control.LabelDebug.prototype.showDebugMode_.bind(this);
 };
+// Inherit from ol.control.Control class
 ol.inherits(ol.control.LabelDebug, ol.control.Control);
 
 ol.control.LabelDebug.prototype.toggleMenu = function() {
@@ -122,30 +130,22 @@ ol.control.LabelDebug.prototype.closeMenu = function(){
 }
 
 ol.control.LabelDebug.prototype.renderMenuContents = function() {
-  console.log("renderMenuContents");
   // var menuContent = document.createElement("div");
   // menuContent.innerHTML = "Test<br>Test 12344";
 
   var map = this.getMap();
 
-  var defaultCSS = {
-    'padding': '15px 10px 0px',
-  }
-
   var rangeCSS = {
-    'width': '200px',
+    'width': '300px',
   }
 
   var rowContainerTemplate = document.createElement('div');
   Object.assign(rowContainerTemplate.style, {
-    'padding': '10px 10px 0px',
+    'margin': '10px',
   });
 
   // Checkbox for enabling the drawing of the circles
-  var drawCirclesCheckboxContainer = document.createElement('div');
-  Object.assign(drawCirclesCheckboxContainer.style, {
-    'padding': '10px 10px 0px',
-  });
+  var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
 
   var drawCirclesCheckbox = document.createElement('input');
   drawCirclesCheckbox.setAttribute('type', 'checkbox');
@@ -164,8 +164,7 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   window.debugDrawCirc = false;
 
   // Slider for coefficient of labelfactor
-  var labelfactorSliderContainer = document.createElement('div');
-  Object.assign(labelfactorSliderContainer.style, defaultCSS);
+  var labelfactorSliderContainer = rowContainerTemplate.cloneNode();
 
   var labelfactorRange = document.createElement('input');
   Object.assign(labelfactorRange.style, rangeCSS);
@@ -191,8 +190,7 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   window.labelFacCoeff = 1.1;
 
   // Slider for controlling the calculation of the min_t value
-  var minTFactorSliderContainer = document.createElement('div');
-  Object.assign(minTFactorSliderContainer.style, defaultCSS);
+  var minTFactorSliderContainer = rowContainerTemplate.cloneNode();
 
   var minTFactorRange = document.createElement('input');
   Object.assign(minTFactorRange.style, rangeCSS);
@@ -211,7 +209,15 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   ol.events.listen(minTFactorRange, "input",
     ol.control.LabelDebug.prototype.changeMinTFactor_.bind(this));
 
+  minTFactorSliderContainer.appendChild(minTLabel);
+  minTFactorSliderContainer.appendChild(document.createElement('br'));
+  minTFactorSliderContainer.appendChild(minTFactorRange);
+
   window.minTFac = 9;
+
+  // TODO new
+
+  var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
 
   var minTCoeffRange = document.createElement('input');
   Object.assign(minTCoeffRange.style, rangeCSS);
@@ -230,11 +236,14 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   ol.events.listen(minTCoeffRange, "input",
     ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
 
+  minTCoeffRangeContainer.appendChild(minTCoeffLabel);
+  minTCoeffRangeContainer.appendChild(document.createElement('br'));
+  minTCoeffRangeContainer.appendChild(minTCoeffRange);
+
   window.minTCoeff = 1.0;
 
-  /* Zoom level ****************************************/
-  var zoomSliderContainer = document.createElement('div');
-  Object.assign(zoomSliderContainer.style, defaultCSS);
+  /* Create slider control for zoom level */
+  var zoomSliderContainer = rowContainerTemplate.cloneNode();
 
   var zoomLevelDelta = document.createElement('input');
   Object.assign(zoomLevelDelta.style, {
@@ -297,22 +306,12 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
     document.getElementById('zoomSliderInput').value = newZoomLevel;
   });
 
-  /****************************************************/
-
-  minTFactorSliderContainer.appendChild(minTLabel);
-  minTFactorSliderContainer.appendChild(document.createElement('br'));
-  minTFactorSliderContainer.appendChild(minTFactorRange);
-  minTFactorSliderContainer.appendChild(document.createElement('br'));
-  minTFactorSliderContainer.appendChild(minTCoeffLabel);
-  minTFactorSliderContainer.appendChild(document.createElement('br'));
-  minTFactorSliderContainer.appendChild(minTCoeffRange);
-  minTFactorSliderContainer.appendChild(document.createElement('br'));
   // Add zoom slider
-  minTFactorSliderContainer.appendChild(zoomSliderLabel);
-  minTFactorSliderContainer.appendChild(zoomLevelDelta);
-  minTFactorSliderContainer.appendChild(document.createElement('br'));
-  minTFactorSliderContainer.appendChild(zoomSliderInput);
-  minTFactorSliderContainer.appendChild(zoomLevelLabel);
+  zoomSliderContainer.appendChild(zoomSliderLabel);
+  zoomSliderContainer.appendChild(zoomLevelDelta);
+  zoomSliderContainer.appendChild(document.createElement('br'));
+  zoomSliderContainer.appendChild(zoomSliderInput);
+  zoomSliderContainer.appendChild(zoomLevelLabel);
 
 
   var demoModeControlContainer = rowContainerTemplate.cloneNode();
@@ -342,49 +341,21 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   demoModeControlContainer.appendChild(demoModeControlLabel);
   demoModeControlContainer.appendChild(demoModeControlBtn);
 
-
-  // Hide Button
-  var hideButton = document.createElement('button');
-  Object.assign(hideButton.style, {
-    'padding': '15px 32px',
-    'margin': '10px 10px',
-    'width': 'auto',
-    'float': 'right',
-    'line-height': '0.0',
-  });
-  var hideButtonText = document.createTextNode('Hide');
-  hideButton.appendChild(hideButtonText);
-  ol.events.listen(hideButton, ol.events.EventType.CLICK,
-    ol.control.LabelDebug.prototype.hideDebugMode_.bind(this));
-
-  // the parent div
-  // var cssClasses = className + ' ' + ol.css.CLASS_UNSELECTABLE + ' ' + ol.css.CLASS_CONTROL;
+  // Create container div for all debug menu entries
   var menuContent = document.createElement('div');
-  var br = document.createElement('br');
-  // menuContent.className = cssClasses;
-  menuContent.appendChild(hideButton);
   menuContent.appendChild(drawCirclesCheckboxContainer);
-  // element.appendChild(document.createElement('br'));
   menuContent.appendChild(labelfactorSliderContainer);
-  // element.appendChild(document.createElement('br'));
   menuContent.appendChild(minTFactorSliderContainer);
+  menuContent.appendChild(minTCoeffRangeContainer);
+  menuContent.appendChild(zoomSliderContainer);
   menuContent.appendChild(demoModeControlContainer);
 
-
-  Object.assign(menuContent.style, {
-    // background: 'lightgrey',
-    // left: '20px',
-    // bottom: '20px',
-    // width: '800px',
-    // display: 'none',
-  });
-
-  // ol.control.Control.call(this, {
-  //   element: element,
-  //   target: options.target
-  // });
-
   this.menu.appendChild(menuContent);
+
+  // Override function resolutionToMinT if debug mode is active
+  resolutionToMinT = this.resolutionToMinT;
+  // Override function calculateLabelFactor if debug mode is active
+  calculateLabelFactor = this.calculateLabelFactor;
 }
 
 ol.control.LabelDebug.prototype.toggleDrawCircles_ = function(event) {
@@ -417,15 +388,6 @@ ol.control.LabelDebug.prototype.changeMinTCoeff_ = function(event) {
   this.updateLabelLayer_();
 };
 
-ol.control.LabelDebug.prototype.hideDebugMode_ = function(event) {
-  event.preventDefault();
-  this.element.style.display = 'none';
-};
-
-ol.control.LabelDebug.prototype.showDebugMode_ = function() {
-  this.element.style.display = 'inline-block';
-};
-
 ol.control.LabelDebug.prototype.updateLabelLayer_ = function() {
   // Refresh layers after updating the draw circle settings
   this.getMap().getLayers().forEach(function(layer) {
@@ -445,26 +407,23 @@ ol.control.LabelDebug.prototype.stopDemoMode_ = function() {
   view.setResolution(view.getResolution());
 }
 
-ol.layer.Label = function(opt_options) {
-
-  var options = opt_options || {};
-
-  if(!options.style) {
-    options.style = ol.style.Label
+ol.control.LabelDebug.prototype.resolutionToMinT = function (resolution) {
+  var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
+  if (zoom <= 3) {
+    return 10000;
+  } else {
+    /* TODO: Find a better solaution than a global variable.
+     * It must be possible to use the label source without the debug mode. */
+    var calculatedMinT = window.minTCoeff * Math.pow(2, window.minTFac - (zoom - 1));
+    return calculatedMinT;
   }
+}
 
-  // If no preffered options for update while animating or interacting are given, set them as default to true
-  if (options.updateWhileAnimating === undefined) {
-    options.updateWhileAnimating = true;
-  }
-  if (options.updateWhileInteracting === undefined) {
-    options.updateWhileInteracting = true;
-  }
-
-
-  ol.layer.Vector.call(this, options);
-};
-ol.inherits(ol.layer.Label, ol.layer.Vector);
+ol.control.LabelDebug.prototype.calculateLabelFactor = function (feature) {
+  var labelFactor = feature.get("lbl_fac");
+  var calculatedLabelFactor = parseInt(labelFactor) * window.labelFacCoeff;
+  return calculatedLabelFactor;
+}
 
 ol.source.Label = function(org_options) {
 
@@ -578,7 +537,7 @@ function resolutionToMinT(resolution) {
  * Builds a query in the format of:
  *    http://<label-server>/label/<label-type>?x_min=8&x_max=9&y_min=53&y_max=53.06&t_min=0.001
  */
-ol.source.Label.prototype.buildQuery = function(params){
+ol.source.Label.prototype.buildQuery = function(params) {
   if (typeof params === 'undefined' || typeof params !== 'object') {
         params = {};
     }
@@ -607,7 +566,6 @@ ol.style.Label = function(feature, resolution) {
   // Get needed fields from feature object
   var labelText = feature.get("name");
   var t = feature.get("t");
-  var labelFactor = feature.get("lbl_fac");
 
   var labelTextColor = '#fff';
   var labelBorderColor = '#333';
@@ -616,15 +574,13 @@ ol.style.Label = function(feature, resolution) {
 
   var min_t = resolutionToMinT(resolution);
 
-  if(min_t > t){
-    // console.log(labelText, window.min_t, t);
+  if(min_t > t) {
     return null;
   }
 
   // Calculate the label size by the given value label factor
-  // TODO: Remove global variable here
-  var calculatedlabelFactor = window.labelFacCoeff * parseInt(labelFactor);
-  var fontConfig = calculatedlabelFactor + "px " + labelFontType;
+  var calculatedLabelFactor = calculateLabelFactor(feature);
+  var fontConfig = calculatedLabelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n
   if (labelText.indexOf("\\") >= 0) {
@@ -632,7 +588,7 @@ ol.style.Label = function(feature, resolution) {
   }
 
   var maxLabelLength = getMaxLabelLength(labelText);
-  var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
+  var circleRadius = calculatedLabelFactor * maxLabelLength * 0.26;
 
   this.image = new ol.style.Circle({
     radius: circleRadius,
@@ -671,6 +627,7 @@ ol.style.Label = function(feature, resolution) {
     return null;
   }
 
+  // TODO: Remove global variable here
   var style = new ol.style.Style({
     image: window.debugDrawCirc == true ? this.image : null,
     text: this.text
@@ -682,13 +639,17 @@ ol.style.Label = function(feature, resolution) {
   // ol.style.Style.call(this, this);
 };
 
+function calculateLabelFactor(feature) {
+  var labelFactor = feature.get("lbl_fac");
+  var calculatedLabelFactor = parseInt(labelFactor) * 1.1;
+  return calculatedLabelFactor;
+}
 
 /**
  * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
  * @param {string} labelText - text of the label
  */
 function getMaxLabelLength(labelText) {
-
   var lines = labelText.split("\n");
   var maxLength = 0;
   var arrayLength = lines.length;

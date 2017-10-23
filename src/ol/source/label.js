@@ -110,7 +110,7 @@ function resolutionToMinT(resolution) {
  * Builds a query in the format of:
  *    http://<label-server>/label/<label-type>?x_min=8&x_max=9&y_min=53&y_max=53.06&t_min=0.001
  */
-ol.source.Label.prototype.buildQuery = function(params){
+ol.source.Label.prototype.buildQuery = function(params) {
   if (typeof params === 'undefined' || typeof params !== 'object') {
         params = {};
     }

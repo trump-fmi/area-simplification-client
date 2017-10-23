@@ -6,6 +6,7 @@ html, body {
 .ol-label-debug {
   bottom: 0.5em;
   left: 0.5em;
+  background-color: rgba(255,255,255,.8);
 }
 
 .ol-label-debug .menu-toggle-button {
