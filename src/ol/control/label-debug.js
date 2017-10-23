@@ -5,7 +5,7 @@ ol.control.LabelDebug = function(opt_options) {
 
   this.state = {
     open: false,
-    layers: []
+    isDemoModeRunning: false
   };
 
   this.btn = document.createElement('button');
@@ -260,7 +260,6 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   var demoModeControlBtn = document.createElement('button');
   demoModeControlBtn.className = 'demo-mode-button';
   demoModeControlBtn.id = 'demoModeControlBtn';
-  demoModeControlBtn.isDemoModeRunning = false;
   demoModeControlBtn.innerHTML = '&#9658';
 
   var demoModeControlLabel = document.createElement('label');
@@ -271,14 +270,14 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   ol.events.listen(demoModeControlBtn, ol.events.EventType.CLICK, toggleDemoMode);
   var this_ = this;
   function toggleDemoMode() {
-    if (this.isDemoModeRunning) { // Demo is currently running
+    if (this_.state.isDemoModeRunning) { // Demo is currently running
       demoModeControlBtn.innerHTML = '&#9658;'; // Play icon
       this_.stopDemoMode_();
     } else { // Demo mode is not running, start it
       demoModeControlBtn.innerHTML = '&#10074;&#10074;'; // Stop icon
       this_.startDemoMode_();
     }
-    this.isDemoModeRunning = !this.isDemoModeRunning;
+    this_.state.isDemoModeRunning = !this_.state.isDemoModeRunning;
   }
   demoModeControlContainer.appendChild(demoModeControlLabel);
   demoModeControlContainer.appendChild(demoModeControlBtn);
@@ -339,16 +338,6 @@ ol.control.LabelDebug.prototype.updateLabelLayer_ = function() {
   });
 }
 
-ol.control.LabelDebug.prototype.startDemoMode_ = function() {
-  startDemoMode();
-}
-
-ol.control.LabelDebug.prototype.stopDemoMode_ = function() {
-  var view = this.getMap().getView();
-  // Only found workaround solution for stopping a running animation: https://github.com/openlayers/openlayers/issues/3714
-  view.setResolution(view.getResolution());
-}
-
 ol.control.LabelDebug.prototype.resolutionToMinT = function (resolution) {
   var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
   if (zoom <= 3) {
@@ -365,4 +354,83 @@ ol.control.LabelDebug.prototype.calculateLabelFactor = function (feature) {
   var labelFactor = feature.get("lbl_fac");
   var calculatedLabelFactor = parseInt(labelFactor) * window.labelFacCoeff;
   return calculatedLabelFactor;
+}
+
+
+ol.control.LabelDebug.prototype.startDemoMode_ = function() {
+  var this_ = this;
+  var view = this.getMap().getView();
+  var currentZoomLevel = 14;
+
+  var currentRotation = view.getRotation();
+  var currentCenter = view.getCenter();
+
+  // Calculate the animation duration in dependence of the zoom lebel difference
+  var animationDuration = 3000;
+  var newZoomLevel = getRandomZoom();
+  var zoomLevelDifference = Math.abs(currentZoomLevel - newZoomLevel);
+  animationDuration = animationDuration * zoomLevelDifference;
+
+  var newLocation = getRandomLocationInGermany();
+  // Distance also could be used for calculation of animation duration
+  var distance = (Math.round(new ol.geom.LineString([currentCenter, newLocation]).getLength() * 100) / 100) / 1000;
+
+  var newRotation = getRandomRotation();
+
+  function callback() {
+    setTimeout(function() {
+      if (this_.state.isDemoModeRunning) {
+        this_.startDemoMode_();
+      }
+    }, 1);
+  }
+
+  view.animate({
+    center: newLocation,
+    duration: (animationDuration * 2),
+    rotation: newRotation
+  }, callback);
+
+  view.animate({
+    zoom: newZoomLevel,
+    duration: animationDuration
+  },
+  {
+    zoom: currentZoomLevel,
+    duration: animationDuration
+  });
+
+  function getRandomRotation() {
+    return (Math.random() * (Math.PI * 2));
+  }
+
+  // Get random zoom level between 4 - 10
+  function getRandomZoom() {
+    return Math.round(Math.random() * 6) + 4;
+  }
+
+  function getZoomLevelChange() {
+    var newZoomLevelDiff = Math.round(Math.random()); // value between 0 - 1
+    // Make random decision if new zoom level delta is positive or negative
+    if (Math.round(Math.random()) > 0) {
+      return newZoomLevelDiff;
+    } else {
+      return newZoomLevelDiff * -1;
+    }
+  }
+
+  function getRandomLocationInGermany() {
+    var rangeLong = [8.0, 12.0]; // More exactly = [6.0, 15.0]
+    var rangeLat = [48.0, 54.0]; // More exactly = [47.5, 54.8]
+
+    var randomLong = (Math.random() * (rangeLong[1] - rangeLong[0] + 1)) + rangeLong[0];
+    var randomLat = (Math.random() * (rangeLat[1] - rangeLat[0] + 1)) + rangeLat[0];
+    return ol.proj.fromLonLat([randomLong, randomLat]);
+  }
+}
+
+ol.control.LabelDebug.prototype.stopDemoMode_ = function() {
+  var view = this.getMap().getView();
+  // Only found workaround solution for stopping a running animation: https://github.com/openlayers/openlayers/issues/3714
+  view.setResolution(view.getResolution());
 }
