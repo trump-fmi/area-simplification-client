@@ -19,20 +19,39 @@
       var labelCollectionUrl = "http://seeigel.informatik.uni-stuttgart.de:8080/labelCollections";
 
       var tile_url = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles/{z}/{x}/{y}.png';
+      var tile_url_2 = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles2/{z}/{x}/{y}.png';
+      var bike_url = 'http://b.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png';
 
       var map = new ol.Map({
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({
               url: tile_url
-            })
+            }),
+            title: 'Seeigel'
+          }),
+          new ol.layer.Tile({
+            source: new ol.source.OSM({
+              url: bike_url
+            }),
+            title: 'Fahrrad',
+            visible: false
           }),
           new ol.layer.Label({
             source: new ol.source.Label({
               url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/citynames',
-              labelClasses: ['city',],
             }),
-            style: null
+            style: null,
+            title: 'City',
+            visible: true
+          }),
+          new ol.layer.Label({
+            source: new ol.source.Label({
+              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icons',
+            }),
+            style: null,
+            title: 'Icons',
+            visible: false
           })
         ],
         target: 'map',
@@ -41,9 +60,12 @@
           zoom: 6
         })
       });
-      zoomslider = new ol.control.ZoomSlider();
-      map.addControl(zoomslider);
+
+
+      // add controls
+      map.addControl(new ol.control.ZoomSlider());
       map.addControl(new ol.control.LabelDebug());
+      map.addControl(new ol.control.LayerMenu());
 
     </script>
   </body>
