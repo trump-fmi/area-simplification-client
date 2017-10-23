@@ -77,41 +77,24 @@ ol.control.LabelDebug.prototype.toggleMenu = function() {
   } else {
     this.openMenu();
   }
-
   this.state.open = !this.state.open;
 }
 
 ol.control.LabelDebug.prototype.openMenu = function() {
-
-  var map = this.getMap();
-  var layers = map.getLayers();
-
   this.btn.innerHTML = this.buttonIcon.closeMenu;
-  // this.container.classList.remove('ol-collapsed');
   this.menu.style.display = '';
 
   if(this.menu.innerHTML.length == 0){
     this.renderMenuContents();
   };
-
 }
 
 ol.control.LabelDebug.prototype.closeMenu = function(){
-
-  var map = this.getMap();
-  var layers = map.getLayers();
-
-  // this.container.classList.add('ol-collapsed');
-
   this.btn.innerHTML = this.buttonIcon.openMenu;
   this.menu.style.display = "none";
-
 }
 
 ol.control.LabelDebug.prototype.renderMenuContents = function() {
-  // var menuContent = document.createElement("div");
-  // menuContent.innerHTML = "Test<br>Test 12344";
-
   var map = this.getMap();
 
   var rangeCSS = {
@@ -194,10 +177,7 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
 
   window.minTFac = 9;
 
-  // TODO new
-
   var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
-
   var minTCoeffRange = document.createElement('input');
   Object.assign(minTCoeffRange.style, rangeCSS);
   minTCoeffRange.setAttribute('type', 'range');
@@ -223,7 +203,6 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
 
   /* Create slider control for zoom level */
   var zoomSliderContainer = rowContainerTemplate.cloneNode();
-
   var zoomLevelDelta = document.createElement('input');
   Object.assign(zoomLevelDelta.style, {
     'margin-left': '10px',
@@ -291,7 +270,6 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   zoomSliderContainer.appendChild(document.createElement('br'));
   zoomSliderContainer.appendChild(zoomSliderInput);
   zoomSliderContainer.appendChild(zoomLevelLabel);
-
 
   var demoModeControlContainer = rowContainerTemplate.cloneNode();
   var demoModeControlBtn = document.createElement('button');
@@ -472,27 +450,6 @@ ol.control.LabelDebug.prototype.stopDemoMode_ = function() {
   view.setResolution(view.getResolution());
 }
 
-ol.layer.Label = function(opt_options) {
-
-  var options = opt_options || {};
-
-  if(!options.style) {
-    options.style = ol.style.Label
-  }
-
-  // If no preffered options for update while animating or interacting are given, set them as default to true
-  if (options.updateWhileAnimating === undefined) {
-    options.updateWhileAnimating = true;
-  }
-  if (options.updateWhileInteracting === undefined) {
-    options.updateWhileInteracting = true;
-  }
-
-
-  ol.layer.Vector.call(this, options);
-};
-ol.inherits(ol.layer.Label, ol.layer.Vector);
-
 ol.source.Label = function(org_options) {
 
   this.labelServerUrl = org_options.url;
@@ -623,6 +580,27 @@ ol.source.Label.prototype.buildQuery = function(params) {
     }
     return this.labelServerUrl + query;
 }
+
+ol.layer.Label = function(opt_options) {
+
+  var options = opt_options || {};
+
+  if(!options.style) {
+    options.style = ol.style.Label
+  }
+
+  // If no preffered options for update while animating or interacting are given, set them as default to true
+  if (options.updateWhileAnimating === undefined) {
+    options.updateWhileAnimating = true;
+  }
+  if (options.updateWhileInteracting === undefined) {
+    options.updateWhileInteracting = true;
+  }
+
+
+  ol.layer.Vector.call(this, options);
+};
+ol.inherits(ol.layer.Label, ol.layer.Vector);
 
 
 /*
