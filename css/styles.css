@@ -9,6 +9,10 @@ html, body {
   background-color: rgba(255,255,255,.8);
 }
 
+.ol-label-debug:hover {
+  background-color: rgba(255,255,255,.9);
+}
+
 .ol-label-debug .menu-toggle-button {
   float: right;
 }
