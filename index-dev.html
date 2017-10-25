@@ -23,12 +23,15 @@
       var bike_url = 'http://b.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png';
 
       var map = new ol.Map({
+        loadTilesWhileAnimating: true,
+        loadTilesWhileInteracting: true,
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({
               url: tile_url
             }),
-            title: 'Seeigel'
+            title: 'Seeigel',
+            preload: 5  // Preload tile with information from zoom level 5
           }),
           new ol.layer.Tile({
             source: new ol.source.OSM({
