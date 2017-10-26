@@ -10,9 +10,6 @@ ol.source.Label = function(org_options) {
   org_options.updateWhileAnimating = true;
   org_options.updateWhileInteracting = true;
 
-  this.updateInterval = 200;
-  this.lastUpdate = (new Date().getTime() - this.updateInterval); // Let´s do an update on the first check
-
   ol.source.Vector.call(this, org_options);
 };
 
@@ -42,14 +39,7 @@ ol.source.Label.prototype.addFeatureInternal = function(feature) {
 };
 
 
-
 ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection) {
-
-  if ((new Date().getTime() - this.lastUpdate) < this.updateInterval) {
-    return;
-  } else {
-    this.lastUpdate = new Date().getTime();
-  }
 
   var loadedExtentsRtree = this.loadedExtentsRtree_;
   var extentsToLoad = this.strategy_(extent, resolution);
