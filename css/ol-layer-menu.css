@@ -1,7 +1,11 @@
 .ol-layer-menu{
-  bottom: 2.5em;
+  bottom: 3em;
   right:.5em;
-  background:rgba(255,255,255,.6);
+  background:rgba(255,255,255,.8);
+}
+
+.ol-layer-menu:hover {
+  background:rgba(255,255,255,.9);
 }
 
 .ol-layer-menu button{
