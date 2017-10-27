@@ -43,24 +43,40 @@ ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection
 
   var loadedExtentsRtree = this.loadedExtentsRtree_;
   var extentsToLoad = this.strategy_(extent, resolution);
+  // console.log(resolution, Math.round(resolution));
+  //
+  let zoom = window.map.getView().getZoom();
+  zoom = Math.round(zoom);
+  console.log(zoom);
+
+  // console.log(zoom, Math.ceil(zoom));
+  // zoom = Math.round(zoom - zoom % 1);
+  // console.log(zoom);
+
+  // //enlarge extent to load by 10%
+  // extentsToLoad = extentsToLoad.map(extents => extents.map(extent => extent * 1.1));
+  //
+  //
+  //
+  // console.log(extentsToLoad, resolution, loadedExtentsRtree);
 
 
-  var length = Math.log(resolution) * Math.LOG10E + 1 | 0;
-  var normalizer = Math.pow(10, length - 1);
-  var resolution_ = Math.round(resolution/normalizer)*normalizer;
-
-  console.log("original res: ", resolution," rounded res: ", resolution_, " normalizer: ", normalizer);
+  // var length = Math.log(resolution) * Math.LOG10E + 1 | 0;
+  // var normalizer = Math.pow(10, length - 1);
+  // var resolution_ = Math.round(resolution/normalizer)*normalizer;
+  //
+  // console.log("original res: ", resolution," rounded res: ", resolution_, " normalizer: ", normalizer);
 
   // var length = Math.log(extent) * Math.LOG10E + 1 | 0;
-  var normalizer_array = extent
-    .map(val => Math.log(Math.abs(val)) * Math.LOG10E + 1 | 0)
-    .map(val => Math.pow(10, val - 1));
-
-  console.log("original extent: ", extent, " normalizer(extent): ", normalizer_array);
+  // var normalizer_array = extent
+  //   .map(val => Math.log(Math.abs(val)) * Math.LOG10E + 1 | 0)
+  //   .map(val => Math.pow(10, val - 1));
+  //
+  // console.log("original extent: ", extent, " normalizer(extent): ", normalizer_array);
 
   var i, ii;
   for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
-    var extentToLoad = extentsToLoad[i]
+    var extentToLoad = extentsToLoad[i];
     .map((extent,idx) => Math.round(extent/normalizer_array[idx]) * normalizer_array[idx]);
     console.log(extentToLoad.slice());
     var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
@@ -69,12 +85,28 @@ ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection
          * @return {boolean} Contains.
          */
         function(object) {
-          // console.log(object,extentToLoad);
-          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution_ == object.resolution;
+          console.log(object.extent,extentToLoad,ol.extent.containsExtent(object.extent, extentToLoad));
+          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution == object.resolution;
         });
     if (!alreadyLoaded) {
+      // load 10% more extent in every direction and store with resolution buffered
+      // extentToLoad = ol.extent.buffer(extentToLoad, 10);
+      // console.log(extentToLoad, resolution);
+      // if(zoom < 8){
+      // extentToLoad = extentToLoad.map((extent, idx) => {
+      //   if(idx < 2){
+      //     return extent - Math.abs(extent*0.2);
+      //   }else{
+      //     return extent + Math.abs(extent*0.2);
+      //   }
+      // });
+      // }
+      // console.log(extentToLoad, resolution);
+      // debugger;
+
+      // this.loader_.call(this, extentToLoad, zoom < 8 ? resolution*.6 : resolution, projection);
       this.loader_.call(this, extentToLoad, resolution, projection);
-      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution_});
+      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution});
     }
   }
 }
@@ -96,7 +128,9 @@ ol.source.Label.prototype.featureLoader = function(extent, resolution, projectio
   var max = ol.proj.toLonLat(extent.slice(2, 4));
 
   // Calculate mint_t value for label request
+
   var min_t = resolutionToMinT(resolution);
+console.log(resolution, min_t);
 
   var parameters = {
       x_min: min[0],

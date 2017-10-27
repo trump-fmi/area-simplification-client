@@ -23,6 +23,8 @@
       var bike_url = 'http://b.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png';
 
       var map = new ol.Map({
+        loadTilesWhileAnimating: true,
+        loadTilesWhileInteracting: true,
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({
