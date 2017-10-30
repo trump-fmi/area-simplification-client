@@ -3,7 +3,7 @@ ol.layer.Label = function(opt_options) {
   var options = opt_options || {};
 
   if(!options.style) {
-    options.style = ol.style.Label
+    options.style = ol.style.labelStyle
   }
 
   ol.layer.Vector.call(this, options);
