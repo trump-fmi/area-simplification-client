@@ -99,7 +99,7 @@ ol.source.Label.prototype.featureLoader = function(extent, resolution, projectio
 function resolutionToMinT(resolution) {
   var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
   if (zoom <= 3) {
-    return 0.01;
+    return 10000;
   } else {
     return Math.pow(2, 9 - (zoom - 1));
   }
@@ -110,7 +110,7 @@ function resolutionToMinT(resolution) {
  * Builds a query in the format of:
  *    http://<label-server>/label/<label-type>?x_min=8&x_max=9&y_min=53&y_max=53.06&t_min=0.001
  */
-ol.source.Label.prototype.buildQuery = function(params){
+ol.source.Label.prototype.buildQuery = function(params) {
   if (typeof params === 'undefined' || typeof params !== 'object') {
         params = {};
     }

@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>OpenLayers Label Plugin</title>
-    <link rel="stylesheet" href="https://openlayers.org/en/v4.1.1/css/ol.css" type="text/css">
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/assets/theme/img/favicon.ico" />
+
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.3.4/css/ol.css" type="text/css">
     <link rel="stylesheet" href="dist/ol-labels.css" type="text/css">
     <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
-    <script src="https://openlayers.org/en/v4.1.1/build/ol-debug.js"></script>
+    <script src="https://openlayers.org/en/v4.3.4/build/ol-debug.js"></script>
     <script src="dist/ol-labels.js"></script>
   </head>
   <body>
@@ -16,20 +19,47 @@
       var labelCollectionUrl = "http://seeigel.informatik.uni-stuttgart.de:8080/labelCollections";
 
       var tile_url = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles/{z}/{x}/{y}.png';
+      var tile_url_2 = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles2/{z}/{x}/{y}.png';
+      var bike_url = 'http://b.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png';
 
       var map = new ol.Map({
+        loadTilesWhileAnimating: true,
+        loadTilesWhileInteracting: true,
         layers: [
           new ol.layer.Tile({
             source: new ol.source.OSM({
               url: tile_url
-            })
+            }),
+            title: 'Seeigel',
+            preload: 5  // Preload tile with information from zoom level 5
+          }),
+          new ol.layer.Tile({
+            source: new ol.source.OSM({
+              url: bike_url
+            }),
+            title: 'Fahrrad',
+            visible: false
           }),
           new ol.layer.Label({
             source: new ol.source.Label({
+<<<<<<< HEAD
               url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icon',
               labelClasses: ['city',],
+=======
+              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/citynames',
+>>>>>>> 32f0d7484d0942aac04c51899a3bcfc2358684ee
             }),
-            style: null
+            style: null,
+            title: 'City',
+            visible: true
+          }),
+          new ol.layer.Label({
+            source: new ol.source.Label({
+              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icon_bw',
+            }),
+            style: null,
+            title: 'Icons',
+            visible: false
           })
         ],
         target: 'map',
@@ -39,15 +69,11 @@
         })
       });
 
-      // TODO: Implement another solution to reload label data on zoom or extent changes
-      // On change event handler on view. Will be fired if center or resolution has been chnaged
-      // map.getView().on('propertychange', function(e) {
-      //   // keys: center, resolution
-      //   // console.log("propertychange: ", e.key, e);
-      //   var vector_layer = map.getLayers().getArray()[1];
-      //   vector_layer.getSource().clear();
-      //   vector_layer.getSource().refresh();
-      // });
+
+      // add controls
+      map.addControl(new ol.control.ZoomSlider());
+      map.addControl(new ol.control.LabelDebug());
+      map.addControl(new ol.control.LayerMenu());
 
     </script>
   </body>

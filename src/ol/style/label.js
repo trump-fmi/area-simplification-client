@@ -190,6 +190,11 @@ ol.Label.prototype.getIconURL = function(iconName){
   return ICON_URL + icon;
 }
 
+function calculateLabelFactor(feature) {
+  var labelFactor = feature.get("lbl_fac");
+  var calculatedLabelFactor = parseInt(labelFactor) * 1.1;
+  return calculatedLabelFactor;
+}
 
 /**
  * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
