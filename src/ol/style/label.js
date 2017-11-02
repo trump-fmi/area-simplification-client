@@ -84,6 +84,7 @@ ol.Label = function(feature, resolution) {
 
   // Get needed fields from feature object
   this.text = feature.get("name");
+  this.feature = feature;
   this.t = feature.get("t");
   this.factor = feature.get("lbl_fac");
 
@@ -118,6 +119,8 @@ ol.Label.prototype.render = function(){
 
   var style = null;
 
+  console.log(this.text);
+
   //do not render if t value of feature is lower then current min_t
   if(this.min_t > this.t){
     // console.log(this.text, min_t, this.t);
@@ -125,7 +128,7 @@ ol.Label.prototype.render = function(){
   }
 
 
-  var calculatedlabelFactor = window.labelFacCoeff * parseInt(this.factor);
+  var calculatedlabelFactor = calculateLabelFactor(this.feature);
   var fontConfig = calculatedlabelFactor + "px " + labelFontType;
 
   // Remove escaped character from JSON format string: \\n to \n

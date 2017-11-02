@@ -880,8 +880,8 @@ ol.source.Label.prototype.buildQuery = function(params) {
 ol.Label = function(feature, resolution) {
 
   // Get needed fields from feature object
-<<<<<<< HEAD
   this.text = feature.get("name");
+  this.feature = feature;
   this.t = feature.get("t");
   this.factor = feature.get("lbl_fac");
 
@@ -905,10 +905,6 @@ ol.Label.prototype.resolveType = function(){
   }
 
 }
-=======
-  var labelText = feature.get("name");
-  var t = feature.get("t");
->>>>>>> 32f0d7484d0942aac04c51899a3bcfc2358684ee
 
 ol.Label.prototype.render = function(){
 
@@ -920,7 +916,8 @@ ol.Label.prototype.render = function(){
 
   var style = null;
 
-<<<<<<< HEAD
+  console.log(this.text);
+
   //do not render if t value of feature is lower then current min_t
   if(this.min_t > this.t){
     // console.log(this.text, min_t, this.t);
@@ -928,31 +925,17 @@ ol.Label.prototype.render = function(){
   }
 
 
-  var calculatedlabelFactor = window.labelFacCoeff * parseInt(this.factor);
+  var calculatedlabelFactor = calculateLabelFactor(this.feature);
   var fontConfig = calculatedlabelFactor + "px " + labelFontType;
-=======
-  if(min_t > t) {
-    return null;
-  }
-
-  // Calculate the label size by the given value label factor
-  var calculatedLabelFactor = calculateLabelFactor(feature);
-  var fontConfig = calculatedLabelFactor + "px " + labelFontType;
->>>>>>> 32f0d7484d0942aac04c51899a3bcfc2358684ee
 
   // Remove escaped character from JSON format string: \\n to \n
   if (this.text.indexOf("\\") >= 0) {
     this.text = this.text.replace("\\n", "\n");
   }
 
-<<<<<<< HEAD
   // Calculate the label size by the given value label factor
   var maxLabelLength = this.getMaxLabelLength(this.text);
   var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
-=======
-  var maxLabelLength = getMaxLabelLength(labelText);
-  var circleRadius = calculatedLabelFactor * maxLabelLength * 0.26;
->>>>>>> 32f0d7484d0942aac04c51899a3bcfc2358684ee
 
   var debugCircle = new ol.style.Circle({
     radius: circleRadius,
@@ -991,15 +974,6 @@ ol.Label.prototype.render = function(){
 
   }
 
-<<<<<<< HEAD
-=======
-  // TODO: Remove global variable here
-  var style = new ol.style.Style({
-    image: window.debugDrawCirc == true ? this.image : null,
-    text: this.text
-  });
-
->>>>>>> 32f0d7484d0942aac04c51899a3bcfc2358684ee
   return style;
 
 }
@@ -1026,7 +1000,6 @@ function calculateLabelFactor(feature) {
  * Get max label length for the case that label has more than one row, e.g. Frankfurt\nam Main
  * @param {string} labelText - text of the label
  */
-<<<<<<< HEAD
 
  ol.Label.prototype.getMaxLabelLength = function (labelText){
 
@@ -1048,16 +1021,3 @@ ol.style.labelStyle = function(feature,resolution) {
   var label = new ol.Label(feature, resolution);
   return label.render();
 }
-=======
-function getMaxLabelLength(labelText) {
-  var lines = labelText.split("\n");
-  var maxLength = 0;
-  var arrayLength = lines.length;
-  for (var i = 0; i < arrayLength; i++) {
-     if (maxLength < lines[i].length) {
-      maxLength = lines[i].length;
-    }
-  }
-  return maxLength;
-};
->>>>>>> 32f0d7484d0942aac04c51899a3bcfc2358684ee
