@@ -42,6 +42,8 @@
           }),
           new ol.layer.Label({
             source: new ol.source.Label({
+              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icon',
+              labelClasses: ['city',],
               url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/citynames',
             }),
             style: null,
@@ -60,7 +62,7 @@
         target: 'map',
         view: new ol.View({
           center: ol.proj.fromLonLat([9.180769, 48.777106]),
-          zoom: 6
+          zoom: 18
         })
       });
 

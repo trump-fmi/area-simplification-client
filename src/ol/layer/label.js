@@ -3,7 +3,7 @@ ol.layer.Label = function(opt_options) {
   var options = opt_options || {};
 
   if(!options.style) {
-    options.style = ol.style.Label
+    options.style = ol.style.labelStyle
   }
 
   // If no preffered options for update while animating or interacting are given, set them as default to true
