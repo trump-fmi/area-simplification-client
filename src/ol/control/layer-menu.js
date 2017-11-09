@@ -131,8 +131,9 @@ ol.control.LayerMenu.prototype.renderMenuContents = function(){
     var title = layer.get('title');
     var visible = layer.getVisible();
 
-    var li = document.createElement('li')
-    var label = document.createElement('label')
+    var li = document.createElement('li');
+    li.setAttribute('title', layer.get('description'));
+    var label = document.createElement('label');
     var element = document.createElement('input');
     element.setAttribute('type', 'radio');
     element.setAttribute('name', 'tiles');

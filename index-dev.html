@@ -16,7 +16,11 @@
     <div id="map" class="map"></div>
     <script>
 
-      var labelCollectionUrl = "http://seeigel.informatik.uni-stuttgart.de:8080/labelCollections";
+      var labelServerUrl = "http://seeigel.informatik.uni-stuttgart.de";
+      var labelServerPort = "8080";
+      var tileServerUrl = labelServerUrl;
+      var tileServerPort = "80";
+      var labelCollectionUrl = labelServerUrl + ":" + labelServerPort + "/labelCollections";
 
       var tile_url = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles/{z}/{x}/{y}.png';
       var tile_url_2 = 'http://seeigel.informatik.uni-stuttgart.de/osm_tiles2/{z}/{x}/{y}.png';
@@ -25,40 +29,7 @@
       var map = new ol.Map({
         loadTilesWhileAnimating: true,
         loadTilesWhileInteracting: true,
-        layers: [
-          new ol.layer.Tile({
-            source: new ol.source.OSM({
-              url: tile_url
-            }),
-            title: 'Seeigel',
-            preload: 5  // Preload tile with information from zoom level 5
-          }),
-          new ol.layer.Tile({
-            source: new ol.source.OSM({
-              url: bike_url
-            }),
-            title: 'Fahrrad',
-            visible: false
-          }),
-          new ol.layer.Label({
-            source: new ol.source.Label({
-              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icon',
-              labelClasses: ['city',],
-              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/citynames',
-            }),
-            style: null,
-            title: 'City',
-            visible: true
-          }),
-          new ol.layer.Label({
-            source: new ol.source.Label({
-              url: 'http://seeigel.informatik.uni-stuttgart.de:8080/label/icon_bw',
-            }),
-            style: null,
-            title: 'Icons',
-            visible: false
-          })
-        ],
+        layers: [],
         target: 'map',
         view: new ol.View({
           center: ol.proj.fromLonLat([9.180769, 48.777106]),
@@ -66,11 +37,67 @@
         })
       });
 
-
       // add controls
       map.addControl(new ol.control.ZoomSlider());
       map.addControl(new ol.control.LabelDebug());
       map.addControl(new ol.control.LayerMenu());
+
+      httpGET(labelCollectionUrl, function(response) {
+        var endpointsJSON = JSON.parse(response);
+        console.log(endpointsJSON);
+        addLayersToMap(endpointsJSON);
+      });
+
+      function addLayersToMap(endpoints) {
+
+        // Add tile layers to map
+        var tileEndpoints = endpoints.tileEndpoints;
+        for (var i = 0; i < tileEndpoints.length; i++) {
+          var tileEndpoint = tileEndpoints[i];
+          var tileEndpointUrl = tileServerUrl + ":" + tileServerPort + tileEndpoint.uri + "{z}/{x}/{y}.png";
+          var isLayerVisible = (tileEndpoint.name === "default");
+          map.addLayer(
+            new ol.layer.Tile({
+              source: new ol.source.OSM({
+                url: tileEndpointUrl
+              }),
+              title: tileEndpoint.name,
+              description: tileEndpoint.description,
+              preload: 5,
+              visible: isLayerVisible
+            })
+          );
+        }
+
+        // Add label layers to map
+        var labelEndpoints = endpoints.endpoints;
+        for (var i = 0; i < labelEndpoints.length; i++) {
+          var labelName = labelEndpoints[i];
+          var labelEndpointUrl = labelServerUrl + ":" + labelServerPort + "/" + endpoints.pathPrefix + "/" + labelName;
+          var isLayerVisible = (labelName === "citynames");
+          map.addLayer(
+            new ol.layer.Label({
+              source: new ol.source.Label({
+                url: labelEndpointUrl
+              }),
+              style: null,
+              title: labelName,
+              visible: isLayerVisible
+            })
+          );
+        }
+
+      }
+
+      function httpGET(url, callback) {
+          var xmlHttp = new XMLHttpRequest();
+          xmlHttp.onreadystatechange = function() {
+              if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                  callback(xmlHttp.responseText);
+          }
+          xmlHttp.open("GET", url, true); // true for asynchronous
+          xmlHttp.send(null);
+      }
 
     </script>
   </body>
