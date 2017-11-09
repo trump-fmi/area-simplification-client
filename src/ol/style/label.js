@@ -119,8 +119,6 @@ ol.Label.prototype.render = function(){
 
   var style = null;
 
-  console.log(this.text);
-
   //do not render if t value of feature is lower then current min_t
   if(this.min_t > this.t){
     // console.log(this.text, min_t, this.t);
