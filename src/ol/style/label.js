@@ -4,6 +4,9 @@
  * @param {ol.Feature} feature - ol.Feature object with attributes from geojson data that represents an text label.
  */
 
+ let ICON_CACHE = {};
+ let TEXT_CACHE = {};
+
  const ICON_TYPE = 'icon';
  const TEXT_TYPE = 'text';
  const ICON_MAPPING = {
@@ -111,7 +114,7 @@ ol.Label.prototype.resolveType = function(){
 
 ol.Label.prototype.render = function(){
 
-  //basic settings of display
+  // //basic settings of display
   var labelTextColor = '#fff';
   var labelBorderColor = '#333';
   var labelFontType = "Consolas";
@@ -125,57 +128,78 @@ ol.Label.prototype.render = function(){
     return null;
   }
 
-
-  var calculatedlabelFactor = calculateLabelFactor(this.feature);
-  var fontConfig = calculatedlabelFactor + "px " + labelFontType;
-
-  // Remove escaped character from JSON format string: \\n to \n
-  if (this.text.indexOf("\\") >= 0) {
-    this.text = this.text.replace("\\n", "\n");
-  }
-
-  // Calculate the label size by the given value label factor
-  var maxLabelLength = this.getMaxLabelLength(this.text);
-  var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
-
-  var debugCircle = new ol.style.Circle({
-    radius: circleRadius,
-    stroke: new ol.style.Stroke({
-      color: labelCircleColor
-    })
-  });
-
   if(this.type == ICON_TYPE){
-    style = new ol.style.Style({
-        image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-          crossOrigin: 'anonymous',
-          src: this.iconUrl
-        }))
-      });
+    // console.log(this.feature);
+    // console.log(this.text);
+
+    const cache_key = this.text;
+
+    if(typeof ICON_CACHE[cache_key] === 'undefined'){
+      style =new ol.style.Style({
+          image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            crossOrigin: 'anonymous',
+            // size: [95, 95],
+            src: this.iconUrl
+          }))
+        });
+
+      ICON_CACHE[cache_key] = style;
+    }else{
+      style = ICON_CACHE[cache_key];
+    }
 
   }else if(this.type == TEXT_TYPE){
 
-    var label = new ol.style.Text({
-       text: this.text,
-       font: fontConfig,
-       stroke: new ol.style.Stroke({
-         color: labelBorderColor,
-         width: 4
-       }),
-       fill: new ol.style.Fill({
-         color: labelTextColor
-       })
-     });
+    var cache_key = window.debugDrawCirc ? this.text + ':debug' : this.text;
 
 
-    style = new ol.style.Style({
-      image: window.debugDrawCirc == true ? debugCircle : null,
-      text: label
-    });
+     if(typeof TEXT_CACHE[cache_key] === 'undefined'){
+       var calculatedlabelFactor = calculateLabelFactor(this.feature);
+       var fontConfig = calculatedlabelFactor + "px " + labelFontType;
+
+       // Remove escaped character from JSON format string: \\n to \n
+       if (this.text.indexOf("\\") >= 0) {
+         this.text = this.text.replace("\\n", "\n");
+       }
+
+       // Calculate the label size by the given value label factor
+       var maxLabelLength = this.getMaxLabelLength(this.text);
+       var circleRadius = calculatedlabelFactor * maxLabelLength * 0.26;
+
+       var debugCircle = new ol.style.Circle({
+         radius: circleRadius,
+         stroke: new ol.style.Stroke({
+           color: labelCircleColor
+         })
+       });
+
+       var label = new ol.style.Text({
+          text: this.text,
+          font: fontConfig,
+          stroke: new ol.style.Stroke({
+            color: labelBorderColor,
+            width: 4
+          }),
+          fill: new ol.style.Fill({
+            color: labelTextColor
+          })
+        });
+
+        style = new ol.style.Style({
+          image: window.debugDrawCirc == true ? debugCircle : null,
+          text: label
+        });
+
+       TEXT_CACHE[cache_key] = style;
+     }else{
+       style = TEXT_CACHE[cache_key];
+     }
+
 
   }
 
   return style;
+  // return null;
 
 }
 
