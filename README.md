@@ -1,4 +1,4 @@
-# OpenLayers Label Plugin
+# OpenLayers Label Plugin [![Build Status](https://travis-ci.org/trump-fmi/area-simplification-client.svg?branch=master)](https://travis-ci.org/trump-fmi/area-simplification-client)
 
 
 ## Installation (details coming soon)
