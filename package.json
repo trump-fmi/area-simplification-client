@@ -1,7 +1,8 @@
 {
   "name": "ol-labels",
   "version": "0.1.0",
-  "description": "",
+  "description": "Display OSM data in OpenLayer with labels and borders placed separately",
+  "repository": "https://travis-ci.org/trump-fmi/area-simplification-client",
   "main": "index.js",
   "scripts": {
     "dev": "gulp watch",
@@ -11,15 +12,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "eslint": "^3.19.0",
-    "jsdoc": "^3.4.3"
+    "eslint": "^5.16.0",
+    "jsdoc": "^3.6.2"
   },
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-clean-css": "^3.4.0",
+    "gulp": "^4.0.2",
+    "gulp-clean-css": "^4.2.0",
     "gulp-concat": "^2.6.1",
     "gulp-cssmin": "^0.2.0",
-    "gulp-jsdoc3": "^1.0.1",
-    "gulp-minify": "^1.0.0"
+    "gulp-jsdoc3": "^2.0.0",
+    "gulp-minify": "^3.1.0"
   }
 }

@@ -4,45 +4,44 @@ var minify = require("gulp-minify");
 var cssmin = require('gulp-cssmin');
 var rename = require('gulp-rename');
 
-gulp.task('js', function () {
-  return gulp.src("src/**/*.js")
-	.pipe(concat("ol-labels.js"))
-    .pipe(gulp.dest("./dist/"))
-});
+const js = done => {
+	return gulp.src("src/**/*.js")
+		.pipe(concat("ol-labels.js"))
+		.pipe(gulp.dest("dist/"));
+};
 
-gulp.task("watch-js", function() {
-  return gulp.watch("src/**/*.js", ["js"])
-});
+const watchjs = done => {
+	return gulp.watch("src/**/*.js", gulp.series(js))
+}
 
-gulp.task("css", function() {
+const css = done => {
 	return gulp.src("css/**/*.css")
-	   .pipe(concat("ol-labels.css"))
-     .pipe(gulp.dest("./dist/"))
-});
+		.pipe(concat("ol-labels.css"))
+		.pipe(gulp.dest("dist/"));
+};
 
-gulp.task("watch-css", function() {
-  return gulp.watch("css/**/*.css", ["css"])
-});
+const watchcss = done => {
+	return gulp.watch("css/**/*.css", gulp.series(css));
+};
 
-gulp.task("minify-js", function(){
-  return gulp.src("src/**/*.js")
-	.pipe(concat("ol-labels.js"))
-  .pipe(minify(
-  {	ext: {
-      src:".js",
-      min:".min.js"
-    }
-  }))
-  .pipe(gulp.dest("./dist/"))
-})
+const minifyjs = done => {
+	return gulp.src("src/**/*.js")
+		.pipe(minify(
+			{ext: {
+				src:".js",
+				min:".min.js"
+			}}
+		))
+		.pipe(concat("ol-labels.js"))
+		.pipe(gulp.dest("dist/"));
+};
 
-gulp.task('minify-css', function() {
-  gulp.src('css/**/*.css')
-      .pipe(cssmin())
-      .pipe(rename("ol-labels.min.css"))
-      .pipe(gulp.dest('dist'));
-});
+const minifycss = done => {
+	return gulp.src('css/**/*.css')
+		.pipe(cssmin())
+		.pipe(rename("ol-labels.min.css"))
+		.pipe(gulp.dest('dist/'));
+};
 
-
-gulp.task("watch", ["watch-js", "watch-css"]);
-gulp.task("build", ["css", "minify-css", "minify-js"]);
+gulp.task("watch", gulp.parallel(watchjs, watchcss));
+gulp.task("build", gulp.series(css, minifycss, minifyjs));
