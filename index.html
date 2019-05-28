@@ -17,9 +17,9 @@
 <div id="map" class="map" style="height:100vh; width:100vw"></div>
 <script>
 
-    var labelServerUrl = "http://seeigel.informatik.uni-stuttgart.de";
+    var labelServerUrl = "http://" + window.location.host;
     var labelServerPort = "8080";
-    var tileServerUrl = labelServerUrl;
+    var tileServerUrl = "http://" + window.location.host;
     var tileServerPort = "80";
     var labelCollectionUrl = labelServerUrl + ":" + labelServerPort + "/labelCollections";
 
