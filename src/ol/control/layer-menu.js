@@ -10,9 +10,13 @@ ol.control.LayerMenu = function(opt_options) {
   this.btn = document.createElement('button');
   this.btn.innerHTML = '&#9776;';
 
-  var this_ = this;
+  //Create reference to current scope
+  var _this = this;
 
-  ol.events.listen(this.btn, ol.events.EventType.CLICK, this.toggleMenu, this);
+  //Register event listener for button and use current scope
+  this.btn.addEventListener('click', function () {
+    _this.toggleMenu();
+  });
 
   this.container = document.createElement('div');
   this.container.className = 'ol-layer-menu ol-control ol-collapsed';
@@ -55,7 +59,7 @@ ol.control.LayerMenu.prototype.activateLayerLabel = function(event){
     .forEach(
       layer => {
         const title = layer.get('title');
-        if(title == selectedOpt){
+        if(title === selectedOpt){
           layer.setVisible(true);
         }else{
           layer.setVisible(false);
@@ -66,7 +70,7 @@ ol.control.LayerMenu.prototype.activateLayerLabel = function(event){
 
 ol.control.LayerMenu.prototype.activateLayer = function(event){
 
-  if(event.target.value == undefined){
+  if(event.target.value === undefined){
     return
   }
 
@@ -78,7 +82,7 @@ ol.control.LayerMenu.prototype.activateLayer = function(event){
     .forEach(
       layer => {
         const title = layer.get('title');
-        if(title == selectedOpt){
+        if(title === selectedOpt){
           layer.setVisible(true);
         }else{
           layer.setVisible(false);
@@ -148,12 +152,19 @@ ol.control.LayerMenu.prototype.renderMenuContents = function(){
     li.appendChild(label);
     tileList.appendChild(li);
 
-  })
+  });
 
   tilesContainer.appendChild(tileList);
 
   this.menu.appendChild(tilesContainer);
-  ol.events.listen(tilesContainer, ol.events.EventType.CLICK, this.activateLayer, this);
+
+  //Create reference to current scope
+  var _this = this;
+
+  //Register event listener for tiles container and use current scope
+  tilesContainer.addEventListener('click', function (event) {
+      _this.activateLayer(event);
+  });
 
   var labelContainer = document.createElement('div');
   labelContainer.innerHTML = '<h5>Labels</h5>';
@@ -189,5 +200,9 @@ ol.control.LayerMenu.prototype.renderMenuContents = function(){
   labelContainer.appendChild(labelList);
 
   this.menu.appendChild(labelContainer);
-  ol.events.listen(labelContainer, ol.events.EventType.CLICK, this.activateLayerLabel, this);
+
+  //Register event listener for label container and use current scope
+  labelContainer.addEventListener('click', function (event) {
+      _this.activateLayerLabel(event);
+  });
 }

@@ -13,9 +13,16 @@ ol.control.LabelDebug = function(opt_options) {
   this.buttonIcon = {
     openMenu: '>_',
     closeMenu: 'X'
-  }
+  };
   this.btn.innerHTML = this.buttonIcon.openMenu;
-  ol.events.listen(this.btn, ol.events.EventType.CLICK, this.toggleMenu, this);
+
+  //Create reference to current scope
+  var _this = this;
+
+  //Register event listener for button and use current scope
+  this.btn.addEventListener('click', function (event) {
+    _this.toggleMenu();
+  });
 
   this.container = document.createElement('div');
   this.container.className = 'ol-label-debug ol-control ol-collapsed';
@@ -79,12 +86,14 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   var drawCircleLabel = document.createElement('label');
   drawCircleLabel.htmlFor = 'drawCirclesCheckbox';
   drawCircleLabel.appendChild(drawCirclesCheckbox);
-  drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels.'))
+  drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels.'));
 
   drawCirclesCheckboxContainer.appendChild(drawCircleLabel);
 
-  ol.events.listen(drawCirclesCheckbox, ol.events.EventType.CHANGE,
-    ol.control.LabelDebug.prototype.toggleDrawCircles_.bind(this));
+  //Register event listener for circle checkbox
+  drawCirclesCheckbox.addEventListener('change', function (event) {
+    _this.toggleDrawCircles_(event);
+  });
 
   window.debugDrawCirc = false;
 
@@ -109,8 +118,10 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   labelfactorSliderContainer.appendChild(document.createElement('br'));
   labelfactorSliderContainer.appendChild(labelfactorRange);
 
-  ol.events.listen(labelfactorRange, "input",
-    ol.control.LabelDebug.prototype.changeLabelFactor_.bind(this));
+  //Register event listener for label factor range slider
+  labelfactorRange.addEventListener('input', function (event) {
+    _this.changeLabelFactor_(event);
+  });
 
   window.labelFacCoeff = 1.1;
 
@@ -131,8 +142,10 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   minTLabel.htmlFor = 'minTFactorRange';
   minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t. (9)'))
 
-  ol.events.listen(minTFactorRange, "input",
-    ol.control.LabelDebug.prototype.changeMinTFactor_.bind(this));
+  //Register event listener for min_t factor range slider
+  minTFactorRange.addEventListener('input', function (event) {
+    _this.changeMinTFactor_(event);
+  });
 
   minTFactorSliderContainer.appendChild(minTLabel);
   minTFactorSliderContainer.appendChild(document.createElement('br'));
@@ -155,8 +168,14 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   minTCoeffLabel.htmlFor = 'minTCoeffRange';
   minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t. (1.0)'))
 
-  ol.events.listen(minTCoeffRange, "input",
-    ol.control.LabelDebug.prototype.changeMinTCoeff_.bind(this));
+  //Create reference to current scope
+  var _this = this;
+
+  //Register event listener for min_t coefficient range slider
+  minTCoeffRange.addEventListener('input', function (event) {
+    _this.changeMinTCoeff_(event);
+  });
+
 
   minTCoeffRangeContainer.appendChild(minTCoeffLabel);
   minTCoeffRangeContainer.appendChild(document.createElement('br'));
@@ -205,14 +224,17 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   zoomLevelLabel.htmlFor = 'zoomLevelLabel';
   zoomLevelLabel.appendChild(document.createTextNode("zoom: " + map.getView().getZoom()));
 
-  // Add onchange listener for zoomLevelDelta
-  ol.events.listen(zoomLevelDelta, "input", zoomDeltaChange);
+  //Register event listener for zoom level delta input
+  zoomLevelDelta.addEventListener('input', zoomDeltaChange);
+
   function zoomDeltaChange() {
     zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
   }
 
-  // Add on input listener for zoomSliderInput
-  ol.events.listen(zoomSliderInput, "input", changeZoomLevel);
+
+  //Register event listener for zoom slider
+  zoomSliderInput.addEventListener('input', changeZoomLevel);
+
   function changeZoomLevel() {
     document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + zoomSliderInput.value;
     map.getView().setZoom(zoomSliderInput.value);
@@ -245,7 +267,9 @@ ol.control.LabelDebug.prototype.renderMenuContents = function() {
   demoModeControlLabel.htmlFor = 'demoModeControlBtn';
   demoModeControlLabel.innerHTML = 'Demo mode: ';
 
-  ol.events.listen(demoModeControlBtn, ol.events.EventType.CLICK, toggleDemoMode);
+  //Register event listener for demo mode control button
+  demoModeControlBtn.addEventListener('click', toggleDemoMode);
+
   var this_ = this;
   function toggleDemoMode() {
     if (this_.state.isDemoModeRunning) { // Demo is currently running
