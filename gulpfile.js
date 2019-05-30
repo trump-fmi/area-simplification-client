@@ -26,13 +26,13 @@ const watchcss = done => {
 
 const minifyjs = done => {
 	return gulp.src("src/**/*.js")
+		.pipe(concat("ol-labels.js"))
 		.pipe(minify(
 			{ext: {
 				src:".js",
 				min:".min.js"
 			}}
 		))
-		.pipe(concat("ol-labels.js"))
 		.pipe(gulp.dest("dist/"));
 };
 

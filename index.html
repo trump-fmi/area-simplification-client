@@ -6,23 +6,25 @@
     <link rel="icon" type="image/x-icon" href="https://openlayers.org/assets/theme/img/favicon.ico"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.3.4/ol-debug.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.6.5/ol-debug.css" type="text/css">
     <link rel="stylesheet" href="dist/ol-labels.css" type="text/css">
     <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.3.4/ol-debug.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.6.5/ol-debug.js"></script>
     <script src="dist/ol-labels.js"></script>
 </head>
 <body>
 <div id="map" class="map" style="height:100vh; width:100vw"></div>
 <script>
 
-    var labelServerUrl = "http://" + window.location.host;
+    //Debug enabled?
+    const DEBUG = window.location.hash.toLowerCase() === "#debug";
+
+    var labelServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.host);
     var labelServerPort = "8080";
-    var tileServerUrl = "http://" + window.location.host;
+    var tileServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.host);
     var tileServerPort = "80";
     var labelCollectionUrl = labelServerUrl + ":" + labelServerPort + "/labelCollections";
-
 
     var stuttgartCoords = [
         [48.728393, 9.212838],
@@ -237,6 +239,7 @@
     }
 
     function httpGET(url, callback) {
+        console.log(url);
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.onreadystatechange = function () {
             if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
