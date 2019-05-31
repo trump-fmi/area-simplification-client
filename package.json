@@ -1,5 +1,5 @@
 {
-  "name": "ol-labels",
+  "name": "ol-areas",
   "version": "0.1.0",
   "description": "Display OSM data in OpenLayer with labels and borders placed separately",
   "repository": "https://travis-ci.org/trump-fmi/area-simplification-client",
