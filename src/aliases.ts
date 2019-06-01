@@ -1,0 +1,1 @@
+const TypedMap = Map;
