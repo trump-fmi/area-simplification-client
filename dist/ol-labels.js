@@ -1,61 +1,3 @@
-ol.layer.Label = function(opt_options) {
-
-  var options = opt_options || {};
-
-  if(!options.style) {
-    options.style = ol.style.labelStyle
-  }
-
-  // If no preffered options for update while animating or interacting are given, set them as default to true
-  if (options.updateWhileAnimating === undefined) {
-    options.updateWhileAnimating = true;
-  }
-  if (options.updateWhileInteracting === undefined) {
-    options.updateWhileInteracting = true;
-  }
-
-
-  ol.layer.Vector.call(this, options);
-};
-ol.inherits(ol.layer.Label, ol.layer.Vector);
-
-/**
- * Set of controls included in maps by default. Unless configured otherwise,
- * this returns a collection containing an instance of each of the following
- * controls:
- * * {@link ol.control.Zoom}
- * * {@link ol.control.Rotate}
- * * {@link ol.control.Attribution}
- *
- * @param {olx.control.DefaultsOptions=} opt_options Defaults options.
- * @return {ol.Collection.<ol.control.Control>} Controls.
- * @api
- */
-ol.control.defaults = function(opt_options) {
-
-  var options = opt_options ? opt_options : {};
-
-  var controls = new ol.Collection();
-
-  var zoomControl = options.zoom !== undefined ? options.zoom : true;
-  if (zoomControl) {
-    controls.push(new ol.control.Zoom(options.zoomOptions));
-  }
-
-  var rotateControl = options.rotate !== undefined ? options.rotate : true;
-  if (rotateControl) {
-    controls.push(new ol.control.Rotate(options.rotateOptions));
-  }
-
-  var attributionControl = options.attribution !== undefined ?
-    options.attribution : true;
-  if (attributionControl) {
-    controls.push(new ol.control.Attribution(options.attributionOptions));
-  }
-
-  return controls;
-};
-
 ol.control.LabelDebug = function(opt_options) {
 
   var options = opt_options || {};
@@ -495,347 +437,309 @@ ol.control.LabelDebug.prototype.stopDemoMode_ = function() {
   view.setResolution(view.getResolution());
 }
 
-ol.control.LayerMenu = function(opt_options) {
-
-  var options = opt_options || {};
-
-  this.state = {
-    open: false,
-    layers: []
-  };
-
-  this.btn = document.createElement('button');
-  this.btn.innerHTML = '&#9776;';
-
-  //Create reference to current scope
-  var _this = this;
-
-  //Register event listener for button and use current scope
-  this.btn.addEventListener('click', function () {
-    _this.toggleMenu();
-  });
-
-  this.container = document.createElement('div');
-  this.container.className = 'ol-layer-menu ol-control ol-collapsed';
-
-  this.menu = document.createElement('div');
-  this.menu.className = 'layer-menu';
-
-  this.container.appendChild(this.menu);
-  this.container.appendChild(this.btn);
-
-  ol.control.Control.call(this, {
-    element: this.container,
-    target: options.target
-  });
-}
-
-ol.inherits(ol.control.LayerMenu, ol.control.Control);
-
-ol.control.LayerMenu.prototype.toggleMenu = function(){
-  if(this.state.open === true){
-    this.closeMenu();
-  }else{
-    this.openMenu();
-  }
-
-  this.state.open = !this.state.open;
-}
-
-ol.control.LayerMenu.prototype.activateLayerLabel = function(event){
-
-  if(event.target.value == undefined){
-    return
-  }
-
-  selectedOpt = event.target.value;
-  checked = event.target.checked;
-
-  this.state.layers.getArray()
-    .filter(layer => layer instanceof ol.layer.Label)
-    .forEach(
-      layer => {
-        const title = layer.get('title');
-        if(title === selectedOpt){
-          layer.setVisible(true);
-        }else{
-          layer.setVisible(false);
-        }
-      }
-    )
-}
-
-ol.control.LayerMenu.prototype.activateLayer = function(event){
-
-  if(event.target.value === undefined){
-    return
-  }
-
-  selectedOpt = event.target.value;
-  checked = event.target.checked;
-
-  this.state.layers.getArray()
-    .filter(layer => !(layer instanceof ol.layer.Label))
-    .forEach(
-      layer => {
-        const title = layer.get('title');
-        if(title === selectedOpt){
-          layer.setVisible(true);
-        }else{
-          layer.setVisible(false);
-        }
-      }
-    )
-}
-
-ol.control.LayerMenu.prototype.openMenu = function(){
-
-  var map = this.getMap();
-  var layers = map.getLayers();
-
-  this.btn.innerHTML = 'X';
-
-  this.container.classList.remove('ol-collapsed');
-
-
-  if(this.menu.innerHTML == ''){
-    this.renderMenuContents();
-  };
-
-}
-
-ol.control.LayerMenu.prototype.closeMenu = function(){
-
-  var map = this.getMap();
-  var layers = map.getLayers();
-
-  this.container.classList.add('ol-collapsed');
-
-  this.btn.innerHTML = '&#9776;';
-
-}
-
-ol.control.LayerMenu.prototype.renderMenuContents = function(){
-
-  var tilesContainer = document.createElement('div');
-  tilesContainer.innerHTML = '<h5>Tiles</h5>';
-  var tileList = document.createElement('ul');
-
-  this.state.layers = map.getLayers();
-
-  this.state.layers.forEach(function(layer, index, array) {
-
-    if(layer instanceof ol.layer.Label || layer.get('title') == undefined){
-      return;
-    }
-
-    var title = layer.get('title');
-    var visible = layer.getVisible();
-
-    var li = document.createElement('li');
-    li.setAttribute('title', layer.get('description'));
-    var label = document.createElement('label');
-    var element = document.createElement('input');
-    element.setAttribute('type', 'radio');
-    element.setAttribute('name', 'tiles');
-    element.setAttribute('value', title);
-
-    element.checked = visible;
-
-    label.appendChild(element);
-    var name = document.createElement('span');
-    name.innerHTML = title;
-    label.appendChild(name);
-    li.appendChild(label);
-    tileList.appendChild(li);
-
-  });
-
-  tilesContainer.appendChild(tileList);
-
-  this.menu.appendChild(tilesContainer);
-
-  //Create reference to current scope
-  var _this = this;
-
-  //Register event listener for tiles container and use current scope
-  tilesContainer.addEventListener('click', function (event) {
-      _this.activateLayer(event);
-  });
-
-  var labelContainer = document.createElement('div');
-  labelContainer.innerHTML = '<h5>Labels</h5>';
-  var labelList = document.createElement('ul');
-
-  // render available Tile endpoints
-  this.state.layers.forEach(function(layer,idx){
-
-    if(!(layer instanceof ol.layer.Label) || layer.get('title') == undefined){
-      return;
-    }
-
-    var title = layer.get('title');
-    var visible = layer.getVisible();
-    // console.log(title, visible);
-    var li = document.createElement('li');
-    var label = document.createElement('label');
-    var element = document.createElement('input');
-    element.setAttribute('type', 'radio');
-    element.setAttribute('name', 'labels');
-    element.setAttribute('value', title);
-
-    element.checked = visible;
-
-    label.appendChild(element);
-    var name = document.createElement('span');
-    name.innerHTML = title;
-    label.appendChild(name);
-    li.appendChild(label);
-    labelList.appendChild(li);
-  });
-
-  labelContainer.appendChild(labelList);
-
-  this.menu.appendChild(labelContainer);
-
-  //Register event listener for label container and use current scope
-  labelContainer.addEventListener('click', function (event) {
-      _this.activateLayerLabel(event);
-  });
-}
-
-ol.source.Label = function(org_options) {
-
-  this.labelServerUrl = org_options.url;
-
-  // TODO: Allow user to set own options here?!
-  // overwrite needed options:
-  org_options.format = new ol.format.GeoJSON();
-  org_options.strategy = ol.loadingstrategy.bbox
-  org_options.url = this.featureLoader.bind(this);
-  org_options.updateWhileAnimating = true;
-  org_options.updateWhileInteracting = true;
-
-  ol.source.Vector.call(this, org_options);
-};
-
-ol.source.Label.prototype = Object.create(ol.source.Vector.prototype);
-
-ol.source.Label.prototype.addFeatureInternal = function(feature) {
-  var featureKey = feature.get('osm');
-
-  if (!this.addToIndex_(featureKey, feature)) {
-    return;
-  }
-
-  this.setupChangeEvents_(featureKey, feature);
-
-  var geometry = feature.getGeometry();
-  if (geometry) {
-    var extent = geometry.getExtent();
-    if (this.featuresRtree_) {
-      this.featuresRtree_.insert(extent, feature);
-    }
-  } else {
-    this.nullGeometryFeatures_[featureKey] = feature;
-  }
-
-  this.dispatchEvent(
-      new ol.source.Vector.Event(ol.source.VectorEventType.ADDFEATURE, feature));
-};
-
-
-ol.source.Label.prototype.loadFeatures = function(extent, resolution, projection) {
-
-  var loadedExtentsRtree = this.loadedExtentsRtree_;
-  var extentsToLoad = this.strategy_(extent, resolution);
-  var i, ii;
-  for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
-    var extentToLoad = extentsToLoad[i];
-    var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
-        /**
-         * @param {{extent: ol.Extent}} object Object.
-         * @return {boolean} Contains.
-         */
-        function(object) {
-          // console.log(object,extentToLoad);
-          return ol.extent.containsExtent(object.extent, extentToLoad) && resolution == object.resolution;
-        });
-    if (!alreadyLoaded) {
-      this.loader_.call(this, extentToLoad, resolution, projection);
-      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice(), resolution: resolution});
-    }
-  }
-}
-
-ol.source.Label.prototype.constructor = ol.source.Label;
-
-
-
-/**
- * Feature loader function
- * @param {Array} extent - Array that representisthe area to be loaded with: [minx, miny, maxx, maxy]
- * @param {number} resolution - the number representing the resolution (map units per pixel)
- * @param {ol.proj.Projection} projection - the projection that is used for this feature
- */
-ol.source.Label.prototype.featureLoader = function(extent, resolution, projection){
-  // extent: [minx, miny, maxx, maxy]
-  //ol.proj.toLonLat takes coord-pair, so need to split
-  var min = ol.proj.toLonLat(extent.slice(0, 2));
-  var max = ol.proj.toLonLat(extent.slice(2, 4));
-
-  // Calculate mint_t value for label request
-  var min_t = resolutionToMinT(resolution);
-
-  var parameters = {
-      x_min: min[0],
-      x_max: max[0],
-      y_min: min[1],
-      y_max: max[1],
-      t_min: min_t
-  };
-
-  return this.buildQuery(parameters);
-}
-
-/**
- * Calculate the min_t value from the resolution.
- * @param {number} resolution - current resolution
- */
-function resolutionToMinT(resolution) {
-  var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
-  if (zoom <= 3) {
-    return 10000;
-  } else {
-    return Math.pow(2, 9 - (zoom - 1));
-  }
-}
-
-
-/**
- * Builds a query in the format of:
- *    http://<label-server>/label/<label-type>?x_min=8&x_max=9&y_min=53&y_max=53.06&t_min=0.001
- */
-ol.source.Label.prototype.buildQuery = function(params) {
-  if (typeof params === 'undefined' || typeof params !== 'object') {
-        params = {};
-    }
-    var query = '?';
-    var index = 0;
-    for (var i in params) {
-        index++;
-        var param = i;
-        var value = params[i];
-        if (index == 1) {
-            query += param + '=' + value;
-        } else {
-            query += '&' + param + '=' + value;
-        }
-    }
-    return this.labelServerUrl + query;
-}
-
 const TypedMap = Map;
+var ol;
+(function (ol) {
+    /**
+     * Calculate the min_t value from the resolution.
+     * @param {number} resolution - current resolution
+     */
+    function resolutionToMinT(resolution) {
+        var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
+        if (zoom <= 3) {
+            return 10000;
+        }
+        else {
+            return Math.pow(2, 9 - (zoom - 1));
+        }
+    }
+    ol.resolutionToMinT = resolutionToMinT;
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var control;
+    (function (control) {
+        /**
+         * Set of controls included in maps by default. Unless configured otherwise,
+         * this returns a collection containing an instance of each of the following
+         * controls:
+         * * {@link ol.control.Zoom}
+         * * {@link ol.control.Rotate}
+         * * {@link ol.control.Attribution}
+         *
+         * @param opt_options Defaults options.
+         * @return Controls.
+         * @api stable
+         */
+        function defaults(opt_options) {
+            var controls = new ol.Collection();
+            var zoomControl = opt_options.zoom !== undefined ? opt_options.zoom : true;
+            if (zoomControl) {
+                controls.push(new ol.control.Zoom(opt_options.zoomOptions));
+            }
+            var rotateControl = opt_options.rotate !== undefined ? opt_options.rotate : true;
+            if (rotateControl) {
+                controls.push(new ol.control.Rotate(opt_options.rotateOptions));
+            }
+            var attributionControl = opt_options.attribution !== undefined ?
+                opt_options.attribution : true;
+            if (attributionControl) {
+                controls.push(new ol.control.Attribution(opt_options.attributionOptions));
+            }
+            return controls;
+        }
+    })(control = ol.control || (ol.control = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var control;
+    (function (control) {
+        class LayerMenu extends ol.control.Control {
+            constructor(opt_options) {
+                var container = document.createElement('div');
+                opt_options = opt_options || {};
+                var options = {
+                    element: container,
+                    target: opt_options.target
+                };
+                super(options);
+                this.container = container;
+                this.menu = document.createElement('div');
+                this.menu.className = 'layer-menu';
+                this.btn = document.createElement('button');
+                this.btn.innerHTML = '&#9776;';
+                //Create reference to current scope
+                var _this = this;
+                //Register event listener for button and use current scope
+                this.btn.addEventListener('click', function () {
+                    _this.toggleMenu();
+                });
+                container.className = 'ol-layer-menu ol-control ol-collapsed';
+                container.appendChild(this.menu);
+                container.appendChild(this.btn);
+                this.state = {
+                    open: false,
+                    layers: new ol.Collection()
+                };
+            }
+            toggleMenu() {
+                if (this.state.open === true) {
+                    this.closeMenu();
+                }
+                else {
+                    this.openMenu();
+                }
+                this.state.open = !this.state.open;
+            }
+            activateLayerLabel(event) {
+                var eventTarget = event.target;
+                if (eventTarget.value == undefined) {
+                    return;
+                }
+                var selectedOpt = eventTarget.value;
+                var checked = eventTarget.checked;
+                this.state.layers.getArray()
+                    .filter(layer => layer instanceof ol.layer.Label)
+                    .forEach(layer => {
+                    const title = layer.get('title');
+                    if (title === selectedOpt) {
+                        layer.setVisible(true);
+                    }
+                    else {
+                        layer.setVisible(false);
+                    }
+                });
+            }
+            activateLayer(event) {
+                var eventTarget = event.target;
+                if (eventTarget.value === undefined) {
+                    return;
+                }
+                var selectedOpt = eventTarget.value;
+                var checked = eventTarget.checked;
+                this.state.layers.getArray()
+                    .filter(layer => !(layer instanceof ol.layer.Label))
+                    .forEach(layer => {
+                    const title = layer.get('title');
+                    if (title === selectedOpt) {
+                        layer.setVisible(true);
+                    }
+                    else {
+                        layer.setVisible(false);
+                    }
+                });
+            }
+            openMenu() {
+                var map = this.getMap();
+                var layers = map.getLayers();
+                this.btn.innerHTML = 'X';
+                this.container.classList.remove('ol-collapsed');
+                if (this.menu.innerHTML == '') {
+                    this.renderMenuContents();
+                }
+            }
+            closeMenu() {
+                var map = this.getMap();
+                var layers = map.getLayers();
+                this.container.classList.add('ol-collapsed');
+                this.btn.innerHTML = '&#9776;';
+            }
+            renderMenuContents() {
+                var tilesContainer = document.createElement('div');
+                tilesContainer.innerHTML = '<h5>Tiles</h5>';
+                var tileList = document.createElement('ul');
+                this.state.layers = this.getMap().getLayers();
+                this.state.layers.forEach(function (layer, index, array) {
+                    if (layer instanceof ol.layer.Label || layer.get('title') == undefined) {
+                        return;
+                    }
+                    var title = layer.get('title');
+                    var visible = layer.getVisible();
+                    var li = document.createElement('li');
+                    li.setAttribute('title', layer.get('description'));
+                    var label = document.createElement('label');
+                    var element = document.createElement('input');
+                    element.setAttribute('type', 'radio');
+                    element.setAttribute('name', 'tiles');
+                    element.setAttribute('value', title);
+                    element.checked = visible;
+                    label.appendChild(element);
+                    var name = document.createElement('span');
+                    name.innerHTML = title;
+                    label.appendChild(name);
+                    li.appendChild(label);
+                    tileList.appendChild(li);
+                });
+                tilesContainer.appendChild(tileList);
+                this.menu.appendChild(tilesContainer);
+                //Create reference to current scope
+                var _this = this;
+                //Register event listener for tiles container and use current scope
+                tilesContainer.addEventListener('click', function (event) {
+                    _this.activateLayer(event);
+                });
+                var labelContainer = document.createElement('div');
+                labelContainer.innerHTML = '<h5>Labels</h5>';
+                var labelList = document.createElement('ul');
+                // render available Tile endpoints
+                this.state.layers.forEach(function (layer, idx) {
+                    if (!(layer instanceof ol.layer.Label) || layer.get('title') == undefined) {
+                        return;
+                    }
+                    var title = layer.get('title');
+                    var visible = layer.getVisible();
+                    // console.log(title, visible);
+                    var li = document.createElement('li');
+                    var label = document.createElement('label');
+                    var element = document.createElement('input');
+                    element.setAttribute('type', 'radio');
+                    element.setAttribute('name', 'labels');
+                    element.setAttribute('value', title);
+                    element.checked = visible;
+                    label.appendChild(element);
+                    var name = document.createElement('span');
+                    name.innerHTML = title;
+                    label.appendChild(name);
+                    li.appendChild(label);
+                    labelList.appendChild(li);
+                });
+                labelContainer.appendChild(labelList);
+                this.menu.appendChild(labelContainer);
+                //Register event listener for label container and use current scope
+                labelContainer.addEventListener('click', function (event) {
+                    _this.activateLayerLabel(event);
+                });
+            }
+        }
+        control.LayerMenu = LayerMenu;
+    })(control = ol.control || (ol.control = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var layer;
+    (function (layer) {
+        class Label extends ol.layer.Vector {
+            constructor(opt_options) {
+                if (!opt_options.style) {
+                    opt_options.style = ol.style.labelStyle;
+                }
+                // If no preferred options for update while animating or interacting are given, set them as default to true
+                if (opt_options.updateWhileAnimating === undefined) {
+                    opt_options.updateWhileAnimating = true;
+                }
+                if (opt_options.updateWhileInteracting === undefined) {
+                    opt_options.updateWhileInteracting = true;
+                }
+                super(opt_options);
+            }
+        }
+        layer.Label = Label;
+    })(layer = ol.layer || (ol.layer = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var source;
+    (function (source) {
+        class Label extends source.Vector {
+            constructor(org_options) {
+                //Read url of the label server and create feature loader from it
+                var labelServerUrl = org_options.url.toString();
+                var featureLoader = Label.createFeatureLoader(labelServerUrl);
+                //TODO: Allow user to set own options here?!
+                //Overwrite required options
+                org_options.format = new ol.format.GeoJSON();
+                org_options.strategy = ol.loadingstrategy.bbox;
+                org_options.url = featureLoader;
+                super(org_options);
+                this.labelServerUrl = labelServerUrl;
+                this.featureLoader = featureLoader;
+            }
+            static createFeatureLoader(labelServerUrl) {
+                let featureLoader = (extent, resolution, projection) => {
+                    // extent: [minx, miny, maxx, maxy]
+                    //ol.proj.toLonLat takes coord-pair, so need to split
+                    var min = ol.proj.toLonLat(extent.slice(0, 2));
+                    var max = ol.proj.toLonLat(extent.slice(2, 4));
+                    // Calculate mint_t value for label request
+                    var min_t = ol.resolutionToMinT(resolution);
+                    var parameters = {
+                        x_min: min[0],
+                        x_max: max[0],
+                        y_min: min[1],
+                        y_max: max[1],
+                        t_min: min_t
+                    };
+                    return Label.buildQuery(labelServerUrl, parameters);
+                };
+                return featureLoader;
+            }
+            static buildQuery(labelServerUrl, params) {
+                if (typeof params === 'undefined' || typeof params !== 'object') {
+                    params = {};
+                }
+                var query = '?';
+                var index = 0;
+                for (var i in params) {
+                    index++;
+                    var param = i;
+                    var value = params[i];
+                    if (index == 1) {
+                        query += param + '=' + value;
+                    }
+                    else {
+                        query += '&' + param + '=' + value;
+                    }
+                }
+                return labelServerUrl + query;
+            }
+        }
+        source.Label = Label;
+    })(source = ol.source || (ol.source = {}));
+})(ol || (ol = {}));
 
 var ol;
 (function (ol) {
@@ -925,8 +829,7 @@ var ol;
             //resolve if icon or text label
             this.resolveType();
             //get global min t
-            // @ts-ignore
-            this.min_t = resolutionToMinT(resolution);
+            this.min_t = ol.resolutionToMinT(resolution);
         }
         resolveType() {
             if (this.text.includes('icon:')) {

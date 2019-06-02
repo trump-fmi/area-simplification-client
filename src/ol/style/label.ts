@@ -99,8 +99,7 @@ namespace ol {
             this.resolveType();
 
             //get global min t
-            // @ts-ignore
-            this.min_t = resolutionToMinT(resolution);
+            this.min_t = ol.resolutionToMinT(resolution);
         }
 
         private resolveType() {
