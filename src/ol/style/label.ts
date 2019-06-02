@@ -150,7 +150,7 @@ namespace ol {
 
 
                 if (typeof Label.textCache.get(cache_key) === 'undefined') {
-                    var calculatedlabelFactor = this.calculateLabelFactor();
+                    var calculatedlabelFactor = ol.calculateLabelFactor(this.feature);
                     var fontConfig = calculatedlabelFactor + "px " + labelFontType;
 
                     // Remove escaped character from JSON format string: \\n to \n
@@ -204,11 +204,6 @@ namespace ol {
             }
 
             return ICON_URL + icon;
-        }
-
-        private calculateLabelFactor(): number {
-            var labelFactor = this.feature.get("lbl_fac");
-            return parseInt(labelFactor) * 1.1;
         }
 
         /**

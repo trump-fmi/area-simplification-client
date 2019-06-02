@@ -1,9 +1,5 @@
 namespace ol.control {
 
-    interface EventTarget{
-        value:any;
-    }
-
     interface LayerMenuState {
         open: boolean;
         layers: ol.Collection<ol.layer.Base>;
@@ -12,14 +8,14 @@ namespace ol.control {
     export class LayerMenu extends ol.control.Control {
 
         private state: LayerMenuState;
+        private container: HTMLDivElement;
         private menu: HTMLDivElement;
         private btn: HTMLButtonElement;
-        private container: HTMLDivElement;
 
         constructor(opt_options: olx.control.ControlOptions) {
-            var container = document.createElement('div');
-
             opt_options = opt_options || {};
+
+            var container = document.createElement('div');
 
             var options: olx.control.ControlOptions = {
                 element: container,
