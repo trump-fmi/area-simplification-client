@@ -47,20 +47,25 @@ namespace ol.source {
         }
 
         private static buildQuery(labelServerUrl: string, params: any): string {
-            if (typeof params === 'undefined' || typeof params !== 'object') {
+            if (typeof params !== 'object') {
                 params = {};
             }
+
             var query = '?';
-            var index = 0;
-            for (var i in params) {
-                index++;
-                var param = i;
-                var value = params[i];
-                if (index == 1) {
+            var first = true;
+            for (var property in params) {
+                if (!params.hasOwnProperty(property)) {
+                    continue;
+                }
+
+                var param = property;
+                var value = params[property];
+                if (first) {
                     query += param + '=' + value;
                 } else {
                     query += '&' + param + '=' + value;
                 }
+                first = false;
             }
 
             return labelServerUrl + query;

@@ -220,7 +220,6 @@ function addLayersToMap(endpoints) {
 }
 
 function httpGET(url, callback) {
-    console.log(url);
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)

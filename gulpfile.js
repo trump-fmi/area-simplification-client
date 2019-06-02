@@ -27,10 +27,11 @@ const watchcss = done => {
 };
 
 const prepareJS = done => {
-    var mainFile = gulp.src("src/main.js")
+    var mainJSFiles = gulp.src("src/main/**/*.js")
+        .pipe(concat("main.js"))
         .pipe(gulp.dest("dist/"));
 
-    var jsFiles = gulp.src(["src/**/*.js", "!src/main.js"]);
+    var jsFiles = gulp.src(["src/**/*.js", "!src/main/**/*.js"]);
 
     var tsProject = ts.createProject('tsconfig.json');
     var tsFiles = tsProject.src()

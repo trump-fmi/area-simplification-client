@@ -128,7 +128,6 @@ var ol;
             renderMenuContents() {
                 const rangeCSSWidth = '300px';
                 var map = this.getMap();
-                //TODO test
                 var rowContainerTemplate = document.createElement('div');
                 rowContainerTemplate.style.margin = '10px';
                 // Checkbox for enabling the drawing of the circles
@@ -150,7 +149,6 @@ var ol;
                 // Slider for coefficient of labelfactor
                 var labelfactorSliderContainer = rowContainerTemplate.cloneNode();
                 var labelfactorRange = document.createElement('input');
-                //TODO test
                 labelfactorRange.style.width = rangeCSSWidth;
                 labelfactorRange.setAttribute('type', 'range');
                 labelfactorRange.setAttribute('id', 'labelfactorRange');
@@ -174,7 +172,6 @@ var ol;
                 // Slider for controlling the calculation of the min_t value
                 var minTFactorSliderContainer = rowContainerTemplate.cloneNode();
                 var minTFactorRange = document.createElement('input');
-                //TODO test
                 minTFactorRange.style.width = rangeCSSWidth;
                 minTFactorRange.setAttribute('type', 'range');
                 minTFactorRange.setAttribute('id', 'minTFactorRange');
@@ -197,7 +194,6 @@ var ol;
                 window.minTFac = 9;
                 var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
                 var minTCoeffRange = document.createElement('input');
-                //TODO test
                 minTCoeffRange.style.width = rangeCSSWidth;
                 minTCoeffRange.setAttribute('type', 'range');
                 minTCoeffRange.setAttribute('id', 'minTCoeffRange');
@@ -223,7 +219,6 @@ var ol;
                 /* Create slider control for zoom level */
                 var zoomSliderContainer = rowContainerTemplate.cloneNode();
                 var zoomLevelDelta = document.createElement('input');
-                //TODO test
                 zoomLevelDelta.style.marginLeft = '10px';
                 zoomLevelDelta.style.width = '50px';
                 zoomLevelDelta.setAttribute('type', 'number');
@@ -233,7 +228,6 @@ var ol;
                 zoomLevelDelta.setAttribute('step', '0.1');
                 zoomLevelDelta.setAttribute('value', '1.0');
                 var zoomSliderInput = document.createElement('input');
-                //TODO test
                 zoomSliderInput.style.marginTop = '10px';
                 zoomSliderInput.style.width = '600px';
                 zoomSliderInput.setAttribute('type', 'range');
@@ -247,7 +241,6 @@ var ol;
                 zoomSliderLabel.htmlFor = 'zoomSliderInput';
                 zoomSliderLabel.appendChild(document.createTextNode('Use the slider to change the zoom level with the defined zoom delta:'));
                 var zoomLevelLabel = document.createElement('label');
-                //TODO test
                 zoomLevelLabel.style.marginLeft = '10px';
                 zoomLevelLabel.style.position = 'relative';
                 zoomLevelLabel.style.top = '-6px';
@@ -632,21 +625,24 @@ var ol;
                 return featureLoader;
             }
             static buildQuery(labelServerUrl, params) {
-                if (typeof params === 'undefined' || typeof params !== 'object') {
+                if (typeof params !== 'object') {
                     params = {};
                 }
                 var query = '?';
-                var index = 0;
-                for (var i in params) {
-                    index++;
-                    var param = i;
-                    var value = params[i];
-                    if (index == 1) {
+                var first = true;
+                for (var property in params) {
+                    if (!params.hasOwnProperty(property)) {
+                        continue;
+                    }
+                    var param = property;
+                    var value = params[property];
+                    if (first) {
                         query += param + '=' + value;
                     }
                     else {
                         query += '&' + param + '=' + value;
                     }
+                    first = false;
                 }
                 return labelServerUrl + query;
             }
