@@ -96,7 +96,7 @@ namespace ol.control {
             var checked = eventTarget.checked;
 
             this.state.layers.getArray()
-                .filter(layer => !(layer instanceof ol.layer.Label))
+                .filter(layer => (layer instanceof ol.layer.Tile))
                 .forEach(
                     layer => {
                         const title = layer.get('title');
