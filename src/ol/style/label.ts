@@ -89,9 +89,10 @@ namespace ol {
         private iconUrl: string;
 
         constructor(feature: Feature, resolution: number) {
+            this.feature = feature;
+
             // Get needed fields from feature object
             this.text = feature.get("name");
-            this.feature = feature;
             this.t = feature.get("t");
             this.factor = feature.get("lbl_fac");
 

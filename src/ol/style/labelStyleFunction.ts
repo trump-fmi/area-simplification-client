@@ -1,5 +1,5 @@
 namespace ol.style {
-    export function labelStyle(feature: Feature, resolution: number) {
+    export function labelStyleFunction(feature: Feature, resolution: number): ol.style.Style {
         //Create new label
         var label = new ol.Label(feature, resolution);
         return label.render();

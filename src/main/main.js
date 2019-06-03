@@ -94,39 +94,6 @@ for (var i = 0; i < stuttgartCoords.length; i++) {
     stuttgartPolygon.push(polygonPoints);
 }
 
-
-var areaStyles = [
-    /* We are using two different styles for the polygons:
-     *  - The first style is for the polygons themselves.
-     *  - The second style is to draw the vertices of the polygons.
-     *    In a custom `geometry` function the vertices of a polygon are
-     *    returned as `MultiPoint` geometry, which will be used to render
-     *    the style.
-     */
-    new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: 'blue',
-            width: 3
-        }),
-        fill: new ol.style.Fill({
-            color: 'rgba(0, 0, 255, 0.6)'
-        })
-    }),
-    new ol.style.Style({
-        image: new ol.style.Circle({
-            radius: 5,
-            fill: new ol.style.Fill({
-                color: 'orange'
-            })
-        }),
-        geometry: function (feature) {
-            // return the coordinates of the first ring of the polygon
-            var coordinates = feature.getGeometry().getCoordinates()[0];
-            return new ol.geom.MultiPoint(coordinates);
-        }
-    })
-];
-
 var geojsonObject = {
     'type': 'FeatureCollection',
     'crs': {
@@ -148,11 +115,6 @@ var areaSource = new ol.source.Vector({
     features: (new ol.format.GeoJSON()).readFeatures(geojsonObject)
 });
 
-var areaLayer = new ol.layer.Vector({
-    source: areaSource,
-    style: areaStyles
-});
-
 
 var map = new ol.Map({
     loadTilesWhileAnimating: true,
@@ -172,7 +134,6 @@ map.addControl(new ol.control.LayerMenu());
 
 httpGET(labelCollectionUrl, function (response) {
     var endpointsJSON = JSON.parse(response);
-    console.log(endpointsJSON);
     addLayersToMap(endpointsJSON);
 });
 
@@ -197,7 +158,9 @@ function addLayersToMap(endpoints) {
     }
 
     //TODO
-    map.addLayer(areaLayer);
+    map.addLayer(new ol.layer.Area({
+        source: areaSource,
+    }));
 
     // Add label layers to map
     var labelEndpoints = endpoints.endpoints;
@@ -222,9 +185,9 @@ function addLayersToMap(endpoints) {
 function httpGET(url, callback) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+        if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
             callback(xmlHttp.responseText);
-    }
+    };
     xmlHttp.open("GET", url, true); // true for asynchronous
     xmlHttp.send(null);
 }

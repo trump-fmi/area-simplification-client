@@ -2,7 +2,7 @@ namespace ol.layer {
     export class Label extends ol.layer.Vector {
         constructor(opt_options: olx.layer.VectorOptions) {
             if (!opt_options.style) {
-                opt_options.style = ol.style.labelStyle
+                opt_options.style = ol.style.labelStyleFunction
             }
 
             // If no preferred options for update while animating or interacting are given, set them as default to true

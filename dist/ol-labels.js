@@ -460,6 +460,7 @@ var ol;
                 });
             }
             activateLayer(event) {
+                alert("howdy");
                 var eventTarget = event.target;
                 if (eventTarget.value === undefined) {
                     return;
@@ -467,7 +468,7 @@ var ol;
                 var selectedOpt = eventTarget.value;
                 var checked = eventTarget.checked;
                 this.state.layers.getArray()
-                    .filter(layer => !(layer instanceof ol.layer.Label))
+                    .filter(layer => (layer instanceof ol.layer.Tile))
                     .forEach(layer => {
                     const title = layer.get('title');
                     if (title === selectedOpt) {
@@ -568,10 +569,37 @@ var ol;
 (function (ol) {
     var layer;
     (function (layer) {
+        /**
+         * Instances of this class represent area layers that are used for displaying areas on the map,
+         * given as polygon features.
+         */
+        class Area extends ol.layer.Vector {
+            /**
+             * Creates a new layer for displaying areas on the map by passing an option object.
+             *
+             * @param opt_options An object of options to use within this layer
+             */
+            constructor(opt_options) {
+                //If certain options were not set then provide a default value for them
+                opt_options.style = opt_options.style || ol.style.areaStyleFunction;
+                opt_options.updateWhileAnimating = opt_options.updateWhileAnimating || true;
+                opt_options.updateWhileInteracting = opt_options.updateWhileInteracting || true;
+                //Call constructor of vector layer (parent)
+                super(opt_options);
+            }
+        }
+        layer.Area = Area;
+    })(layer = ol.layer || (ol.layer = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var layer;
+    (function (layer) {
         class Label extends ol.layer.Vector {
             constructor(opt_options) {
                 if (!opt_options.style) {
-                    opt_options.style = ol.style.labelStyle;
+                    opt_options.style = ol.style.labelStyleFunction;
                 }
                 // If no preferred options for update while animating or interacting are given, set them as default to true
                 if (opt_options.updateWhileAnimating === undefined) {
@@ -649,6 +677,100 @@ var ol;
         }
         source.Label = Label;
     })(source = ol.source || (ol.source = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    /**
+     * Instances of this class represent areas, consisting out of a polygon, that may be displayed
+     * within the area layer of a map. All area objects provide a render method which returns the style
+     * that is supposed to be used for this area object.
+     */
+    class Area {
+        /**
+         * Creates a new area object from a feature and a resolution.
+         *
+         * @param feature The feature to create the area object from
+         * @param resolution The resolution to use
+         */
+        constructor(feature, resolution) {
+            // Get needed fields from feature object
+            this.feature = feature;
+        }
+        /**
+         * Returns an array of styles that is supposed to be used for the rendering of this area object.
+         */
+        render() {
+            //Create empty array for styles
+            var styles = [];
+            var polygonStyle = new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: 'blue',
+                    width: 3
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(0, 0, 255, 0.6)'
+                })
+            });
+            styles.push(polygonStyle);
+            styles.push(ol.style.STYLE_AREA_POLYGON_POINTS);
+            return styles;
+        }
+    }
+    //TODO use
+    //Map (area type -> style) of styles for different area types
+    Area.typeStyles = new TypedMap();
+    ol.Area = Area;
+})(ol || (ol = {}));
+
+/**
+ * This file defines style constants that might be used as building blocks for area styles.
+ */
+var ol;
+(function (ol) {
+    var style;
+    (function (style) {
+        const POLYGON_POINTS_RADIUS = 5;
+        const POLYGON_POINTS_FILL_COLOR = 'orange';
+        /**
+         * Style for points that are part of an area polygon.
+         */
+        style.STYLE_AREA_POLYGON_POINTS = new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: POLYGON_POINTS_RADIUS,
+                fill: new ol.style.Fill({
+                    color: POLYGON_POINTS_FILL_COLOR
+                })
+            }),
+            geometry: function (feature) {
+                //Get polygon coordinates from feature
+                var polygon = feature.getGeometry();
+                var coordinates = polygon.getCoordinates()[0];
+                //Draw points for all coordinates
+                return new ol.geom.MultiPoint(coordinates);
+            }
+        });
+    })(style = ol.style || (ol.style = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var style;
+    (function (style) {
+        /**
+         * Returns an array of styles that may be used for rendering a given feature at a certain resolution.
+         *
+         * @param feature The feature to return the styles for
+         * @param resolution The resolution to use
+         */
+        function areaStyleFunction(feature, resolution) {
+            //Create new area object from parameters
+            var area = new ol.Area(feature, resolution);
+            //Render area and return resulting styles
+            return area.render();
+        }
+        style.areaStyleFunction = areaStyleFunction;
+    })(style = ol.style || (ol.style = {}));
 })(ol || (ol = {}));
 
 var ol;
@@ -731,9 +853,9 @@ var ol;
     const ICON_URL = "https://rawgit.com/gravitystorm/openstreetmap-carto/master/symbols/";
     class Label {
         constructor(feature, resolution) {
+            this.feature = feature;
             // Get needed fields from feature object
             this.text = feature.get("name");
-            this.feature = feature;
             this.t = feature.get("t");
             this.factor = feature.get("lbl_fac");
             //resolve if icon or text label
@@ -853,11 +975,11 @@ var ol;
 (function (ol) {
     var style;
     (function (style) {
-        function labelStyle(feature, resolution) {
+        function labelStyleFunction(feature, resolution) {
             //Create new label
             var label = new ol.Label(feature, resolution);
             return label.render();
         }
-        style.labelStyle = labelStyle;
+        style.labelStyleFunction = labelStyleFunction;
     })(style = ol.style || (ol.style = {}));
 })(ol || (ol = {}));
