@@ -70,7 +70,7 @@ var ol;
 (function (ol) {
     var control;
     (function (control) {
-        class LabelDebug extends ol.control.Control {
+        class DebugMenu extends ol.control.Control {
             constructor(opt_options) {
                 opt_options = opt_options || {};
                 var container = document.createElement('div');
@@ -80,7 +80,7 @@ var ol;
                 };
                 super(options);
                 this.container = container;
-                this.container.className = 'ol-label-debug ol-control ol-collapsed';
+                this.container.className = 'ol-debug-menu ol-control ol-collapsed';
                 //Create menu element
                 this.menu = document.createElement('div');
                 this.menu.className = '';
@@ -395,7 +395,7 @@ var ol;
                 view.cancelAnimations();
             }
         }
-        control.LabelDebug = LabelDebug;
+        control.DebugMenu = DebugMenu;
     })(control = ol.control || (ol.control = {}));
 })(ol || (ol = {}));
 

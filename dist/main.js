@@ -167,7 +167,7 @@ var map = new ol.Map({
 
 // add controls
 map.addControl(new ol.control.ZoomSlider());
-map.addControl(new ol.control.LabelDebug());
+map.addControl(new ol.control.DebugMenu());
 map.addControl(new ol.control.LayerMenu());
 
 httpGET(labelCollectionUrl, function (response) {

@@ -10,7 +10,7 @@ namespace ol.control {
         closeMenu: string;
     }
 
-    export class LabelDebug extends ol.control.Control {
+    export class DebugMenu extends ol.control.Control {
 
         private state: DebugMenuState;
         private container: HTMLDivElement;
@@ -31,7 +31,7 @@ namespace ol.control {
             super(options);
 
             this.container = container;
-            this.container.className = 'ol-label-debug ol-control ol-collapsed';
+            this.container.className = 'ol-debug-menu ol-control ol-collapsed';
 
             //Create menu element
             this.menu = document.createElement('div');

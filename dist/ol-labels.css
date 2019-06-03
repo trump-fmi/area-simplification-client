@@ -47,20 +47,20 @@ html, body {
   
 }
 
-.ol-label-debug {
+.ol-debug-menu {
   bottom: 0.5em;
   left: 0.5em;
   background-color: rgba(255,255,255,.8);
 }
 
-.ol-label-debug:hover {
+.ol-debug-menu:hover {
   background-color: rgba(255,255,255,.9);
 }
 
-.ol-label-debug .menu-toggle-button {
+.ol-debug-menu .menu-toggle-button {
   float: right;
 }
 
-.ol-label-debug .demo-mode-button {
+.ol-debug-menu .demo-mode-button {
   display: inline-block;
 }
