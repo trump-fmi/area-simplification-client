@@ -1,3 +1,4 @@
+//Alias for typescript map
 const TypedMap = Map;
 
 namespace ol {

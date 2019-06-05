@@ -30,6 +30,7 @@ namespace ol {
             //Create empty array for styles
             var styles: ol.style.Style[] = [];
 
+            //Create style for polygon
             var polygonStyle = new ol.style.Style({
                 stroke: new ol.style.Stroke({
                     color: 'blue',
@@ -40,6 +41,7 @@ namespace ol {
                 })
             });
 
+            //Return styles as area
             styles.push(polygonStyle);
             styles.push(ol.style.STYLE_AREA_POLYGON_POINTS);
 

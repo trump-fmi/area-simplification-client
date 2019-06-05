@@ -16,13 +16,36 @@ namespace ol.style {
                 color: POLYGON_POINTS_FILL_COLOR
             })
         }),
-        geometry: function (feature) {
-            //Get polygon coordinates from feature
-            var polygon = <geom.Polygon>feature.getGeometry();
-            var coordinates = polygon.getCoordinates()[0];
+        geometry: function (feature: Feature) {
+            //Get geometry of feature
+            var geometry = feature.getGeometry();
 
-            //Draw points for all coordinates
-            return new ol.geom.MultiPoint(coordinates);
+            //Check whether geometry is polygon or multi polygon
+            if (geometry instanceof ol.geom.Polygon) {
+                //Return all points of the polygon so that points can be drawn
+                var polygon = <ol.geom.Polygon>geometry;
+                return new ol.geom.MultiPoint(polygon.getCoordinates()[0]);
+            } else if (geometry instanceof ol.geom.MultiPolygon) {
+                var multiPolygon = <ol.geom.MultiPolygon>geometry;
+                var coordinates = multiPolygon.getCoordinates()
+
+                //List for all found coordinates of the multi polygon
+                var coordinatesList: ol.Coordinate[] = [];
+
+                //Iterate over all available coordinates
+                for (var i = 0; i < coordinates.length; i++) {
+                    for (var k = 0; k < coordinates[i][0].length; k++) {
+                        //Add current coordinate to list
+                        coordinatesList.push(coordinates[i][0][k]);
+                    }
+
+                }
+
+                //Return all coordinates of the multi polygon so that points can be drawn
+                return new ol.geom.MultiPoint(coordinatesList);
+            }
+
+
         }
     });
 }
