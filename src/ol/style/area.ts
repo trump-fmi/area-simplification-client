@@ -43,7 +43,7 @@ namespace ol {
 
             //Return styles as area
             styles.push(polygonStyle);
-            styles.push(ol.style.STYLE_AREA_POLYGON_POINTS);
+            //styles.push(ol.style.STYLE_AREA_POLYGON_POINTS);
 
             return styles;
         }

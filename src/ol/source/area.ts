@@ -30,7 +30,7 @@ namespace ol.source {
             var oldZoom = 0;
             org_options.strategy = function (extent: Extent, resolution: number) {
                 var currentZoom = _this.map.getView().getZoom();
-                if (Math.abs(oldZoom - currentZoom) > 0.4) {
+                if (Math.abs(oldZoom - currentZoom) > 0.2) {
                     // @ts-ignore
                     _this.loadedExtentsRtree_.clear();
                     oldZoom = currentZoom;
