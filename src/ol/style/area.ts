@@ -35,10 +35,10 @@ namespace ol {
                 stroke: new ol.style.Stroke({
                     color: 'blue',
                     width: 3
-                }),
-                fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 255, 0.6)'
                 })
+                /*, fill: new ol.style.Fill({
+                    color: 'rgba(0, 0, 255, 0.6)'
+                })*/
             });
 
             //Return styles as area

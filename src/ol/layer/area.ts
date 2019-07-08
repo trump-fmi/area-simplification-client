@@ -13,8 +13,8 @@ namespace ol.layer {
         constructor(opt_options: olx.layer.VectorOptions) {
             //If certain options were not set then provide a default value for them
             opt_options.style = opt_options.style || ol.style.areaStyleFunction;
-            opt_options.updateWhileAnimating = opt_options.updateWhileAnimating || true;
-            opt_options.updateWhileInteracting = opt_options.updateWhileInteracting || true;
+            opt_options.updateWhileAnimating = opt_options.updateWhileAnimating || false;
+            opt_options.updateWhileInteracting = opt_options.updateWhileInteracting || false;
 
             //Call constructor of vector layer (parent)
             super(opt_options);

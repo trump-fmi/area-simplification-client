@@ -27,7 +27,7 @@ namespace ol.style {
                 return new ol.geom.MultiPoint(polygon.getCoordinates()[0]);
             } else if (geometry instanceof ol.geom.MultiPolygon) {
                 var multiPolygon = <ol.geom.MultiPolygon>geometry;
-                var coordinates = multiPolygon.getCoordinates()
+                var coordinates = multiPolygon.getCoordinates();
 
                 //List for all found coordinates of the multi polygon
                 var coordinatesList: ol.Coordinate[] = [];
