@@ -6,11 +6,8 @@ namespace ol {
      * that is supposed to be used for this area object.
      */
     export class Area {
-        //TODO use
-        //Map (area type -> style) of styles for different area types
-        private static typeStyles = new TypedMap<string, ol.style.Style>();
-
         private feature: Feature;
+        private resolution: number;
 
         /**
          * Creates a new area object from a feature and a resolution.
@@ -21,28 +18,18 @@ namespace ol {
         constructor(feature: Feature, resolution: number) {
             // Get needed fields from feature object
             this.feature = feature;
+            this.resolution = resolution;
         }
 
         /**
          * Returns an array of styles that is supposed to be used for the rendering of this area object.
          */
         public render(): ol.style.Style[] {
-            //Create empty array for styles
+            //Array for all styles that are supposed to be returned
             var styles: ol.style.Style[] = [];
 
-            //Create style for polygon
-            var polygonStyle = new ol.style.Style({
-                stroke: new ol.style.Stroke({
-                    color: 'blue',
-                    width: 3
-                })
-                /*, fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 255, 0.6)'
-                })*/
-            });
-
-            //Return styles as area
-            styles.push(polygonStyle);
+            //Add desired styles to array
+            styles.push(ol.style.STYLE_AREA_BORDERS);
             //styles.push(ol.style.STYLE_AREA_POLYGON_POINTS);
 
             return styles;

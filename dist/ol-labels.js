@@ -584,7 +584,8 @@ var ol;
                 opt_options.style = opt_options.style || ol.style.areaStyleFunction;
                 opt_options.updateWhileAnimating = opt_options.updateWhileAnimating || false;
                 opt_options.updateWhileInteracting = opt_options.updateWhileInteracting || false;
-                //Call constructor of vector layer (parent)
+                opt_options.renderMode = opt_options.renderMode || 'image'; //'vector' is default
+                //Call constructor of vector layer (super class)
                 super(opt_options);
             }
         }
@@ -840,32 +841,20 @@ var ol;
         constructor(feature, resolution) {
             // Get needed fields from feature object
             this.feature = feature;
+            this.resolution = resolution;
         }
         /**
          * Returns an array of styles that is supposed to be used for the rendering of this area object.
          */
         render() {
-            //Create empty array for styles
+            //Array for all styles that are supposed to be returned
             var styles = [];
-            //Create style for polygon
-            var polygonStyle = new ol.style.Style({
-                stroke: new ol.style.Stroke({
-                    color: 'blue',
-                    width: 3
-                })
-                /*, fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 255, 0.6)'
-                })*/
-            });
-            //Return styles as area
-            styles.push(polygonStyle);
+            //Add desired styles to array
+            styles.push(ol.style.STYLE_AREA_BORDERS);
             //styles.push(ol.style.STYLE_AREA_POLYGON_POINTS);
             return styles;
         }
     }
-    //TODO use
-    //Map (area type -> style) of styles for different area types
-    Area.typeStyles = new TypedMap();
     ol.Area = Area;
 })(ol || (ol = {}));
 
@@ -878,6 +867,18 @@ var ol;
     (function (style) {
         const POLYGON_POINTS_RADIUS = 5;
         const POLYGON_POINTS_FILL_COLOR = 'orange';
+        /**
+         * General style for borders.
+         */
+        style.STYLE_AREA_BORDERS = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'blue',
+                width: 3
+            })
+            /*, fill: new ol.style.Fill({
+                color: 'rgba(0, 0, 255, 0.6)'
+            })*/
+        });
         /**
          * Style for points that are part of an area polygon.
          */

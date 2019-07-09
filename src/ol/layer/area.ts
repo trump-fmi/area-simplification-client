@@ -15,8 +15,9 @@ namespace ol.layer {
             opt_options.style = opt_options.style || ol.style.areaStyleFunction;
             opt_options.updateWhileAnimating = opt_options.updateWhileAnimating || false;
             opt_options.updateWhileInteracting = opt_options.updateWhileInteracting || false;
+            opt_options.renderMode = opt_options.renderMode || 'image'; //'vector' is default
 
-            //Call constructor of vector layer (parent)
+            //Call constructor of vector layer (super class)
             super(opt_options);
         }
     }

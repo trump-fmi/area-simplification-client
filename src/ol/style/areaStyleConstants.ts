@@ -7,6 +7,19 @@ namespace ol.style {
     const POLYGON_POINTS_FILL_COLOR = 'orange';
 
     /**
+     * General style for borders.
+     */
+    export const STYLE_AREA_BORDERS = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'blue',
+            width: 3
+        })
+        /*, fill: new ol.style.Fill({
+            color: 'rgba(0, 0, 255, 0.6)'
+        })*/
+    });
+
+    /**
      * Style for points that are part of an area polygon.
      */
     export const STYLE_AREA_POLYGON_POINTS = new ol.style.Style({
@@ -44,8 +57,6 @@ namespace ol.style {
                 //Return all coordinates of the multi polygon so that points can be drawn
                 return new ol.geom.MultiPoint(coordinatesList);
             }
-
-
         }
     });
 }
