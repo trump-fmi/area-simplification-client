@@ -11,7 +11,7 @@ const labelCollectionUrl = labelServerUrl + ":" + labelServerPort + "/labelColle
 const tileEndpointsUrl = tileServerUrl + ":" + tileEndpointsPort;
 
 //TODO configure area server URI
-const areaServerUrl = "http://localhost:8080";
+const areaServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.host) + ":8181";
 const areaUrlPrefix = "/area/countries";
 
 var map = new ol.Map({
