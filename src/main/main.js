@@ -34,15 +34,15 @@ map.addControl(new ol.control.LayerMenu());
 httpGET(tileEndpointsUrl, function (response) {
     var tileEndpointsJSON = JSON.parse(response);
     addTileLayersToMap(tileEndpointsJSON);
+    addAreaLayersToMap();
+
+    // Get label endpoints (this is nested for a deterministic order of layers)
+    httpGET(labelCollectionUrl, function (response) {
+        var labelEndpointsJSON = JSON.parse(response);
+        addLabelLayersToMap(labelEndpointsJSON);
+    });
 });
 
-addAreaLayersToMap();
-
-// Get label endpoints
-httpGET(labelCollectionUrl, function (response) {
-    var labelEndpointsJSON = JSON.parse(response);
-    addLabelLayersToMap(labelEndpointsJSON);
-});
 
 function addTileLayersToMap(tileEndpoints) {
     // Add tile layers to map
