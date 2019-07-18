@@ -5,9 +5,12 @@ const labelServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de
 const labelServerPort = "8080";
 const tileServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.host);
 const tileServerPort = "80";
-const labelCollectionUrl = labelServerUrl + ":" + labelServerPort + "/labelCollections";
+const tileEndpointsPort = "8081";
 
-//TODO
+const labelCollectionUrl = labelServerUrl + ":" + labelServerPort + "/labelCollections";
+const tileEndpointsUrl = tileServerUrl + ":" + tileEndpointsPort;
+
+//TODO configure area server URI
 const areaServerUrl = "http://localhost:8080";
 const areaUrlPrefix = "/area/countries";
 
@@ -27,14 +30,20 @@ map.addControl(new ol.control.ZoomSlider());
 map.addControl(new ol.control.DebugMenu());
 map.addControl(new ol.control.LayerMenu());
 
+// Get label endpoints
 httpGET(labelCollectionUrl, function (response) {
-    var endpointsJSON = JSON.parse(response);
-    addLayersToMap(endpointsJSON);
+    var labelEndpointsJSON = JSON.parse(response);
+    addLabelLayersToMap(labelEndpointsJSON);
 });
 
-function addLayersToMap(endpoints) {
+// Get tile endpoints
+httpGET(tileEndpointsUrl, function (response) {
+    var tileEndpointsJSON = JSON.parse(response);
+    addTileLayersToMap(tileEndpointsJSON);
+});
+
+function addTileLayersToMap(tileEndpoints) {
     // Add tile layers to map
-    var tileEndpoints = endpoints.tileEndpoints;
     for (var i = 0; i < tileEndpoints.length; i++) {
         var tileEndpoint = tileEndpoints[i];
         var tileEndpointUrl = tileServerUrl + ":" + tileServerPort + tileEndpoint.uri + "{z}/{x}/{y}.png";
@@ -51,8 +60,10 @@ function addLayersToMap(endpoints) {
             })
         );
     }
+}
 
-    //TODO
+function addLabelLayersToMap(endpoints) {
+    //TODO extract to function when endpoint exists
     map.addLayer(new ol.layer.Area({
         source: new ol.source.Area({
             url: areaServerUrl + areaUrlPrefix
