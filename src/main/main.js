@@ -30,16 +30,18 @@ map.addControl(new ol.control.ZoomSlider());
 map.addControl(new ol.control.DebugMenu());
 map.addControl(new ol.control.LayerMenu());
 
-// Get label endpoints
-httpGET(labelCollectionUrl, function (response) {
-    var labelEndpointsJSON = JSON.parse(response);
-    addLabelLayersToMap(labelEndpointsJSON);
-});
-
 // Get tile endpoints
 httpGET(tileEndpointsUrl, function (response) {
     var tileEndpointsJSON = JSON.parse(response);
     addTileLayersToMap(tileEndpointsJSON);
+});
+
+addAreaLayersToMap();
+
+// Get label endpoints
+httpGET(labelCollectionUrl, function (response) {
+    var labelEndpointsJSON = JSON.parse(response);
+    addLabelLayersToMap(labelEndpointsJSON);
 });
 
 function addTileLayersToMap(tileEndpoints) {
@@ -62,8 +64,8 @@ function addTileLayersToMap(tileEndpoints) {
     }
 }
 
-function addLabelLayersToMap(endpoints) {
-    //TODO extract to function when endpoint exists
+function addAreaLayersToMap(){
+    //TODO parse API when it exists
     map.addLayer(new ol.layer.Area({
         source: new ol.source.Area({
             url: areaServerUrl + areaUrlPrefix
@@ -71,7 +73,9 @@ function addLabelLayersToMap(endpoints) {
         title: "areas",
         visible: true
     }));
+}
 
+function addLabelLayersToMap(endpoints) {
     // Add label layers to map
     var labelEndpoints = endpoints.endpoints;
     for (var i = 0; i < labelEndpoints.length; i++) {
