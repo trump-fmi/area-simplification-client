@@ -3,30 +3,38 @@
  */
 namespace ol.style {
 
-    const POLYGON_POINTS_RADIUS = 5;
-    const POLYGON_POINTS_FILL_COLOR = 'orange';
-
     /**
-     * General style for borders.
+     * Style for town borders.
      */
-    export const STYLE_AREA_BORDERS = new ol.style.Style({
+    export const STYLE_AREA_TOWNS = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: 'blue',
             width: 3
         })
-        /*, fill: new ol.style.Fill({
-            color: 'rgba(0, 0, 255, 0.6)'
-        })*/
     });
 
     /**
-     * Style for points that are part of an area polygon.
+     * Style for woodland.
+     */
+    export const STYLE_AREA_WOODLAND = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#248c26',
+            width: 1
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(41, 163, 43, 0.6)'
+        })
+    });
+
+    /**
+     * Style for points that of an area polygon. May be helpful for debugging, should not be used
+     * in productive environments however.
      */
     export const STYLE_AREA_POLYGON_POINTS = new ol.style.Style({
         image: new ol.style.Circle({
-            radius: POLYGON_POINTS_RADIUS,
+            radius: 5,
             fill: new ol.style.Fill({
-                color: POLYGON_POINTS_FILL_COLOR
+                color: 'orange'
             })
         }),
         geometry: function (feature: Feature) {

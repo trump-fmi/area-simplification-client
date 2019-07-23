@@ -1,46 +1,66 @@
 //Debug enabled?
 const DEBUG = window.location.hash.toLowerCase() === "#debug";
 
-const labelServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.host);
-const labelServerPort = "8080";
-const tileServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.host);
-const tileServerPort = "80";
-const tileEndpointsPort = "8081";
+//*************** CONFIG ****************
+const MAP_CONTAINER = 'map';
+const START_LOCATION = [9.180769, 48.777106];
+const START_ZOOM = 12;
+const TILE_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
+const TILE_SERVER_PORT = "80";
+const TILE_SERVER_ENDPOINTS_PORT = "8081";
+const LABEL_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
+const LABEL_SERVER_PORT = "8080";
 
-const labelCollectionUrl = labelServerUrl + ":" + labelServerPort + "/labelCollections";
-const tileEndpointsUrl = tileServerUrl + ":" + tileEndpointsPort;
+const AREA_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
+//const AREA_SERVER_URL = "http://" + window.location.hostname;
+const AREA_SERVER_PORT = "8181";
 
-//TODO configure area server URI
-const areaServerUrl = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.host) + ":8181";
-const areaUrlPrefix = "/area/countries";
+const TILES_Z_INDEX = 0;
+const AREAS_Z_INDEX_BASE = 10;
+const LABEL_Z_INDEX = 10000;
+//**************************************
 
+//Put together required URLs
+const tileEndpointsUrl = TILE_SERVER_URL + ":" + TILE_SERVER_ENDPOINTS_PORT;
+const tileRetrievalUrl = TILE_SERVER_URL + ":" + TILE_SERVER_PORT;
+const labelCollectionUrl = LABEL_SERVER_URL + ":" + LABEL_SERVER_PORT + "/labelCollections";
+const labelRetrievalUrl = LABEL_SERVER_URL + ":" + LABEL_SERVER_PORT + "/";
+const areaTypesUrl = AREA_SERVER_URL + ":" + AREA_SERVER_PORT + "/types";
+const areaRetrievalUrl = AREA_SERVER_URL + ":" + AREA_SERVER_PORT + "/get/";
+
+//Create map
 var map = new ol.Map({
     loadTilesWhileAnimating: true,
     loadTilesWhileInteracting: true,
     layers: [],
-    target: 'map',
+    target: MAP_CONTAINER,
     view: new ol.View({
-        center: ol.proj.fromLonLat([9.180769, 48.777106]),
-        zoom: 12
+        center: ol.proj.fromLonLat(START_LOCATION),
+        zoom: START_ZOOM
     })
 });
 
-// add controls
+//Add controls to map
 map.addControl(new ol.control.ZoomSlider());
 map.addControl(new ol.control.DebugMenu());
 map.addControl(new ol.control.LayerMenu());
 
-// Get tile endpoints
+//Get all available tile endpoints and create layers for them subsequently
 httpGET(tileEndpointsUrl, function (response) {
-    var tileEndpointsJSON = JSON.parse(response);
-    addTileLayersToMap(tileEndpointsJSON);
-    addAreaLayersToMap();
+    var tileEndpoints = JSON.parse(response);
+    addTileLayersToMap(tileEndpoints);
+});
 
-    // Get label endpoints (this is nested for a deterministic order of layers)
-    httpGET(labelCollectionUrl, function (response) {
-        var labelEndpointsJSON = JSON.parse(response);
-        addLabelLayersToMap(labelEndpointsJSON);
-    });
+//Get all available area types and create layers for them subsequently
+httpGET(areaTypesUrl, function (response) {
+    var areaTypes = JSON.parse(response);
+    addAreaLayersToMap(areaTypes);
+});
+
+//Get all available label collections and create layers for them subsequently
+httpGET(labelCollectionUrl, function (response) {
+    var labelEndpointsJSON = JSON.parse(response);
+    addLabelLayersToMap(labelEndpointsJSON);
 });
 
 
@@ -48,53 +68,77 @@ function addTileLayersToMap(tileEndpoints) {
     // Add tile layers to map
     for (var i = 0; i < tileEndpoints.length; i++) {
         var tileEndpoint = tileEndpoints[i];
-        var tileEndpointUrl = tileServerUrl + ":" + tileServerPort + tileEndpoint.uri + "{z}/{x}/{y}.png";
+        var tileEndpointUrl = tileRetrievalUrl + tileEndpoint.uri + "{z}/{x}/{y}.png";
         var isLayerVisible = (tileEndpoint.name === "default");
-        map.addLayer(
-            new ol.layer.Tile({
-                source: new ol.source.OSM({
-                    url: tileEndpointUrl
-                }),
-                title: tileEndpoint.name,
-                description: tileEndpoint.description,
-                preload: 5,
-                visible: isLayerVisible
-            })
-        );
+
+        //Create new tile layer
+        var tileLayer = new ol.layer.Tile({
+            source: new ol.source.OSM({
+                url: tileEndpointUrl
+            }),
+            title: tileEndpoint.name,
+            description: tileEndpoint.description,
+            preload: 5,
+            visible: isLayerVisible,
+            zIndex: TILES_Z_INDEX
+        });
+
+        //Add layer to map
+        map.addLayer(tileLayer);
     }
 }
 
-function addAreaLayersToMap(){
-    //TODO parse API when it exists
-    map.addLayer(new ol.layer.Area({
-        source: new ol.source.Area({
-            url: areaServerUrl + areaUrlPrefix
-        }, map),
-        title: "areas",
-        visible: true
-    }));
+
+function addAreaLayersToMap(areaTypes) {
+    //Sanity check
+    if (!Array.isArray(areaTypes)) {
+        return;
+    }
+
+    //iterate over all area types
+    for (var i = 0; i < areaTypes.length; i++) {
+        var areaType = areaTypes[i];
+
+        //Create new area layer
+        var areaLayer = new ol.layer.Area({
+            source: new ol.source.Area({
+                url: (areaRetrievalUrl + areaType.resource)
+            }, map),
+            title: areaType.name,
+            visible: true,
+            zIndex: (AREAS_Z_INDEX_BASE + i)
+        }, areaType, map);
+
+        //Add layer to map
+        map.addLayer(areaLayer)
+    }
 }
 
-function addLabelLayersToMap(endpoints) {
+
+function addLabelLayersToMap(endpointsObject) {
     // Add label layers to map
-    var labelEndpoints = endpoints.endpoints;
+    var labelEndpoints = endpointsObject.endpoints;
     for (var i = 0; i < labelEndpoints.length; i++) {
         var labelName = labelEndpoints[i];
-        var labelEndpointUrl = labelServerUrl + ":" + labelServerPort + "/" + endpoints.pathPrefix + "/" + labelName;
+        var labelEndpointUrl = labelRetrievalUrl + endpointsObject.pathPrefix + "/" + labelName;
         var isLayerVisible = (labelName === "citynames");
-        map.addLayer(
-            new ol.layer.Label({
-                source: new ol.source.Label({
-                    url: labelEndpointUrl
-                }),
-                style: null,
-                title: labelName,
-                visible: isLayerVisible
-            })
-        );
-    }
 
+        //Create new label layer
+        var labelLayer = new ol.layer.Label({
+            source: new ol.source.Label({
+                url: labelEndpointUrl
+            }),
+            style: null,
+            title: labelName,
+            visible: isLayerVisible,
+            zIndex: LABEL_Z_INDEX
+        });
+
+        //Add layer to map
+        map.addLayer(labelLayer);
+    }
 }
+
 
 function httpGET(url, callback) {
     var xmlHttp = new XMLHttpRequest();

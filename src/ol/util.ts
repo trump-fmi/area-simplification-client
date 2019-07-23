@@ -2,6 +2,16 @@
 const TypedMap = Map;
 
 namespace ol {
+
+    /**
+     * Describes the assumed structure of AreaType objects that describe a certain area type.
+     */
+    export interface AreaType {
+        resource: string;
+        zoom_min: number,
+        zoom_max: number
+    }
+
     /**
      * Calculate the min_t value from the resolution.
      * @param {number} resolution - current resolution

@@ -447,7 +447,6 @@ var ol;
                     return;
                 }
                 var selectedOpt = eventTarget.value;
-                var checked = eventTarget.checked;
                 this.state.layers.getArray()
                     .filter(layer => layer instanceof ol.layer.Label)
                     .forEach(layer => {
@@ -499,8 +498,8 @@ var ol;
                 tilesContainer.innerHTML = '<h5>Tiles</h5>';
                 var tileList = document.createElement('ul');
                 this.state.layers = this.getMap().getLayers();
-                this.state.layers.forEach(function (layer, index, array) {
-                    if (layer instanceof ol.layer.Label || layer.get('title') == undefined) {
+                this.state.layers.forEach(function (layer) {
+                    if (!(layer instanceof ol.layer.Tile) || (layer.get('title') == undefined)) {
                         return;
                     }
                     var title = layer.get('title');
@@ -570,23 +569,56 @@ var ol;
     var layer;
     (function (layer) {
         /**
-         * Instances of this class represent area layers that are used for displaying areas on the map,
-         * given as polygon features.
+         * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
+         * given as GeoJSON features. The layer will automatically be hidden if the current map zoom
+         * is no longer within the zoom range of the area type it represents.
          */
         class Area extends ol.layer.Vector {
             /**
              * Creates a new layer for displaying areas on the map by passing an option object.
              *
-             * @param opt_options An object of options to use within this layer
+             * @param options An object of options to use within this layer
+             * @param areaType The area type that is represented by this layer
+             * @param map The map instance for which the layer is used
+    
              */
-            constructor(opt_options) {
+            constructor(options, areaType, map) {
                 //If certain options were not set then provide a default value for them
-                opt_options.style = opt_options.style || ol.style.areaStyleFunction;
-                opt_options.updateWhileAnimating = opt_options.updateWhileAnimating || false;
-                opt_options.updateWhileInteracting = opt_options.updateWhileInteracting || false;
-                opt_options.renderMode = opt_options.renderMode || 'image'; //'vector' is default
-                //Call constructor of vector layer (super class)
-                super(opt_options);
+                options.style = options.style || ol.style.areaStyleFunction(areaType);
+                options.updateWhileAnimating = options.updateWhileAnimating || false;
+                options.updateWhileInteracting = options.updateWhileInteracting || false;
+                options.renderMode = options.renderMode || 'image'; //'vector' is default
+                //Set default options (if necessary) and call vector layer constructor
+                super(options);
+                this.areaType = areaType;
+                this.map = map;
+                this._wantDisplay = true;
+                //Save reference to current scope
+                let _this = this;
+                //Register move end event handler on map in order to check for the zoom level
+                this.map.on('moveend', function (event) {
+                    //Get current zoom level
+                    let zoomLevel = map.getView().getZoom();
+                    //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
+                    _this.setVisible((zoomLevel >= areaType.zoom_min)
+                        && (zoomLevel < areaType.zoom_max)
+                        && _this._wantDisplay);
+                });
+            }
+            /**
+             * Returns whether the layer is supposed to be displayed in case the zoom level of the map
+             * is within the zoom range of the area type.
+             */
+            get wantDisplay() {
+                return this._wantDisplay;
+            }
+            /**
+             * Sets whether the layer is supposed to be displayed in case the zoom level of the map
+             * is within the zoom range of the area type.
+             * @param value True, if the layer is supposed to be displayed; false otherwise
+             */
+            set wantDisplay(value) {
+                this._wantDisplay = value;
             }
         }
         layer.Area = Area;
@@ -824,40 +856,6 @@ var ol;
     })(source = ol.source || (ol.source = {}));
 })(ol || (ol = {}));
 
-var ol;
-(function (ol) {
-    /**
-     * Instances of this class represent areas, consisting out of a polygon, that may be displayed
-     * within the area layer of a map. All area objects provide a render method which returns the style
-     * that is supposed to be used for this area object.
-     */
-    class Area {
-        /**
-         * Creates a new area object from a feature and a resolution.
-         *
-         * @param feature The feature to create the area object from
-         * @param resolution The resolution to use
-         */
-        constructor(feature, resolution) {
-            // Get needed fields from feature object
-            this.feature = feature;
-            this.resolution = resolution;
-        }
-        /**
-         * Returns an array of styles that is supposed to be used for the rendering of this area object.
-         */
-        render() {
-            //Array for all styles that are supposed to be returned
-            var styles = [];
-            //Add desired styles to array
-            styles.push(ol.style.STYLE_AREA_BORDERS);
-            //styles.push(ol.style.STYLE_AREA_POLYGON_POINTS);
-            return styles;
-        }
-    }
-    ol.Area = Area;
-})(ol || (ol = {}));
-
 /**
  * This file defines style constants that might be used as building blocks for area styles.
  */
@@ -865,28 +863,36 @@ var ol;
 (function (ol) {
     var style;
     (function (style) {
-        const POLYGON_POINTS_RADIUS = 5;
-        const POLYGON_POINTS_FILL_COLOR = 'orange';
         /**
-         * General style for borders.
+         * Style for town borders.
          */
-        style.STYLE_AREA_BORDERS = new ol.style.Style({
+        style.STYLE_AREA_TOWNS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: 'blue',
                 width: 3
             })
-            /*, fill: new ol.style.Fill({
-                color: 'rgba(0, 0, 255, 0.6)'
-            })*/
         });
         /**
-         * Style for points that are part of an area polygon.
+         * Style for woodland.
+         */
+        style.STYLE_AREA_WOODLAND = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#248c26',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(41, 163, 43, 0.6)'
+            })
+        });
+        /**
+         * Style for points that of an area polygon. May be helpful for debugging, should not be used
+         * in productive environments however.
          */
         style.STYLE_AREA_POLYGON_POINTS = new ol.style.Style({
             image: new ol.style.Circle({
-                radius: POLYGON_POINTS_RADIUS,
+                radius: 5,
                 fill: new ol.style.Fill({
-                    color: POLYGON_POINTS_FILL_COLOR
+                    color: 'orange'
                 })
             }),
             geometry: function (feature) {
@@ -922,17 +928,27 @@ var ol;
 (function (ol) {
     var style;
     (function (style) {
+        //Maps resource names of area types onto arrays of area styles
+        const AREA_STYLES_MAPPING = new TypedMap([
+            ["towns", [style.STYLE_AREA_TOWNS]],
+            ["woodland", [style.STYLE_AREA_WOODLAND]]
+        ]);
         /**
-         * Returns an array of styles that may be used for rendering a given feature at a certain resolution.
-         *
-         * @param feature The feature to return the styles for
-         * @param resolution The resolution to use
+         * Returns a StyleFunction for a certain area type. This StyleFunction returns an array of styles
+         * that may be used for rendering a given feature at a certain resolution.
          */
-        function areaStyleFunction(feature, resolution) {
-            //Create new area object from parameters
-            var area = new ol.Area(feature, resolution);
-            //Render area and return resulting styles
-            return area.render();
+        function areaStyleFunction(areaType) {
+            /**
+             * Returns an array of styles for the given area type.
+             *
+             * @param feature The feature to return the styles for
+             * @param resolution The resolution to use
+             */
+            let styleFunction = (feature, resolution) => {
+                //Get and return styles array for this area type from the map
+                return AREA_STYLES_MAPPING.get(areaType.resource);
+            };
+            return styleFunction;
         }
         style.areaStyleFunction = areaStyleFunction;
     })(style = ol.style || (ol.style = {}));

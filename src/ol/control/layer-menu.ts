@@ -68,7 +68,6 @@ namespace ol.control {
             }
 
             var selectedOpt = eventTarget.value;
-            var checked = eventTarget.checked;
 
             this.state.layers.getArray()
                 .filter(layer => layer instanceof ol.layer.Label)
@@ -139,9 +138,9 @@ namespace ol.control {
 
             this.state.layers = this.getMap().getLayers();
 
-            this.state.layers.forEach(function (layer, index, array) {
+            this.state.layers.forEach(function (layer) {
 
-                if (layer instanceof ol.layer.Label || layer.get('title') == undefined) {
+                if (!(layer instanceof ol.layer.Tile) || (layer.get('title') == undefined)) {
                     return;
                 }
 
