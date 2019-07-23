@@ -16,7 +16,7 @@ const AREA_SERVER_PORT = "8181";
 const TILES_Z_INDEX = 0;
 const AREAS_Z_INDEX_BASE = 10;
 const LABEL_Z_INDEX = 10000;
-//**************************************
+//***************************************
 
 //Put together required URLs
 const tileEndpointsUrl = TILE_SERVER_URL + ":" + TILE_SERVER_ENDPOINTS_PORT;
@@ -104,7 +104,7 @@ function addAreaLayersToMap(areaTypes) {
             }, map),
             title: areaType.name,
             visible: true,
-            zIndex: (AREAS_Z_INDEX_BASE + i)
+            zIndex: (AREAS_Z_INDEX_BASE + areaType.z_index)
         }, areaType, map);
 
         //Add layer to map
