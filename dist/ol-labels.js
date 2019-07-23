@@ -914,10 +914,19 @@ var ol;
         /**
          * Style for town borders.
          */
+        style.STYLE_AREA_STATES = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'rgb(209, 53, 42)',
+                width: 3
+            })
+        });
+        /**
+         * Style for town borders.
+         */
         style.STYLE_AREA_TOWNS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: 'blue',
-                width: 3
+                width: 2
             })
         });
         /**
@@ -978,6 +987,7 @@ var ol;
     (function (style) {
         //Maps resource names of area types onto arrays of area styles
         const AREA_STYLES_MAPPING = new TypedMap([
+            ["states", [style.STYLE_AREA_STATES]],
             ["towns", [style.STYLE_AREA_TOWNS]],
             ["woodland", [style.STYLE_AREA_WOODLAND]]
         ]);

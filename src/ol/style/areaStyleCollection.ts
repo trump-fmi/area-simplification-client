@@ -6,10 +6,20 @@ namespace ol.style {
     /**
      * Style for town borders.
      */
+    export const STYLE_AREA_STATES = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'rgb(209, 53, 42)',
+            width: 3
+        })
+    });
+
+    /**
+     * Style for town borders.
+     */
     export const STYLE_AREA_TOWNS = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: 'blue',
-            width: 3
+            width: 2
         })
     });
 
