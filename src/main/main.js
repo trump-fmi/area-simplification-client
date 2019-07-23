@@ -104,7 +104,7 @@ function addAreaLayersToMap(areaTypes) {
             }, map),
             title: areaType.name,
             visible: true,
-            zIndex: (AREAS_Z_INDEX_BASE + i)
+            zIndex: (AREAS_Z_INDEX_BASE + areaType.z_index)
         }, areaType, map);
 
         //Add layer to map
