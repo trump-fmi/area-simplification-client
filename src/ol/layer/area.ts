@@ -39,14 +39,22 @@ namespace ol.layer {
 
             //Register move end event handler on map in order to check for the zoom level
             this.map.on('moveend', function (event) {
-                //Get current zoom level
-                let zoomLevel = map.getView().getZoom();
-
-                //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
-                _this.setVisible((zoomLevel >= areaType.zoom_min)
-                    && (zoomLevel < areaType.zoom_max)
-                    && _this._wantDisplay);
+                _this.updateVisibility();
             });
+        }
+
+        /**
+         * Checks the zoom level and wantDisplay property in order to determine whether the layer should
+         * be visible or not and updates its visibility subsequently.
+         */
+        private updateVisibility(): void {
+            //Get current zoom level
+            let zoomLevel = this.map.getView().getZoom();
+
+            //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
+            this.setVisible((zoomLevel >= this.areaType.zoom_min)
+                && (zoomLevel < this.areaType.zoom_max)
+                && this._wantDisplay);
         }
 
 
@@ -60,11 +68,14 @@ namespace ol.layer {
 
         /**
          * Sets whether the layer is supposed to be displayed in case the zoom level of the map
-         * is within the zoom range of the area type.
+         * is within the zoom range of the area type. Subsequently, the visibility of the layer is updated.
          * @param value True, if the layer is supposed to be displayed; false otherwise
          */
         public set wantDisplay(value: boolean) {
             this._wantDisplay = value;
+
+            //Display/hide layer if necessary
+            this.updateVisibility();
         }
     }
 }

@@ -4,7 +4,7 @@ const TypedMap = Map;
 namespace ol {
 
     /**
-     * Describes the assumed structure of AreaType objects that describe a certain area type.
+     * Defines the assumed structure of AreaType objects which describe area type.
      */
     export interface AreaType {
         resource: string;

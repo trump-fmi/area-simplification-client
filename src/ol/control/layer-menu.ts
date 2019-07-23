@@ -25,10 +25,8 @@ namespace ol.control {
             super(options);
 
             this.container = container;
-
             this.menu = document.createElement('div');
             this.menu.className = 'layer-menu';
-
             this.btn = document.createElement('button');
             this.btn.innerHTML = '&#9776;';
 
@@ -61,7 +59,7 @@ namespace ol.control {
 
         private activateLayerLabel(event: Event) {
 
-            var eventTarget = <HTMLInputElement> event.target;
+            var eventTarget = <HTMLInputElement>event.target;
 
             if (eventTarget.value == undefined) {
                 return;
@@ -71,21 +69,15 @@ namespace ol.control {
 
             this.state.layers.getArray()
                 .filter(layer => layer instanceof ol.layer.Label)
-                .forEach(
-                    layer => {
-                        const title = layer.get('title');
-                        if (title === selectedOpt) {
-                            layer.setVisible(true);
-                        } else {
-                            layer.setVisible(false);
-                        }
+                .forEach(layer => {
+                        layer.setVisible(layer.get('title') === selectedOpt);
                     }
-                )
+                );
         }
 
         private activateLayer(event: Event) {
 
-            var eventTarget = <HTMLInputElement> event.target;
+            var eventTarget = <HTMLInputElement>event.target;
 
             if (eventTarget.value === undefined) {
                 return
@@ -132,6 +124,9 @@ namespace ol.control {
         }
 
         private renderMenuContents() {
+            /*
+            Tiles
+             */
             var tilesContainer = document.createElement('div');
             tilesContainer.innerHTML = '<h5>Tiles</h5>';
             var tileList = document.createElement('ul');
@@ -139,7 +134,6 @@ namespace ol.control {
             this.state.layers = this.getMap().getLayers();
 
             this.state.layers.forEach(function (layer) {
-
                 if (!(layer instanceof ol.layer.Tile) || (layer.get('title') == undefined)) {
                     return;
                 }
@@ -163,7 +157,6 @@ namespace ol.control {
                 label.appendChild(name);
                 li.appendChild(label);
                 tileList.appendChild(li);
-
             });
 
             tilesContainer.appendChild(tileList);
@@ -178,6 +171,59 @@ namespace ol.control {
                 _this.activateLayer(event);
             });
 
+            /*
+            Areas
+             */
+            //Create containers
+            var areaContainer = document.createElement('div');
+            areaContainer.innerHTML = '<h5>Areas</h5>';
+            var areaList = document.createElement('ul');
+
+            //Append list to container
+            areaContainer.appendChild(areaList);
+
+            //Add available areas to area list
+            this.state.layers.forEach(function (layer, idx) {
+
+                //Filter for area layers
+                if (!(layer instanceof ol.layer.Area) || layer.get('title') == undefined) {
+                    return;
+                }
+
+                //Cast layer
+                let areaLayer = <ol.layer.Area>layer;
+
+                //Create required DOM elements
+                var listItem = document.createElement('li');
+                var label = document.createElement('label');
+                var input = document.createElement('input');
+                var span = document.createElement('span');
+
+                //Input config
+                input.setAttribute('type', 'checkbox');
+                input.checked = areaLayer.wantDisplay;
+
+                //Span config
+                span.innerHTML = layer.get('title');
+
+                //Add click event listener to label
+                input.addEventListener('click', function (event) {
+                    areaLayer.wantDisplay = !areaLayer.wantDisplay;
+                });
+
+                //Put elements together
+                label.appendChild(input);
+                label.appendChild(span);
+                listItem.appendChild(label);
+                areaList.appendChild(listItem);
+            });
+
+            //Add container to menu container
+            this.menu.appendChild(areaContainer);
+
+            /*
+            Labels
+             */
             var labelContainer = document.createElement('div');
             labelContainer.innerHTML = '<h5>Labels</h5>';
             var labelList = document.createElement('ul');
@@ -210,7 +256,6 @@ namespace ol.control {
             });
 
             labelContainer.appendChild(labelList);
-
             this.menu.appendChild(labelContainer);
 
             //Register event listener for label container and use current scope

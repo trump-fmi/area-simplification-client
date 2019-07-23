@@ -10,15 +10,13 @@ const TILE_SERVER_PORT = "80";
 const TILE_SERVER_ENDPOINTS_PORT = "8081";
 const LABEL_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const LABEL_SERVER_PORT = "8080";
-
 const AREA_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
-//const AREA_SERVER_URL = "http://" + window.location.hostname;
 const AREA_SERVER_PORT = "8181";
 
 const TILES_Z_INDEX = 0;
 const AREAS_Z_INDEX_BASE = 10;
 const LABEL_Z_INDEX = 10000;
-//**************************************
+//***************************************
 
 //Put together required URLs
 const tileEndpointsUrl = TILE_SERVER_URL + ":" + TILE_SERVER_ENDPOINTS_PORT;

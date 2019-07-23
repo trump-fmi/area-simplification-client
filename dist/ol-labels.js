@@ -450,13 +450,7 @@ var ol;
                 this.state.layers.getArray()
                     .filter(layer => layer instanceof ol.layer.Label)
                     .forEach(layer => {
-                    const title = layer.get('title');
-                    if (title === selectedOpt) {
-                        layer.setVisible(true);
-                    }
-                    else {
-                        layer.setVisible(false);
-                    }
+                    layer.setVisible(layer.get('title') === selectedOpt);
                 });
             }
             activateLayer(event) {
@@ -494,6 +488,9 @@ var ol;
                 this.btn.innerHTML = '&#9776;';
             }
             renderMenuContents() {
+                /*
+                Tiles
+                 */
                 var tilesContainer = document.createElement('div');
                 tilesContainer.innerHTML = '<h5>Tiles</h5>';
                 var tileList = document.createElement('ul');
@@ -527,6 +524,48 @@ var ol;
                 tilesContainer.addEventListener('click', function (event) {
                     _this.activateLayer(event);
                 });
+                /*
+                Areas
+                 */
+                //Create containers
+                var areaContainer = document.createElement('div');
+                areaContainer.innerHTML = '<h5>Areas</h5>';
+                var areaList = document.createElement('ul');
+                //Append list to container
+                areaContainer.appendChild(areaList);
+                //Add available areas to area list
+                this.state.layers.forEach(function (layer, idx) {
+                    //Filter for area layers
+                    if (!(layer instanceof ol.layer.Area) || layer.get('title') == undefined) {
+                        return;
+                    }
+                    //Cast layer
+                    let areaLayer = layer;
+                    //Create required DOM elements
+                    var listItem = document.createElement('li');
+                    var label = document.createElement('label');
+                    var input = document.createElement('input');
+                    var span = document.createElement('span');
+                    //Input config
+                    input.setAttribute('type', 'checkbox');
+                    input.checked = areaLayer.wantDisplay;
+                    //Span config
+                    span.innerHTML = layer.get('title');
+                    //Add click event listener to label
+                    input.addEventListener('click', function (event) {
+                        areaLayer.wantDisplay = !areaLayer.wantDisplay;
+                    });
+                    //Put elements together
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    listItem.appendChild(label);
+                    areaList.appendChild(listItem);
+                });
+                //Add container to menu container
+                this.menu.appendChild(areaContainer);
+                /*
+                Labels
+                 */
                 var labelContainer = document.createElement('div');
                 labelContainer.innerHTML = '<h5>Labels</h5>';
                 var labelList = document.createElement('ul');
@@ -597,13 +636,20 @@ var ol;
                 let _this = this;
                 //Register move end event handler on map in order to check for the zoom level
                 this.map.on('moveend', function (event) {
-                    //Get current zoom level
-                    let zoomLevel = map.getView().getZoom();
-                    //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
-                    _this.setVisible((zoomLevel >= areaType.zoom_min)
-                        && (zoomLevel < areaType.zoom_max)
-                        && _this._wantDisplay);
+                    _this.updateVisibility();
                 });
+            }
+            /**
+             * Checks the zoom level and wantDisplay property in order to determine whether the layer should
+             * be visible or not and updates its visibility subsequently.
+             */
+            updateVisibility() {
+                //Get current zoom level
+                let zoomLevel = this.map.getView().getZoom();
+                //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
+                this.setVisible((zoomLevel >= this.areaType.zoom_min)
+                    && (zoomLevel < this.areaType.zoom_max)
+                    && this._wantDisplay);
             }
             /**
              * Returns whether the layer is supposed to be displayed in case the zoom level of the map
@@ -614,11 +660,13 @@ var ol;
             }
             /**
              * Sets whether the layer is supposed to be displayed in case the zoom level of the map
-             * is within the zoom range of the area type.
+             * is within the zoom range of the area type. Subsequently, the visibility of the layer is updated.
              * @param value True, if the layer is supposed to be displayed; false otherwise
              */
             set wantDisplay(value) {
                 this._wantDisplay = value;
+                //Display/hide layer if necessary
+                this.updateVisibility();
             }
         }
         layer.Area = Area;
