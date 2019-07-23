@@ -916,7 +916,7 @@ var ol;
          */
         style.STYLE_AREA_STATES = new ol.style.Style({
             stroke: new ol.style.Stroke({
-                color: 'rgb(209, 53, 42)',
+                color: '#d1352a',
                 width: 3
             })
         });
