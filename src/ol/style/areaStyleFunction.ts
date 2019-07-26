@@ -12,17 +12,32 @@ namespace ol.style {
      * that may be used for rendering a given feature at a certain resolution.
      */
     export function areaStyleFunction(areaType: AreaType): StyleFunction {
+
+        //Get styles array for this area type from the map
+        let mappedStyles = AREA_STYLES_MAPPING.get(areaType.resource);
+
         /**
          * Returns an array of styles for the given area type.
          *
          * @param feature The feature to return the styles for
          * @param resolution The resolution to use
          */
-        let styleFunction = (feature: Feature, resolution: number) => {
-            //Get and return styles array for this area type from the map
-            return AREA_STYLES_MAPPING.get(areaType.resource);
-        };
+        return (feature: Feature, resolution: number) => {
 
-        return styleFunction;
+            //Array for styles to apply on geometries of this area type
+            let styles = [];
+
+            let labelName = feature.get('name');
+
+            if (areaType.labels && (labelName.length > 0)) {
+                let labelStyle = STYLE_AREA_LABELS;
+                labelStyle.getText().setText(labelName);
+                styles.push(labelStyle);
+            }
+
+            //Return merged styles
+            let merged = styles.concat(mappedStyles);
+            return merged;
+        };
     }
 }

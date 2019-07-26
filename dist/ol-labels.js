@@ -627,6 +627,7 @@ var ol;
                 options.updateWhileAnimating = options.updateWhileAnimating || false;
                 options.updateWhileInteracting = options.updateWhileInteracting || false;
                 options.renderMode = options.renderMode || 'image'; //'vector' is default
+                options.declutter = true;
                 //Set default options (if necessary) and call vector layer constructor
                 super(options);
                 this.areaType = areaType;
@@ -942,6 +943,22 @@ var ol;
             })
         });
         /**
+         * Style for area labels.
+         */
+        style.STYLE_AREA_LABELS = new ol.style.Style({
+            text: new ol.style.Text({
+                font: 'bold 16px "Open Sans", "Arial Unicode MS", "sans-serif"',
+                placement: 'point',
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 2
+                }),
+                fill: new style.Fill({
+                    color: 'white'
+                })
+            })
+        });
+        /**
          * Style for points that of an area polygon. May be helpful for debugging, should not be used
          * in productive environments however.
          */
@@ -996,17 +1013,27 @@ var ol;
          * that may be used for rendering a given feature at a certain resolution.
          */
         function areaStyleFunction(areaType) {
+            //Get styles array for this area type from the map
+            let mappedStyles = AREA_STYLES_MAPPING.get(areaType.resource);
             /**
              * Returns an array of styles for the given area type.
              *
              * @param feature The feature to return the styles for
              * @param resolution The resolution to use
              */
-            let styleFunction = (feature, resolution) => {
-                //Get and return styles array for this area type from the map
-                return AREA_STYLES_MAPPING.get(areaType.resource);
+            return (feature, resolution) => {
+                //Array for styles to apply on geometries of this area type
+                let styles = [];
+                let labelName = feature.get('name');
+                if (areaType.labels && (labelName.length > 0)) {
+                    let labelStyle = style.STYLE_AREA_LABELS;
+                    labelStyle.getText().setText(labelName);
+                    styles.push(labelStyle);
+                }
+                //Return merged styles
+                let merged = styles.concat(mappedStyles);
+                return merged;
             };
-            return styleFunction;
         }
         style.areaStyleFunction = areaStyleFunction;
     })(style = ol.style || (ol.style = {}));

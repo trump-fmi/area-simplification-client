@@ -37,6 +37,23 @@ namespace ol.style {
     });
 
     /**
+     * Style for area labels.
+     */
+    export const STYLE_AREA_LABELS = new ol.style.Style({
+        text: new ol.style.Text({
+            font: 'bold 16px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            placement: 'point',
+            stroke: new ol.style.Stroke({
+                color: 'black',
+                width: 2
+            }),
+            fill: new Fill({
+                color: 'white'
+            })
+        })
+    });
+
+    /**
      * Style for points that of an area polygon. May be helpful for debugging, should not be used
      * in productive environments however.
      */

@@ -26,6 +26,7 @@ namespace ol.layer {
             options.updateWhileAnimating = options.updateWhileAnimating || false;
             options.updateWhileInteracting = options.updateWhileInteracting || false;
             options.renderMode = options.renderMode || 'image'; //'vector' is default
+            options.declutter = true;
 
             //Set default options (if necessary) and call vector layer constructor
             super(options);

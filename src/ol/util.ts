@@ -7,6 +7,7 @@ namespace ol {
      * Defines the assumed structure of AreaType objects which describe area type.
      */
     export interface AreaType {
+        labels: boolean,
         resource: string,
         z_index: number,
         zoom_min: number,
