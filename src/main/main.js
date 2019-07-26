@@ -43,6 +43,10 @@ map.addControl(new ol.control.ZoomSlider());
 map.addControl(new ol.control.DebugMenu());
 map.addControl(new ol.control.LayerMenu());
 
+//Add select interaction to map
+map.addInteraction(new ol.interaction.Select());
+
+
 //Get all available tile endpoints and create layers for them subsequently
 httpGET(tileEndpointsUrl, function (response) {
     var tileEndpoints = JSON.parse(response);
