@@ -1,6 +1,7 @@
 /**
  * This file defines style constants that might be used as building blocks for area styles.
  */
+
 namespace ol.style {
 
     /**
@@ -41,7 +42,7 @@ namespace ol.style {
      */
     export const STYLE_AREA_LABELS = new ol.style.Style({
         text: new ol.style.Text({
-            font: 'bold 16px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
             placement: 'point',
             stroke: new ol.style.Stroke({
                 color: 'black',
@@ -49,8 +50,13 @@ namespace ol.style {
             }),
             fill: new Fill({
                 color: 'white'
-            })
-        })
+            }),
+            overflow: false,
+            rotateWithView: true
+        }),
+        geometry: function(feature:Feature){
+            return feature.getGeometry();
+        }
     });
 
     /**
