@@ -1025,7 +1025,7 @@ var ol;
             ["states", [style.STYLE_AREA_STATES]],
             ["towns", [style.STYLE_AREA_TOWNS]],
             ["rivers", [style.STYLE_LINE_RIVERS]],
-            ["commerical", [style.STYLE_AREA_COMMERCIAL]],
+            ["commercial", [style.STYLE_AREA_COMMERCIAL]],
             ["residential", [style.STYLE_AREA_RESIDENTIAL]],
             ["woodland", [style.STYLE_AREA_WOODLAND]]
         ]);
