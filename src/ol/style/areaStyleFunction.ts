@@ -17,7 +17,7 @@ namespace ol.style {
     export function areaStyleFunction(areaType: AreaType): StyleFunction {
 
         //Get styles array for this area type from the map
-        let mappedStyles = AREA_STYLES_MAPPING.get(areaType.resource);
+        let mappedStyles = AREA_STYLES_MAPPING.get(areaType.resource) || [];
 
         /**
          * Returns an array of styles for the given area type.
