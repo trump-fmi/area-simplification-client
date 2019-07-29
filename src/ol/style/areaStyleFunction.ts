@@ -2,10 +2,11 @@ namespace ol.style {
 
     //Maps resource names of area types onto arrays of area styles
     const AREA_STYLES_MAPPING = new TypedMap<string, Array<ol.style.Style>>([
-        ["river", [STYLE_LINE_RIVERS]],
-        ["rivers", [STYLE_LINE_RIVERS]], //TODO remove one
         ["states", [STYLE_AREA_STATES]],
         ["towns", [STYLE_AREA_TOWNS]],
+        ["rivers", [STYLE_LINE_RIVERS]],
+        ["commerical", [STYLE_AREA_COMMERCIAL]],
+        ["residential", [STYLE_AREA_RESIDENTIAL]],
         ["woodland", [STYLE_AREA_WOODLAND]]
     ]);
 

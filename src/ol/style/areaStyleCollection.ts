@@ -25,6 +25,24 @@ namespace ol.style {
     });
 
     /**
+     * Style for commercial landuse.
+     */
+    export const STYLE_AREA_COMMERCIAL = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: 'rgb(238, 206, 209)'
+        })
+    });
+
+    /**
+     * Style for residential landuse.
+     */
+    export const STYLE_AREA_RESIDENTIAL = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: 'rgb(218, 218, 218)'
+        })
+    });
+
+    /**
      * Style for woodland.
      */
     export const STYLE_AREA_WOODLAND = new ol.style.Style({
@@ -54,19 +72,6 @@ namespace ol.style {
             color: '#2c02c4',
             width: 2
         })
-        /*
-        , text: new ol.style.Text({
-            font: '14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-            placement: 'line',
-            stroke: new ol.style.Stroke({
-                color: 'black',
-                width: 0.2
-            }),
-            fill: new Fill({
-                color: 'black'
-            }),
-            rotateWithView: true
-        })*/
     });
 
     /**

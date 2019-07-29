@@ -931,6 +931,22 @@ var ol;
             })
         });
         /**
+         * Style for commercial landuse.
+         */
+        style.STYLE_AREA_COMMERCIAL = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgb(238, 206, 209)'
+            })
+        });
+        /**
+         * Style for residential landuse.
+         */
+        style.STYLE_AREA_RESIDENTIAL = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgb(218, 218, 218)'
+            })
+        });
+        /**
          * Style for woodland.
          */
         style.STYLE_AREA_WOODLAND = new ol.style.Style({
@@ -959,19 +975,6 @@ var ol;
                 color: '#2c02c4',
                 width: 2
             })
-            /*
-            , text: new ol.style.Text({
-                font: '14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-                placement: 'line',
-                stroke: new ol.style.Stroke({
-                    color: 'black',
-                    width: 0.2
-                }),
-                fill: new Fill({
-                    color: 'black'
-                }),
-                rotateWithView: true
-            })*/
         });
         /**
          * Style for points that of an area polygon. May be helpful for debugging, should not be used
@@ -1019,10 +1022,11 @@ var ol;
     (function (style) {
         //Maps resource names of area types onto arrays of area styles
         const AREA_STYLES_MAPPING = new TypedMap([
-            ["river", [style.STYLE_LINE_RIVERS]],
-            ["rivers", [style.STYLE_LINE_RIVERS]],
             ["states", [style.STYLE_AREA_STATES]],
             ["towns", [style.STYLE_AREA_TOWNS]],
+            ["rivers", [style.STYLE_LINE_RIVERS]],
+            ["commerical", [style.STYLE_AREA_COMMERCIAL]],
+            ["residential", [style.STYLE_AREA_RESIDENTIAL]],
             ["woodland", [style.STYLE_AREA_WOODLAND]]
         ]);
         /**
