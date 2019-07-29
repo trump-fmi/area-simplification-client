@@ -10,7 +10,7 @@ namespace ol.style {
     export const STYLE_AREA_STATES = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: '#d1352a',
-            width: 3
+            width: 4
         })
     });
 
@@ -19,8 +19,8 @@ namespace ol.style {
      */
     export const STYLE_AREA_TOWNS = new ol.style.Style({
         stroke: new ol.style.Stroke({
-            color: 'blue',
-            width: 2
+            color: '#a34905',
+            width: 3
         })
     });
 
@@ -34,13 +34,7 @@ namespace ol.style {
         }),
         fill: new ol.style.Fill({
             color: 'rgba(41, 163, 43, 0.6)'
-        })
-    });
-
-    /**
-     * Style for area labels.
-     */
-    export const STYLE_AREA_LABELS = new ol.style.Style({
+        }),
         text: new ol.style.Text({
             font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
             placement: 'point',
@@ -51,12 +45,28 @@ namespace ol.style {
             fill: new Fill({
                 color: 'white'
             }),
-            overflow: false,
             rotateWithView: true
-        }),
-        geometry: function(feature:Feature){
-            return feature.getGeometry();
-        }
+        })
+    });
+
+    export const STYLE_LINE_RIVERS = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#2c02c4',
+            width: 2
+        })
+        /*
+        , text: new ol.style.Text({
+            font: '14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            placement: 'line',
+            stroke: new ol.style.Stroke({
+                color: 'black',
+                width: 0.2
+            }),
+            fill: new Fill({
+                color: 'black'
+            }),
+            rotateWithView: true
+        })*/
     });
 
     /**

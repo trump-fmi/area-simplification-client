@@ -35,7 +35,7 @@ var map = new ol.Map({
     view: new ol.View({
         center: ol.proj.fromLonLat(START_LOCATION),
         zoom: START_ZOOM
-    })
+    }),
 });
 
 //Add controls to map

@@ -2,6 +2,8 @@ namespace ol.style {
 
     //Maps resource names of area types onto arrays of area styles
     const AREA_STYLES_MAPPING = new TypedMap<string, Array<ol.style.Style>>([
+        ["river", [STYLE_LINE_RIVERS]],
+        ["rivers", [STYLE_LINE_RIVERS]], //TODO remove one
         ["states", [STYLE_AREA_STATES]],
         ["towns", [STYLE_AREA_TOWNS]],
         ["woodland", [STYLE_AREA_WOODLAND]]
@@ -23,21 +25,27 @@ namespace ol.style {
          * @param resolution The resolution to use
          */
         return (feature: Feature, resolution: number) => {
-
-            //Array for styles to apply on geometries of this area type
-            let styles = [];
-
+            //Get label name for this feature
             let labelName = feature.get('name');
 
-            if (areaType.labels && (labelName.length > 0)) {
-                let labelStyle = STYLE_AREA_LABELS;
-                labelStyle.getText().setText(labelName);
-                styles.push(labelStyle);
+            //Sanitize it
+            labelName = labelName || "";
+
+            //Iterate over all mapped styles and update the text accordingly
+            for (let i = 0; i < mappedStyles.length; i++) {
+                //Get text object of style
+                let textObject = mappedStyles[i].getText();
+
+                //Sanity check
+                if (!textObject) {
+                    continue;
+                }
+
+                //Update text
+                textObject.setText(labelName);
             }
 
-            //Return merged styles
-            let merged = styles.concat(mappedStyles);
-            return merged;
+            return mappedStyles;
         };
     }
 }

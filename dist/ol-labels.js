@@ -918,7 +918,7 @@ var ol;
         style.STYLE_AREA_STATES = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#d1352a',
-                width: 3
+                width: 4
             })
         });
         /**
@@ -926,8 +926,8 @@ var ol;
          */
         style.STYLE_AREA_TOWNS = new ol.style.Style({
             stroke: new ol.style.Stroke({
-                color: 'blue',
-                width: 2
+                color: '#a34905',
+                width: 3
             })
         });
         /**
@@ -940,12 +940,7 @@ var ol;
             }),
             fill: new ol.style.Fill({
                 color: 'rgba(41, 163, 43, 0.6)'
-            })
-        });
-        /**
-         * Style for area labels.
-         */
-        style.STYLE_AREA_LABELS = new ol.style.Style({
+            }),
             text: new ol.style.Text({
                 font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
                 placement: 'point',
@@ -956,12 +951,27 @@ var ol;
                 fill: new style.Fill({
                     color: 'white'
                 }),
-                overflow: false,
                 rotateWithView: true
-            }),
-            geometry: function (feature) {
-                return feature.getGeometry();
-            }
+            })
+        });
+        style.STYLE_LINE_RIVERS = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#2c02c4',
+                width: 2
+            })
+            /*
+            , text: new ol.style.Text({
+                font: '14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+                placement: 'line',
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 0.2
+                }),
+                fill: new Fill({
+                    color: 'black'
+                }),
+                rotateWithView: true
+            })*/
         });
         /**
          * Style for points that of an area polygon. May be helpful for debugging, should not be used
@@ -1009,6 +1019,8 @@ var ol;
     (function (style) {
         //Maps resource names of area types onto arrays of area styles
         const AREA_STYLES_MAPPING = new TypedMap([
+            ["river", [style.STYLE_LINE_RIVERS]],
+            ["rivers", [style.STYLE_LINE_RIVERS]],
             ["states", [style.STYLE_AREA_STATES]],
             ["towns", [style.STYLE_AREA_TOWNS]],
             ["woodland", [style.STYLE_AREA_WOODLAND]]
@@ -1027,17 +1039,22 @@ var ol;
              * @param resolution The resolution to use
              */
             return (feature, resolution) => {
-                //Array for styles to apply on geometries of this area type
-                let styles = [];
+                //Get label name for this feature
                 let labelName = feature.get('name');
-                if (areaType.labels && (labelName.length > 0)) {
-                    let labelStyle = style.STYLE_AREA_LABELS;
-                    labelStyle.getText().setText(labelName);
-                    styles.push(labelStyle);
+                //Sanitize it
+                labelName = labelName || "";
+                //Iterate over all mapped styles and update the text accordingly
+                for (let i = 0; i < mappedStyles.length; i++) {
+                    //Get text object of style
+                    let textObject = mappedStyles[i].getText();
+                    //Sanity check
+                    if (!textObject) {
+                        continue;
+                    }
+                    //Update text
+                    textObject.setText(labelName);
                 }
-                //Return merged styles
-                let merged = styles.concat(mappedStyles);
-                return merged;
+                return mappedStyles;
             };
         }
         style.areaStyleFunction = areaStyleFunction;
