@@ -93,6 +93,25 @@ namespace ol.control {
             var rowContainerTemplate = document.createElement('div');
             rowContainerTemplate.style.margin = '10px';
 
+            //Checkbox for hiding tiles
+            var hideTilesCheckboxContainer = rowContainerTemplate.cloneNode();
+
+            var hideTilesCheckbox = document.createElement('input');
+            hideTilesCheckbox.setAttribute('type', 'checkbox');
+            hideTilesCheckbox.id = 'hideTilesCheckbox';
+
+            var hideTilesLabel = document.createElement('label');
+            hideTilesLabel.htmlFor = hideTilesCheckbox.id;
+            hideTilesLabel.appendChild(hideTilesCheckbox);
+            hideTilesLabel.appendChild(document.createTextNode('Hide tiles'));
+
+            hideTilesCheckboxContainer.appendChild(hideTilesLabel);
+
+            //Register event listener for tiles checkbox
+            hideTilesCheckbox.addEventListener('change', function (event) {
+                _this.toggleHideTiles_(event);
+            });
+
             // Checkbox for enabling the drawing of the circles
             var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
 
@@ -103,7 +122,7 @@ namespace ol.control {
             var drawCircleLabel = document.createElement('label');
             drawCircleLabel.htmlFor = 'drawCirclesCheckbox';
             drawCircleLabel.appendChild(drawCirclesCheckbox);
-            drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels.'));
+            drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels'));
 
             drawCirclesCheckboxContainer.appendChild(drawCircleLabel);
 
@@ -303,6 +322,7 @@ namespace ol.control {
 
             // Create container div for all debug menu entries
             var menuContent = document.createElement('div');
+            menuContent.appendChild(hideTilesCheckboxContainer);
             menuContent.appendChild(drawCirclesCheckboxContainer);
             menuContent.appendChild(labelfactorSliderContainer);
             menuContent.appendChild(minTFactorSliderContainer);
@@ -311,6 +331,28 @@ namespace ol.control {
             menuContent.appendChild(demoModeControlContainer);
 
             this.menu.appendChild(menuContent);
+        }
+
+        /**
+         * Toggles the display of tiles after the checkbox change event,
+         * depending on the state of the corresponding checkbox. This changes the opacity of
+         * the tile layers, so that there is no interference with the tile selection.
+         *
+         * @param event The checkbox change event
+         */
+        private toggleHideTiles_(event: Event): void {
+            //Get checkbox element
+            let checkBox = <HTMLInputElement>document.getElementById('hideTilesCheckbox');
+
+            //Determine opacity depending on the checkbox state
+            let opacity = checkBox.checked ? 0.0 : 1.0;
+
+            //Adjust opacity of the tile layers accordingly
+            this.getMap().getLayers().forEach(layer => {
+                if (layer instanceof ol.layer.Tile) {
+                    layer.setOpacity(opacity);
+                }
+            });
         }
 
         private toggleDrawCircles_(event: Event) {
