@@ -112,6 +112,32 @@ namespace ol.control {
                 _this.toggleHideTiles_(event);
             });
 
+            // Slider for area transparency
+            var areaTransparencySliderContainer = rowContainerTemplate.cloneNode();
+
+            var areaTransparencyRange = document.createElement('input');
+            areaTransparencyRange.style.width = rangeCSSWidth;
+            areaTransparencyRange.setAttribute('type', 'range');
+            areaTransparencyRange.setAttribute('id', 'areaTransparencyRange');
+            areaTransparencyRange.setAttribute('min', '0.0');
+            areaTransparencyRange.setAttribute('max', '1.0');
+            areaTransparencyRange.setAttribute('step', '0.01');
+            areaTransparencyRange.defaultValue = '1.0';
+
+            var areaTransparencyLabel = document.createElement('label');
+            areaTransparencyLabel.id = 'areaTransparencyLabel';
+            areaTransparencyLabel.htmlFor = 'areaTransparencyRange';
+            areaTransparencyLabel.appendChild(document.createTextNode('Set the opacity of areas: (1.0)'));
+
+            areaTransparencySliderContainer.appendChild(areaTransparencyLabel);
+            areaTransparencySliderContainer.appendChild(document.createElement('br'));
+            areaTransparencySliderContainer.appendChild(areaTransparencyRange);
+
+            //Register event listener for label factor range slider
+            areaTransparencyRange.addEventListener('input', function (event) {
+                _this.changeAreaTransparency_(event);
+            });
+
             // Checkbox for enabling the drawing of the circles
             var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
 
@@ -147,9 +173,9 @@ namespace ol.control {
             labelfactorRange.defaultValue = '1.1';
 
             var labelfactorLabel = document.createElement('label');
-            labelfactorLabel.id = 'sliderLabel';
+            labelfactorLabel.id = 'labelFactorLabel';
             labelfactorLabel.htmlFor = 'labelfactorRange';
-            labelfactorLabel.appendChild(document.createTextNode('Set the coefficient of the labelFactor. (1.1)'))
+            labelfactorLabel.appendChild(document.createTextNode('Set the coefficient of the labelFactor: (1.1)'))
 
             labelfactorSliderContainer.appendChild(labelfactorLabel);
             labelfactorSliderContainer.appendChild(document.createElement('br'));
@@ -178,7 +204,7 @@ namespace ol.control {
             var minTLabel = document.createElement('label');
             minTLabel.id = 'minTLabel';
             minTLabel.htmlFor = 'minTFactorRange';
-            minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t. (9)'))
+            minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (9)'));
 
             //Register event listener for min_t factor range slider
             minTFactorRange.addEventListener('input', function (event) {
@@ -206,7 +232,7 @@ namespace ol.control {
             var minTCoeffLabel = document.createElement('label');
             minTCoeffLabel.id = 'minTCoeffLabel';
             minTCoeffLabel.htmlFor = 'minTCoeffRange';
-            minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t. (1.0)'))
+            minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t: (1.0)'));
 
             //Create reference to current scope
             var _this = this;
@@ -323,6 +349,7 @@ namespace ol.control {
             // Create container div for all debug menu entries
             var menuContent = document.createElement('div');
             menuContent.appendChild(hideTilesCheckboxContainer);
+            menuContent.appendChild(areaTransparencySliderContainer);
             menuContent.appendChild(drawCirclesCheckboxContainer);
             menuContent.appendChild(labelfactorSliderContainer);
             menuContent.appendChild(minTFactorSliderContainer);
@@ -355,6 +382,24 @@ namespace ol.control {
             });
         }
 
+        private changeAreaTransparency_(event: Event) {
+            //Get slider element
+            let slider = <HTMLInputElement>document.getElementById('areaTransparencyRange');
+
+            //Update label text
+            document.getElementById('areaTransparencyLabel').innerHTML = 'Set the opacity of areas: (' + slider.value + ')';
+
+            //Convert slider value
+            let opacity = parseFloat(slider.value);
+
+            //Adjust opacity of the area layers accordingly
+            this.getMap().getLayers().forEach(layer => {
+                if (layer instanceof ol.layer.Area) {
+                    layer.setOpacity(opacity);
+                }
+            });
+        }
+
         private toggleDrawCircles_(event: Event) {
             event.preventDefault();
             var checkBox = <HTMLInputElement>document.getElementById('drawCirclesCheckbox');
@@ -366,7 +411,7 @@ namespace ol.control {
         private changeLabelFactor_(event: Event) {
             event.preventDefault();
             var range = <HTMLInputElement>document.getElementById('labelfactorRange');
-            document.getElementById('sliderLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
+            document.getElementById('labelFactorLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
             // @ts-ignore
             window.labelFacCoeff = range.value;
             this.updateLabelLayer_();
