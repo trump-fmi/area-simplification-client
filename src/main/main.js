@@ -5,6 +5,8 @@ const DEBUG = window.location.hash.toLowerCase() === "#debug";
 const MAP_CONTAINER = 'map';
 const START_LOCATION = [9.180769, 48.777106];
 const START_ZOOM = 12;
+const MIN_ZOOM = 0;
+const MAX_ZOOM = 19;
 const TILE_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const TILE_SERVER_PORT = "80";
 const TILE_SERVER_ENDPOINTS_PORT = "8081";
@@ -34,7 +36,9 @@ var map = new ol.Map({
     target: MAP_CONTAINER,
     view: new ol.View({
         center: ol.proj.fromLonLat(START_LOCATION),
-        zoom: START_ZOOM
+        zoom: START_ZOOM,
+        minZoom: MIN_ZOOM,
+        maxZoom: MAX_ZOOM
     })
 });
 

@@ -88,7 +88,8 @@ namespace ol.control {
         private renderMenuContents() {
             const rangeCSSWidth = '300px';
 
-            var map = this.getMap();
+            let map = this.getMap();
+            let view = map.getView();
 
             var rowContainerTemplate = document.createElement('div');
             rowContainerTemplate.style.margin = '10px';
@@ -268,8 +269,8 @@ namespace ol.control {
             zoomSliderInput.style.width = '600px';
             zoomSliderInput.setAttribute('type', 'range');
             zoomSliderInput.setAttribute('id', 'zoomSliderInput');
-            zoomSliderInput.setAttribute('min', '0.0');
-            zoomSliderInput.setAttribute('max', '28.0');
+            zoomSliderInput.setAttribute('min', view.getMinZoom().toString());
+            zoomSliderInput.setAttribute('max', view.getMaxZoom().toString());
             zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
             zoomSliderInput.defaultValue = map.getView().getZoom().toString();
 
