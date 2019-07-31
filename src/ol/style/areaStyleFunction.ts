@@ -5,6 +5,7 @@ namespace ol.style {
         ["states", [STYLE_AREA_STATES]],
         ["towns", [STYLE_AREA_TOWNS]],
         ["rivers", [STYLE_LINE_RIVERS]],
+        ["lakes", [STYLE_AREA_LAKES]],
         ["commercial", [STYLE_AREA_COMMERCIAL]],
         ["residential", [STYLE_AREA_RESIDENTIAL]],
         ["military", [STYLE_AREA_MILITARY]],

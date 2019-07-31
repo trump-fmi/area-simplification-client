@@ -1001,6 +1001,30 @@ var ol;
             })
         });
         /**
+         * Style for lakes.
+         */
+        style.STYLE_AREA_LAKES = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#210192',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(44, 2, 196, 0.8)'
+            }),
+            text: new ol.style.Text({
+                font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+                placement: 'point',
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 2
+                }),
+                fill: new style.Fill({
+                    color: 'white'
+                }),
+                rotateWithView: true
+            })
+        });
+        /**
          * Style for commercial landuse.
          */
         style.STYLE_AREA_COMMERCIAL = new ol.style.Style({
@@ -1103,6 +1127,7 @@ var ol;
             ["states", [style.STYLE_AREA_STATES]],
             ["towns", [style.STYLE_AREA_TOWNS]],
             ["rivers", [style.STYLE_LINE_RIVERS]],
+            ["lakes", [style.STYLE_AREA_LAKES]],
             ["commercial", [style.STYLE_AREA_COMMERCIAL]],
             ["residential", [style.STYLE_AREA_RESIDENTIAL]],
             ["military", [style.STYLE_AREA_MILITARY]],

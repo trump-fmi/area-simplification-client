@@ -25,6 +25,31 @@ namespace ol.style {
     });
 
     /**
+     * Style for lakes.
+     */
+    export const STYLE_AREA_LAKES = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#210192',
+            width: 1
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(44, 2, 196, 0.8)'
+        }),
+        text: new ol.style.Text({
+            font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            placement: 'point',
+            stroke: new ol.style.Stroke({
+                color: 'black',
+                width: 2
+            }),
+            fill: new Fill({
+                color: 'white'
+            }),
+            rotateWithView: true
+        })
+    });
+
+    /**
      * Style for commercial landuse.
      */
     export const STYLE_AREA_COMMERCIAL = new ol.style.Style({
