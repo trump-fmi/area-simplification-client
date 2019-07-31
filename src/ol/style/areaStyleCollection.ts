@@ -34,6 +34,15 @@ namespace ol.style {
     });
 
     /**
+     * Style for military landuse.
+     */
+    export const STYLE_AREA_MILITARY = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: '#d11313'
+        })
+    });
+
+    /**
      * Style for residential landuse.
      */
     export const STYLE_AREA_RESIDENTIAL = new ol.style.Style({

@@ -939,6 +939,14 @@ var ol;
             })
         });
         /**
+         * Style for military landuse.
+         */
+        style.STYLE_AREA_MILITARY = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: '#d11313'
+            })
+        });
+        /**
          * Style for residential landuse.
          */
         style.STYLE_AREA_RESIDENTIAL = new ol.style.Style({
@@ -1027,6 +1035,7 @@ var ol;
             ["rivers", [style.STYLE_LINE_RIVERS]],
             ["commercial", [style.STYLE_AREA_COMMERCIAL]],
             ["residential", [style.STYLE_AREA_RESIDENTIAL]],
+            ["military", [style.STYLE_AREA_MILITARY]],
             ["woodland", [style.STYLE_AREA_WOODLAND]]
         ]);
         /**

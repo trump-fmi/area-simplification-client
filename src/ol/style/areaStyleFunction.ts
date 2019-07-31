@@ -7,6 +7,7 @@ namespace ol.style {
         ["rivers", [STYLE_LINE_RIVERS]],
         ["commercial", [STYLE_AREA_COMMERCIAL]],
         ["residential", [STYLE_AREA_RESIDENTIAL]],
+        ["military", [STYLE_AREA_MILITARY]],
         ["woodland", [STYLE_AREA_WOODLAND]]
     ]);
 
