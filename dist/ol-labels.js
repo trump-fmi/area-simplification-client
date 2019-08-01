@@ -128,7 +128,8 @@ var ol;
             }
             renderMenuContents() {
                 const rangeCSSWidth = '300px';
-                var map = this.getMap();
+                let map = this.getMap();
+                let view = map.getView();
                 var rowContainerTemplate = document.createElement('div');
                 rowContainerTemplate.style.margin = '10px';
                 //Checkbox for hiding tiles
@@ -268,8 +269,8 @@ var ol;
                 zoomSliderInput.style.width = '600px';
                 zoomSliderInput.setAttribute('type', 'range');
                 zoomSliderInput.setAttribute('id', 'zoomSliderInput');
-                zoomSliderInput.setAttribute('min', '0.0');
-                zoomSliderInput.setAttribute('max', '28.0');
+                zoomSliderInput.setAttribute('min', view.getMinZoom().toString());
+                zoomSliderInput.setAttribute('max', view.getMaxZoom().toString());
                 zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
                 zoomSliderInput.defaultValue = map.getView().getZoom().toString();
                 var zoomSliderLabel = document.createElement('label');
@@ -1010,18 +1011,6 @@ var ol;
             }),
             fill: new ol.style.Fill({
                 color: 'rgba(44, 2, 196, 0.8)'
-            }),
-            text: new ol.style.Text({
-                font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-                placement: 'point',
-                stroke: new ol.style.Stroke({
-                    color: 'black',
-                    width: 2
-                }),
-                fill: new style.Fill({
-                    color: 'white'
-                }),
-                rotateWithView: true
             })
         });
         /**
@@ -1147,21 +1136,26 @@ var ol;
              * @param resolution The resolution to use
              */
             return (feature, resolution) => {
+                /*
                 //Get label name for this feature
                 let labelName = feature.get('name');
+    
                 //Sanitize it
                 labelName = labelName || "";
+    
                 //Iterate over all mapped styles and update the text accordingly
                 for (let i = 0; i < mappedStyles.length; i++) {
                     //Get text object of style
                     let textObject = mappedStyles[i].getText();
+    
                     //Sanity check
                     if (!textObject) {
                         continue;
                     }
+    
                     //Update text
                     textObject.setText(labelName);
-                }
+                }*/
                 return mappedStyles;
             };
         }

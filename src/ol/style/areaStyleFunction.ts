@@ -28,6 +28,7 @@ namespace ol.style {
          * @param resolution The resolution to use
          */
         return (feature: Feature, resolution: number) => {
+            /*
             //Get label name for this feature
             let labelName = feature.get('name');
 
@@ -46,7 +47,7 @@ namespace ol.style {
 
                 //Update text
                 textObject.setText(labelName);
-            }
+            }*/
 
             return mappedStyles;
         };
