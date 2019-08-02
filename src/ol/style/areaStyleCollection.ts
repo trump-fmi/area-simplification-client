@@ -74,8 +74,9 @@ namespace ol.style {
         }),
         fill: new ol.style.Fill({
             color: 'rgba(41, 163, 43, 0.6)'
-        }),
-        text: new ol.style.Text({
+        })
+        /*
+        , text: new ol.style.Text({
             font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
             placement: 'point',
             stroke: new ol.style.Stroke({
@@ -86,13 +87,22 @@ namespace ol.style {
                 color: 'white'
             }),
             rotateWithView: true
-        })
+        })*/
     });
 
     export const STYLE_LINE_RIVERS = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: '#2c02c4',
             width: 2
+        })
+    });
+
+    /**
+     * Style for highlighting certain areas.
+     */
+    export const STYLE_AREA_HIGHLIGHT = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: 'rgba(235, 155, 52, 0.6)'
         })
     });
 

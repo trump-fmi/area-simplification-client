@@ -14,6 +14,8 @@ const LABEL_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.
 const LABEL_SERVER_PORT = "8080";
 const AREA_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const AREA_SERVER_PORT = "8181";
+const ADDRESS_DATA_PROVIDER = "osm";
+const ADDRESS_DATA_LOCALE = "en";
 
 const TILES_Z_INDEX = 0;
 const AREAS_Z_INDEX_BASE = 10;
@@ -32,6 +34,7 @@ const areaRetrievalUrl = AREA_SERVER_URL + ":" + AREA_SERVER_PORT + "/get/";
 var map = new ol.Map({
     loadTilesWhileAnimating: true,
     loadTilesWhileInteracting: true,
+    keyboardEventTarget: document,
     layers: [],
     target: MAP_CONTAINER,
     view: new ol.View({
@@ -42,13 +45,47 @@ var map = new ol.Map({
     })
 });
 
+//Create geocoder
+let geocoder = new Geocoder('nominatim', {
+    provider: ADDRESS_DATA_PROVIDER,
+    lang: 'en',
+    placeholder: 'Search for...',
+    targetType: 'glass-button',
+    limit: 5,
+    autoComplete: true,
+    keepOpen: true,
+    preventDefault: true
+});
+//Align button appropriately
+geocoder.element.style.top = '275px';
+
+//Register listener for address choose events
+geocoder.on('addresschosen', function (event) {
+
+    //Iterate over all layers of the map
+    map.getLayers().forEach(function (layer) {
+        //Only consider area layers
+        if (!(layer instanceof ol.layer.Area)) {
+            return;
+        }
+
+        //Highlight features of this layer at the target position
+        layer.highlightFeaturesAt(event.coordinate);
+    });
+
+    //Move view to target location
+    map.getView().setCenter(event.coordinate);
+});
+
 //Add controls to map
 map.addControl(new ol.control.ZoomSlider());
 map.addControl(new ol.control.DebugMenu());
 map.addControl(new ol.control.LayerMenu());
+map.addControl(new ol.control.Rotate());
+map.addControl(geocoder);
 
 //Add select interaction to map
-map.addInteraction(new ol.interaction.Select());
+//map.addInteraction(new ol.interaction.Select());
 
 
 //Get all available tile endpoints and create layers for them subsequently

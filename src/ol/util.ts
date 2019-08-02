@@ -9,6 +9,7 @@ namespace ol {
     export interface AreaType {
         labels: boolean,
         resource: string,
+        search_highlight: boolean,
         z_index: number,
         zoom_min: number,
         zoom_max: number

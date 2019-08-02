@@ -10,6 +10,8 @@ namespace ol.layer {
         private readonly areaType: AreaType;
         private readonly map: ol.Map;
 
+        private highlightLocation: ol.Coordinate;
+
         private _wantDisplay: boolean;
 
         /**
@@ -35,12 +37,28 @@ namespace ol.layer {
             this.map = map;
             this._wantDisplay = true;
 
+            //No highlighting yet
+            this.highlightLocation = null;
+
             //Save reference to current scope
             let _this = this;
 
             //Register move end event handler on map in order to check for the zoom level
             this.map.on('moveend', function (event) {
                 _this.updateVisibility();
+            });
+
+            //Check if area source is used
+            if (!(this.getSource() instanceof ol.source.Area)) {
+                return;
+            }
+
+            //Cast to area source
+            let source = <ol.source.Area>this.getSource();
+
+            //Register a feature listener
+            source.addFeatureListener(function (feature: Feature) {
+                _this.checkFeatureForHighlight(feature);
             });
         }
 
@@ -58,6 +76,24 @@ namespace ol.layer {
                 && this._wantDisplay);
         }
 
+        public highlightFeaturesAt(location: ol.Coordinate) {
+            if (!this.areaType.search_highlight) {
+                return;
+            }
+
+            this.highlightLocation = location;
+
+            //Save reference to current scope
+            let _this = this;
+
+            //Get source of layer
+            let source = this.getSource();
+
+            //Iterate over all features of the layer
+            source.getFeatures().forEach(function (feature: ol.Feature) {
+                _this.checkFeatureForHighlight(feature);
+            });
+        }
 
         /**
          * Returns whether the layer is supposed to be displayed in case the zoom level of the map
@@ -77,6 +113,30 @@ namespace ol.layer {
 
             //Display/hide layer if necessary
             this.updateVisibility();
+        }
+
+        /**
+         * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
+         * accordingly.
+         * @param feature The feature to check
+         */
+        private checkFeatureForHighlight(feature: Feature) {
+            //Sanity check
+            if ((this.highlightLocation == null) || (feature == null)) {
+                return;
+            }
+
+            //Get geometry of feature
+            let geometry = feature.getGeometry();
+
+            //Check if highlight location is within the feature geometry
+            if (geometry.intersectsCoordinate(this.highlightLocation)) {
+                //Flag for highlighting
+                feature.set('highlight', true);
+            } else {
+                //Unflag for highlighting
+                feature.unset('highlight');
+            }
         }
     }
 }

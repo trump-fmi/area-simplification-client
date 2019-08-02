@@ -49,6 +49,10 @@ namespace ol.style {
                 textObject.setText(labelName);
             }*/
 
+            if(feature.get('highlight')){
+                return mappedStyles.concat([STYLE_AREA_HIGHLIGHT]);
+            }
+
             return mappedStyles;
         };
     }

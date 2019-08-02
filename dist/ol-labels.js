@@ -276,7 +276,7 @@ var ol;
                 var zoomSliderLabel = document.createElement('label');
                 zoomSliderLabel.id = 'zoomSliderLabel';
                 zoomSliderLabel.htmlFor = 'zoomSliderInput';
-                zoomSliderLabel.appendChild(document.createTextNode('Use the slider to change the zoom level with the defined zoom delta:'));
+                zoomSliderLabel.appendChild(document.createTextNode('Change the zoom level with defined zoom delta:'));
                 var zoomLevelLabel = document.createElement('label');
                 zoomLevelLabel.style.marginLeft = '10px';
                 zoomLevelLabel.style.position = 'relative';
@@ -294,13 +294,42 @@ var ol;
                     document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + zoomSliderInput.value;
                     map.getView().setZoom(zoomValue);
                 });
-                // Add listener on view to detect changes on zoom level
+                var rotationRangeContainer = rowContainerTemplate.cloneNode();
+                var rotationRange = document.createElement('input');
+                rotationRange.style.width = '600px';
+                rotationRange.setAttribute('type', 'range');
+                rotationRange.setAttribute('id', 'rotationRange');
+                rotationRange.setAttribute('min', '0');
+                rotationRange.setAttribute('max', '359');
+                rotationRange.setAttribute('step', '1');
+                rotationRange.defaultValue = '0';
+                var rotationLabel = document.createElement('label');
+                rotationLabel.id = 'rotationLabel';
+                rotationLabel.htmlFor = 'rotationRange';
+                rotationLabel.innerHTML = 'Change rotation: (0&deg;)';
+                //Create reference to current scope
+                var _this = this;
+                //Register event listener for min_t coefficient range slider
+                rotationRange.addEventListener('input', function (event) {
+                    _this.changeRotation_(event);
+                });
+                rotationRangeContainer.appendChild(rotationLabel);
+                rotationRangeContainer.appendChild(document.createElement('br'));
+                rotationRangeContainer.appendChild(rotationRange);
+                // Add listener on view to detect changes on zoom level or rotation
                 map.on("moveend", function (event) {
+                    //Get map view
+                    let view = map.getView();
                     // Get zoom level and round to 3 decimal places
-                    var newZoomLevel = map.getView().getZoom();
-                    newZoomLevel = Math.round(newZoomLevel * 1000) / 1000;
+                    let newZoomLevel = Math.round(view.getZoom() * 1000) / 1000;
+                    //Update zoom label and slider
                     document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + newZoomLevel;
                     document.getElementById('zoomSliderInput').value = newZoomLevel.toString();
+                    //Get rotation and round
+                    let rotationDegrees = Math.round(view.getRotation() / (Math.PI / 180));
+                    //Update rotation label and slider
+                    document.getElementById('rotationLabel').innerHTML = 'Change rotation: (' + rotationDegrees + '&deg;)';
+                    document.getElementById('rotationRange').value = rotationDegrees.toString();
                 });
                 // Add zoom slider
                 zoomSliderContainer.appendChild(zoomSliderLabel);
@@ -342,8 +371,23 @@ var ol;
                 menuContent.appendChild(minTFactorSliderContainer);
                 menuContent.appendChild(minTCoeffRangeContainer);
                 menuContent.appendChild(zoomSliderContainer);
+                menuContent.appendChild(rotationRangeContainer);
                 menuContent.appendChild(demoModeControlContainer);
                 this.menu.appendChild(menuContent);
+            }
+            /**
+             * Changes the map rotation after the rotation slider issued the change event.
+             * @param event The event issued by the rotation slider
+             */
+            changeRotation_(event) {
+                //Get slider element, read and convert value
+                let slider = document.getElementById('rotationRange');
+                let rotationDegrees = parseInt(slider.value);
+                let rotationRadians = rotationDegrees * (Math.PI / 180);
+                //Update map
+                this.getMap().getView().setRotation(rotationRadians);
+                //Update label
+                document.getElementById('rotationLabel').innerHTML = 'Change rotation: (' + rotationDegrees + '&deg;)';
             }
             /**
              * Toggles the display of tiles after the checkbox change event,
@@ -704,11 +748,23 @@ var ol;
                 this.areaType = areaType;
                 this.map = map;
                 this._wantDisplay = true;
+                //No highlighting yet
+                this.highlightLocation = null;
                 //Save reference to current scope
                 let _this = this;
                 //Register move end event handler on map in order to check for the zoom level
                 this.map.on('moveend', function (event) {
                     _this.updateVisibility();
+                });
+                //Check if area source is used
+                if (!(this.getSource() instanceof ol.source.Area)) {
+                    return;
+                }
+                //Cast to area source
+                let source = this.getSource();
+                //Register a feature listener
+                source.addFeatureListener(function (feature) {
+                    _this.checkFeatureForHighlight(feature);
                 });
             }
             /**
@@ -722,6 +778,20 @@ var ol;
                 this.setVisible((zoomLevel >= this.areaType.zoom_min)
                     && (zoomLevel < this.areaType.zoom_max)
                     && this._wantDisplay);
+            }
+            highlightFeaturesAt(location) {
+                if (!this.areaType.search_highlight) {
+                    return;
+                }
+                this.highlightLocation = location;
+                //Save reference to current scope
+                let _this = this;
+                //Get source of layer
+                let source = this.getSource();
+                //Iterate over all features of the layer
+                source.getFeatures().forEach(function (feature) {
+                    _this.checkFeatureForHighlight(feature);
+                });
             }
             /**
              * Returns whether the layer is supposed to be displayed in case the zoom level of the map
@@ -739,6 +809,28 @@ var ol;
                 this._wantDisplay = value;
                 //Display/hide layer if necessary
                 this.updateVisibility();
+            }
+            /**
+             * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
+             * accordingly.
+             * @param feature The feature to check
+             */
+            checkFeatureForHighlight(feature) {
+                //Sanity check
+                if ((this.highlightLocation == null) || (feature == null)) {
+                    return;
+                }
+                //Get geometry of feature
+                let geometry = feature.getGeometry();
+                //Check if highlight location is within the feature geometry
+                if (geometry.intersectsCoordinate(this.highlightLocation)) {
+                    //Flag for highlighting
+                    feature.set('highlight', true);
+                }
+                else {
+                    //Unflag for highlighting
+                    feature.unset('highlight');
+                }
             }
         }
         layer.Area = Area;
@@ -805,7 +897,15 @@ var ol;
                 //Set internal fields
                 this.areaServerUrl = areaServerUrl;
                 this.featureLoader = featureLoader;
+                this.featureListeners = new Array();
                 this.map = map;
+            }
+            /**
+             * Registers a callback function at the source that is called in case a new feature is added.
+             * @param callback Callback function that is supposed to be called
+             */
+            addFeatureListener(callback) {
+                this.featureListeners.push(callback);
             }
             /**
              * Overrides the addFeature function of the parent class and extends its functionality.
@@ -823,6 +923,8 @@ var ol;
                     //Get current feature and the corresponding old version that is already part of the layer
                     var newFeature = features[i];
                     var oldFeature = this.getFeatureById(newFeature.getId());
+                    //Notify listeners
+                    this.notifyFeatureListeners(newFeature);
                     //Check if old version of the feature exists
                     if (oldFeature == null) {
                         continue;
@@ -906,6 +1008,15 @@ var ol;
                 }
                 //Return full URL
                 return areaServerUrl + parametersString;
+            }
+            /**
+             * Notifies all feature listeners about the addition of a new feature.
+             * @param feature The feature that is added
+             */
+            notifyFeatureListeners(feature) {
+                this.featureListeners.forEach(function (callback) {
+                    callback(feature);
+                });
             }
         }
         source.Area = Area;
@@ -1047,24 +1158,33 @@ var ol;
             }),
             fill: new ol.style.Fill({
                 color: 'rgba(41, 163, 43, 0.6)'
-            }),
-            text: new ol.style.Text({
+            })
+            /*
+            , text: new ol.style.Text({
                 font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
                 placement: 'point',
                 stroke: new ol.style.Stroke({
                     color: 'black',
                     width: 2
                 }),
-                fill: new style.Fill({
+                fill: new Fill({
                     color: 'white'
                 }),
                 rotateWithView: true
-            })
+            })*/
         });
         style.STYLE_LINE_RIVERS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#2c02c4',
                 width: 2
+            })
+        });
+        /**
+         * Style for highlighting certain areas.
+         */
+        style.STYLE_AREA_HIGHLIGHT = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(235, 155, 52, 0.6)'
             })
         });
         /**
@@ -1156,6 +1276,9 @@ var ol;
                     //Update text
                     textObject.setText(labelName);
                 }*/
+                if (feature.get('highlight')) {
+                    return mappedStyles.concat([style.STYLE_AREA_HIGHLIGHT]);
+                }
                 return mappedStyles;
             };
         }

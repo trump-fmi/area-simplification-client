@@ -9,6 +9,7 @@ namespace ol.source {
 
         private readonly areaServerUrl: string;
         private readonly featureLoader: ol.FeatureUrlFunction;
+        private readonly featureListeners: Array<Function>;
 
         private readonly map: ol.Map;
 
@@ -46,7 +47,16 @@ namespace ol.source {
             //Set internal fields
             this.areaServerUrl = areaServerUrl;
             this.featureLoader = featureLoader;
+            this.featureListeners = new Array<Function>();
             this.map = map;
+        }
+
+        /**
+         * Registers a callback function at the source that is called in case a new feature is added.
+         * @param callback Callback function that is supposed to be called
+         */
+        public addFeatureListener(callback: Function) {
+            this.featureListeners.push(callback);
         }
 
         /**
@@ -65,6 +75,9 @@ namespace ol.source {
                 //Get current feature and the corresponding old version that is already part of the layer
                 var newFeature = features[i];
                 var oldFeature = this.getFeatureById(newFeature.getId());
+
+                //Notify listeners
+                this.notifyFeatureListeners(newFeature);
 
                 //Check if old version of the feature exists
                 if (oldFeature == null) {
@@ -165,6 +178,16 @@ namespace ol.source {
 
             //Return full URL
             return areaServerUrl + parametersString;
+        }
+
+        /**
+         * Notifies all feature listeners about the addition of a new feature.
+         * @param feature The feature that is added
+         */
+        private notifyFeatureListeners(feature: Feature) {
+            this.featureListeners.forEach(function (callback) {
+                callback(feature);
+            });
         }
     }
 }

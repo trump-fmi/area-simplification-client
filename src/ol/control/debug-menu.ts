@@ -277,7 +277,7 @@ namespace ol.control {
             var zoomSliderLabel = document.createElement('label');
             zoomSliderLabel.id = 'zoomSliderLabel';
             zoomSliderLabel.htmlFor = 'zoomSliderInput';
-            zoomSliderLabel.appendChild(document.createTextNode('Use the slider to change the zoom level with the defined zoom delta:'))
+            zoomSliderLabel.appendChild(document.createTextNode('Change the zoom level with defined zoom delta:'));
 
             var zoomLevelLabel = document.createElement('label');
 
@@ -302,13 +302,55 @@ namespace ol.control {
                 map.getView().setZoom(zoomValue);
             });
 
-            // Add listener on view to detect changes on zoom level
+
+            var rotationRangeContainer = rowContainerTemplate.cloneNode();
+            var rotationRange = document.createElement('input');
+            rotationRange.style.width = '600px';
+
+            rotationRange.setAttribute('type', 'range');
+            rotationRange.setAttribute('id', 'rotationRange');
+            rotationRange.setAttribute('min', '0');
+            rotationRange.setAttribute('max', '359');
+            rotationRange.setAttribute('step', '1');
+            rotationRange.defaultValue = '0';
+
+            var rotationLabel = document.createElement('label');
+            rotationLabel.id = 'rotationLabel';
+            rotationLabel.htmlFor = 'rotationRange';
+            rotationLabel.innerHTML = 'Change rotation: (0&deg;)';
+
+            //Create reference to current scope
+            var _this = this;
+
+            //Register event listener for min_t coefficient range slider
+            rotationRange.addEventListener('input', function (event) {
+                _this.changeRotation_(event);
+            });
+
+
+            rotationRangeContainer.appendChild(rotationLabel);
+            rotationRangeContainer.appendChild(document.createElement('br'));
+            rotationRangeContainer.appendChild(rotationRange);
+
+
+            // Add listener on view to detect changes on zoom level or rotation
             map.on("moveend", function (event: ol.events.Event) {
+                //Get map view
+                let view = map.getView();
+
                 // Get zoom level and round to 3 decimal places
-                var newZoomLevel = map.getView().getZoom();
-                newZoomLevel = Math.round(newZoomLevel * 1000) / 1000;
+                let newZoomLevel = Math.round(view.getZoom() * 1000) / 1000;
+
+                //Update zoom label and slider
                 document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + newZoomLevel;
                 (<HTMLInputElement>document.getElementById('zoomSliderInput')).value = newZoomLevel.toString();
+
+                //Get rotation and round
+                let rotationDegrees = Math.round(view.getRotation() / (Math.PI / 180));
+
+                //Update rotation label and slider
+                document.getElementById('rotationLabel').innerHTML = 'Change rotation: (' + rotationDegrees + '&deg;)';
+                (<HTMLInputElement>document.getElementById('rotationRange')).value = rotationDegrees.toString();
             });
 
             // Add zoom slider
@@ -356,9 +398,28 @@ namespace ol.control {
             menuContent.appendChild(minTFactorSliderContainer);
             menuContent.appendChild(minTCoeffRangeContainer);
             menuContent.appendChild(zoomSliderContainer);
+            menuContent.appendChild(rotationRangeContainer);
             menuContent.appendChild(demoModeControlContainer);
 
             this.menu.appendChild(menuContent);
+        }
+
+
+        /**
+         * Changes the map rotation after the rotation slider issued the change event.
+         * @param event The event issued by the rotation slider
+         */
+        private changeRotation_(event: Event): void {
+            //Get slider element, read and convert value
+            let slider = <HTMLInputElement>document.getElementById('rotationRange');
+            let rotationDegrees = parseInt(slider.value);
+            let rotationRadians = rotationDegrees * (Math.PI / 180);
+
+            //Update map
+            this.getMap().getView().setRotation(rotationRadians);
+
+            //Update label
+            document.getElementById('rotationLabel').innerHTML = 'Change rotation: (' + rotationDegrees + '&deg;)';
         }
 
         /**
