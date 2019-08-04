@@ -65,6 +65,32 @@ namespace ol.style {
     });
 
     /**
+     * Style for farmland.
+     */
+    export const STYLE_AREA_FARMLAND = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#b5b540',
+            width: 1
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(204, 204, 110, 1)'
+        })
+    });
+
+    /**
+     * Style for buildings.
+     */
+    export const STYLE_AREA_BUILDINGS = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#69523f',
+            width: 1
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(163, 130, 102, 1)'
+        })
+    });
+
+    /**
      * Style for woodland.
      */
     export const STYLE_AREA_WOODLAND = new ol.style.Style({
@@ -94,6 +120,12 @@ namespace ol.style {
         stroke: new ol.style.Stroke({
             color: '#2c02c4',
             width: 2
+        })
+    });
+
+    export const STYLE_AREA_STREETS = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: 'rgba(255, 255, 255, 1)'
         })
     });
 

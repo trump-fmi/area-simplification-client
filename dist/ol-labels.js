@@ -1149,6 +1149,30 @@ var ol;
             })
         });
         /**
+         * Style for farmland.
+         */
+        style.STYLE_AREA_FARMLAND = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#b5b540',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(204, 204, 110, 1)'
+            })
+        });
+        /**
+         * Style for buildings.
+         */
+        style.STYLE_AREA_BUILDINGS = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#69523f',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(163, 130, 102, 1)'
+            })
+        });
+        /**
          * Style for woodland.
          */
         style.STYLE_AREA_WOODLAND = new ol.style.Style({
@@ -1177,6 +1201,11 @@ var ol;
             stroke: new ol.style.Stroke({
                 color: '#2c02c4',
                 width: 2
+            })
+        });
+        style.STYLE_AREA_STREETS = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(255, 255, 255, 1)'
             })
         });
         /**
@@ -1235,12 +1264,15 @@ var ol;
         const AREA_STYLES_MAPPING = new TypedMap([
             ["states", [style.STYLE_AREA_STATES]],
             ["towns", [style.STYLE_AREA_TOWNS]],
-            ["rivers", [style.STYLE_LINE_RIVERS]],
+            ["woodland", [style.STYLE_AREA_WOODLAND]],
+            ["farmland", [style.STYLE_AREA_FARMLAND]],
             ["lakes", [style.STYLE_AREA_LAKES]],
+            ["rivers", [style.STYLE_LINE_RIVERS]],
             ["commercial", [style.STYLE_AREA_COMMERCIAL]],
             ["residential", [style.STYLE_AREA_RESIDENTIAL]],
             ["military", [style.STYLE_AREA_MILITARY]],
-            ["woodland", [style.STYLE_AREA_WOODLAND]]
+            ["streets", [style.STYLE_AREA_STREETS]],
+            ["buildings", [style.STYLE_AREA_BUILDINGS]]
         ]);
         /**
          * Returns a StyleFunction for a certain area type. This StyleFunction returns an array of styles

@@ -4,12 +4,15 @@ namespace ol.style {
     const AREA_STYLES_MAPPING = new TypedMap<string, Array<ol.style.Style>>([
         ["states", [STYLE_AREA_STATES]],
         ["towns", [STYLE_AREA_TOWNS]],
-        ["rivers", [STYLE_LINE_RIVERS]],
+        ["woodland", [STYLE_AREA_WOODLAND]],
+        ["farmland", [STYLE_AREA_FARMLAND]],
         ["lakes", [STYLE_AREA_LAKES]],
+        ["rivers", [STYLE_LINE_RIVERS]],
         ["commercial", [STYLE_AREA_COMMERCIAL]],
         ["residential", [STYLE_AREA_RESIDENTIAL]],
         ["military", [STYLE_AREA_MILITARY]],
-        ["woodland", [STYLE_AREA_WOODLAND]]
+        ["streets", [STYLE_AREA_STREETS]],
+        ["buildings", [STYLE_AREA_BUILDINGS]]
     ]);
 
     /**
