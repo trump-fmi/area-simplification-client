@@ -117,7 +117,8 @@ function addTileLayersToMap(tileEndpoints) {
         //Create new tile layer
         var tileLayer = new ol.layer.Tile({
             source: new ol.source.OSM({
-                url: tileEndpointUrl
+                url: tileEndpointUrl,
+                crossOrigin: null
             }),
             title: tileEndpoint.name,
             description: tileEndpoint.description,
