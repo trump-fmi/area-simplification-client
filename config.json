@@ -1,0 +1,19 @@
+{
+    "tile": {
+
+        "active": "true",
+        "endpoint": "http://seeigel.informatik.uni-stuttgart.de:8081",
+        "retrieval":  "http://seeigel.informatik.uni-stuttgart.de:80" 
+    },
+    "area": {
+        "active": "true",
+        "endpoint": "http://seeigel.informatik.uni-stuttgart.de:8181/types",
+        "retrieval":  "http://seeigel.informatik.uni-stuttgart.de:8181/get/"  
+    },
+    "label": {
+        "active": "true",
+        "endpoint": "http://seeigel.informatik.uni-stuttgart.de:8080/labelCollections",
+        "retrieval":  "http://seeigel.informatik.uni-stuttgart.de:8080/"  
+    }
+                
+}
