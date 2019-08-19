@@ -399,7 +399,7 @@ namespace ol.control {
             menuContent.appendChild(minTCoeffRangeContainer);
             menuContent.appendChild(zoomSliderContainer);
             menuContent.appendChild(rotationRangeContainer);
-            menuContent.appendChild(demoModeControlContainer);
+            //menuContent.appendChild(demoModeControlContainer);
 
             this.menu.appendChild(menuContent);
         }

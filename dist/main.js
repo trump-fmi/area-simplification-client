@@ -14,8 +14,10 @@ const LABEL_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.
 const LABEL_SERVER_PORT = "8080";
 const AREA_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const AREA_SERVER_PORT = "8181";
+const ADDRESS_TYPE = "nominatim";
 const ADDRESS_DATA_PROVIDER = "osm";
 const ADDRESS_DATA_LOCALE = "en";
+const ADDRESS_SUGGESTIONS = 5;
 
 const TILES_Z_INDEX = 0;
 const AREAS_Z_INDEX_BASE = 10;
@@ -46,12 +48,12 @@ var map = new ol.Map({
 });
 
 //Create geocoder
-let geocoder = new Geocoder('nominatim', {
+let geocoder = new Geocoder(ADDRESS_TYPE, {
     provider: ADDRESS_DATA_PROVIDER,
-    lang: 'en',
+    lang: ADDRESS_DATA_LOCALE,
     placeholder: 'Search for...',
     targetType: 'glass-button',
-    limit: 5,
+    limit: ADDRESS_SUGGESTIONS,
     autoComplete: true,
     keepOpen: true,
     preventDefault: true
@@ -117,7 +119,8 @@ function addTileLayersToMap(tileEndpoints) {
         //Create new tile layer
         var tileLayer = new ol.layer.Tile({
             source: new ol.source.OSM({
-                url: tileEndpointUrl
+                url: tileEndpointUrl,
+                crossOrigin: null
             }),
             title: tileEndpoint.name,
             description: tileEndpoint.description,
