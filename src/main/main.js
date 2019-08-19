@@ -8,11 +8,11 @@ const MIN_ZOOM = 0;
 const MAX_ZOOM = 19;
 const TILE_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const TILE_SERVER_PORT = "80";
-const TILE_SERVER_ENDPOINTS_PORT = "8081";
+const TILE_SERVER_ENDPOINTS_PORT = "80";
 const LABEL_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
-const LABEL_SERVER_PORT = "8080";
+const LABEL_SERVER_PORT = "80";
 const AREA_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
-const AREA_SERVER_PORT = "8181";
+const AREA_SERVER_PORT = "80";
 const ADDRESS_TYPE = "nominatim";
 const ADDRESS_DATA_PROVIDER = "osm";
 const ADDRESS_DATA_LOCALE = "en";
@@ -27,7 +27,7 @@ const LABEL_Z_INDEX = 10000;
 const MAP_CONTAINER = 'map';
 
 //Put together required URLs
-const tileEndpointsUrl = TILE_SERVER_URL + ":" + TILE_SERVER_ENDPOINTS_PORT;
+const tileEndpointsUrl = TILE_SERVER_URL + ":" + TILE_SERVER_ENDPOINTS_PORT + "/tileEndpoints";
 const tileRetrievalUrl = TILE_SERVER_URL + ":" + TILE_SERVER_PORT;
 const labelCollectionUrl = LABEL_SERVER_URL + ":" + LABEL_SERVER_PORT + "/labelCollections";
 const labelRetrievalUrl = LABEL_SERVER_URL + ":" + LABEL_SERVER_PORT + "/";
