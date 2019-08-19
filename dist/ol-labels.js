@@ -146,27 +146,6 @@ var ol;
                 hideTilesCheckbox.addEventListener('change', function (event) {
                     _this.toggleHideTiles_(event);
                 });
-                // Slider for area transparency
-                var areaTransparencySliderContainer = rowContainerTemplate.cloneNode();
-                var areaTransparencyRange = document.createElement('input');
-                areaTransparencyRange.style.width = rangeCSSWidth;
-                areaTransparencyRange.setAttribute('type', 'range');
-                areaTransparencyRange.setAttribute('id', 'areaTransparencyRange');
-                areaTransparencyRange.setAttribute('min', '0.0');
-                areaTransparencyRange.setAttribute('max', '1.0');
-                areaTransparencyRange.setAttribute('step', '0.01');
-                areaTransparencyRange.defaultValue = '1.0';
-                var areaTransparencyLabel = document.createElement('label');
-                areaTransparencyLabel.id = 'areaTransparencyLabel';
-                areaTransparencyLabel.htmlFor = 'areaTransparencyRange';
-                areaTransparencyLabel.appendChild(document.createTextNode('Set the opacity of areas: (1.0)'));
-                areaTransparencySliderContainer.appendChild(areaTransparencyLabel);
-                areaTransparencySliderContainer.appendChild(document.createElement('br'));
-                areaTransparencySliderContainer.appendChild(areaTransparencyRange);
-                //Register event listener for label factor range slider
-                areaTransparencyRange.addEventListener('input', function (event) {
-                    _this.changeAreaTransparency_(event);
-                });
                 // Checkbox for enabling the drawing of the circles
                 var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
                 var drawCirclesCheckbox = document.createElement('input');
@@ -365,14 +344,13 @@ var ol;
                 // Create container div for all debug menu entries
                 var menuContent = document.createElement('div');
                 menuContent.appendChild(hideTilesCheckboxContainer);
-                menuContent.appendChild(areaTransparencySliderContainer);
                 menuContent.appendChild(drawCirclesCheckboxContainer);
                 menuContent.appendChild(labelfactorSliderContainer);
                 menuContent.appendChild(minTFactorSliderContainer);
                 menuContent.appendChild(minTCoeffRangeContainer);
                 menuContent.appendChild(zoomSliderContainer);
                 menuContent.appendChild(rotationRangeContainer);
-                //menuContent.appendChild(demoModeControlContainer);
+                menuContent.appendChild(demoModeControlContainer);
                 this.menu.appendChild(menuContent);
             }
             /**
@@ -404,20 +382,6 @@ var ol;
                 //Adjust opacity of the tile layers accordingly
                 this.getMap().getLayers().forEach(layer => {
                     if (layer instanceof ol.layer.Tile) {
-                        layer.setOpacity(opacity);
-                    }
-                });
-            }
-            changeAreaTransparency_(event) {
-                //Get slider element
-                let slider = document.getElementById('areaTransparencyRange');
-                //Update label text
-                document.getElementById('areaTransparencyLabel').innerHTML = 'Set the opacity of areas: (' + slider.value + ')';
-                //Convert slider value
-                let opacity = parseFloat(slider.value);
-                //Adjust opacity of the area layers accordingly
-                this.getMap().getLayers().forEach(layer => {
-                    if (layer instanceof ol.layer.Area) {
                         layer.setOpacity(opacity);
                     }
                 });
@@ -654,26 +618,56 @@ var ol;
                     if (!(layer instanceof ol.layer.Area) || layer.get('title') == undefined) {
                         return;
                     }
-                    //Cast layer
+                    //Cast layer to area layer
                     let areaLayer = layer;
-                    //Create required DOM elements
+                    //Create required DOM elements for checkbox and label
                     var listItem = document.createElement('li');
-                    var label = document.createElement('label');
-                    var input = document.createElement('input');
-                    var span = document.createElement('span');
-                    //Input config
-                    input.setAttribute('type', 'checkbox');
-                    input.checked = areaLayer.wantDisplay;
-                    //Span config
-                    span.innerHTML = layer.get('title');
-                    //Add click event listener to label
-                    input.addEventListener('click', function (event) {
+                    var checkboxContainer = document.createElement('label');
+                    var checkbox = document.createElement('input');
+                    var nameSpan = document.createElement('span');
+                    //Config for checkbox
+                    checkbox.setAttribute('type', 'checkbox');
+                    checkbox.checked = areaLayer.wantDisplay;
+                    //Display layer name
+                    nameSpan.innerHTML = layer.get('title');
+                    //Add click event listener to container
+                    checkbox.addEventListener('click', function (event) {
                         areaLayer.wantDisplay = !areaLayer.wantDisplay;
                     });
+                    //Create slider for adjusting layer opacity
+                    var opacitySliderContainer = document.createElement('span');
+                    opacitySliderContainer.style.marginLeft = '5px';
+                    opacitySliderContainer.style.cssFloat = 'right';
+                    var opacitySlider = document.createElement('input');
+                    opacitySlider.style.width = '60px';
+                    opacitySlider.style.height = '18px';
+                    opacitySlider.setAttribute('title', 'Opacity: 100%');
+                    opacitySlider.setAttribute('type', 'range');
+                    opacitySlider.setAttribute('min', '0.0');
+                    opacitySlider.setAttribute('max', '1.0');
+                    opacitySlider.setAttribute('step', '0.01');
+                    opacitySlider.defaultValue = '1.0';
+                    //Register input event listener for slider
+                    opacitySlider.addEventListener('input', function (event) {
+                        //Get slider element and its value
+                        let element = event.target;
+                        let value = parseFloat(element.value);
+                        //Adjust layer opacity accordingly
+                        layer.setOpacity(value);
+                        //Update title content
+                        element.setAttribute('title', "Opacity: " + Math.round(value * 100) + "%");
+                    });
+                    //Append slider to its container
+                    opacitySliderContainer.appendChild(opacitySlider);
+                    //Create empty div for clearing floats
+                    var clearElement = document.createElement('div');
+                    clearElement.style.clear = 'both';
                     //Put elements together
-                    label.appendChild(input);
-                    label.appendChild(span);
-                    listItem.appendChild(label);
+                    checkboxContainer.appendChild(checkbox);
+                    checkboxContainer.appendChild(nameSpan);
+                    listItem.appendChild(checkboxContainer);
+                    listItem.appendChild(opacitySliderContainer);
+                    listItem.appendChild(clearElement);
                     areaList.appendChild(listItem);
                 });
                 //Add container to menu container
@@ -684,7 +678,7 @@ var ol;
                 var labelContainer = document.createElement('div');
                 labelContainer.innerHTML = '<h5>Labels</h5>';
                 var labelList = document.createElement('ul');
-                // render available Tile endpoints
+                //Render available label endpoints
                 this.state.layers.forEach(function (layer, idx) {
                     if (!(layer instanceof ol.layer.Label) || layer.get('title') == undefined) {
                         return;

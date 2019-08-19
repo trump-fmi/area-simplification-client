@@ -113,32 +113,6 @@ namespace ol.control {
                 _this.toggleHideTiles_(event);
             });
 
-            // Slider for area transparency
-            var areaTransparencySliderContainer = rowContainerTemplate.cloneNode();
-
-            var areaTransparencyRange = document.createElement('input');
-            areaTransparencyRange.style.width = rangeCSSWidth;
-            areaTransparencyRange.setAttribute('type', 'range');
-            areaTransparencyRange.setAttribute('id', 'areaTransparencyRange');
-            areaTransparencyRange.setAttribute('min', '0.0');
-            areaTransparencyRange.setAttribute('max', '1.0');
-            areaTransparencyRange.setAttribute('step', '0.01');
-            areaTransparencyRange.defaultValue = '1.0';
-
-            var areaTransparencyLabel = document.createElement('label');
-            areaTransparencyLabel.id = 'areaTransparencyLabel';
-            areaTransparencyLabel.htmlFor = 'areaTransparencyRange';
-            areaTransparencyLabel.appendChild(document.createTextNode('Set the opacity of areas: (1.0)'));
-
-            areaTransparencySliderContainer.appendChild(areaTransparencyLabel);
-            areaTransparencySliderContainer.appendChild(document.createElement('br'));
-            areaTransparencySliderContainer.appendChild(areaTransparencyRange);
-
-            //Register event listener for label factor range slider
-            areaTransparencyRange.addEventListener('input', function (event) {
-                _this.changeAreaTransparency_(event);
-            });
-
             // Checkbox for enabling the drawing of the circles
             var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
 
@@ -392,14 +366,13 @@ namespace ol.control {
             // Create container div for all debug menu entries
             var menuContent = document.createElement('div');
             menuContent.appendChild(hideTilesCheckboxContainer);
-            menuContent.appendChild(areaTransparencySliderContainer);
             menuContent.appendChild(drawCirclesCheckboxContainer);
             menuContent.appendChild(labelfactorSliderContainer);
             menuContent.appendChild(minTFactorSliderContainer);
             menuContent.appendChild(minTCoeffRangeContainer);
             menuContent.appendChild(zoomSliderContainer);
             menuContent.appendChild(rotationRangeContainer);
-            //menuContent.appendChild(demoModeControlContainer);
+            menuContent.appendChild(demoModeControlContainer);
 
             this.menu.appendChild(menuContent);
         }
@@ -439,24 +412,6 @@ namespace ol.control {
             //Adjust opacity of the tile layers accordingly
             this.getMap().getLayers().forEach(layer => {
                 if (layer instanceof ol.layer.Tile) {
-                    layer.setOpacity(opacity);
-                }
-            });
-        }
-
-        private changeAreaTransparency_(event: Event) {
-            //Get slider element
-            let slider = <HTMLInputElement>document.getElementById('areaTransparencyRange');
-
-            //Update label text
-            document.getElementById('areaTransparencyLabel').innerHTML = 'Set the opacity of areas: (' + slider.value + ')';
-
-            //Convert slider value
-            let opacity = parseFloat(slider.value);
-
-            //Adjust opacity of the area layers accordingly
-            this.getMap().getLayers().forEach(layer => {
-                if (layer instanceof ol.layer.Area) {
                     layer.setOpacity(opacity);
                 }
             });
