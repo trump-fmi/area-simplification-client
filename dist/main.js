@@ -11,7 +11,7 @@ const TILE_SERVER_PORT = "80";
 const TILE_SERVER_ENDPOINTS_PORT = "80";
 const LABEL_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const LABEL_SERVER_PORT = "80";
-const AREA_SERVER_URL = "http://" + (DEBUG ? window.location.hostname : window.location.hostname);
+const AREA_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const AREA_SERVER_PORT = "80";
 const ADDRESS_TYPE = "nominatim";
 const ADDRESS_DATA_PROVIDER = "osm";
@@ -95,20 +95,81 @@ map.addControl(geocoder);
 //Get all available tile endpoints and create layers for them subsequently
 httpGET(tileEndpointsUrl, function (response) {
     var tileEndpoints = JSON.parse(response);
-    addTileLayersToMap(tileEndpoints);
+    //addTileLayersToMap(tileEndpoints);
 });
 
 //Get all available area types and create layers for them subsequently
 httpGET(areaTypesUrl, function (response) {
     var areaTypes = JSON.parse(response);
-    addAreaLayersToMap(areaTypes);
+    //addAreaLayersToMap(areaTypes);
 });
 
 //Get all available label collections and create layers for them subsequently
 httpGET(labelCollectionUrl, function (response) {
     var labelEndpointsJSON = JSON.parse(response);
-    addLabelLayersToMap(labelEndpointsJSON);
+    //addLabelLayersToMap(labelEndpointsJSON);
 });
+
+
+//TODO test start
+var circleLayer = new ol.layer.Vector({
+    source: new ol.source.Vector({
+        wrapX: false
+    }),
+    style: new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'darkgreen',
+            width: 5
+        }),
+        text: new ol.style.Text({
+            font: 'bold 18px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            placement: 'line',
+            stroke: new ol.style.Stroke({
+                color: 'black',
+                width: 2
+            }),
+            fill: new ol.style.Fill({
+                color: 'white'
+            }),
+            rotateWithView: true,
+            text: 'Superlabel Test 12345'
+        })
+    })
+});
+
+map.addLayer(circleLayer);
+
+/*
+let circle = new ol.geom.Circle(START_LOCATION, 0.06);
+let circlePolygon = ol.geom.Polygon.fromCircle(circle.transform('EPSG:4326', 'EPSG:3857'), 32, 8);
+let cutCoordinates = circlePolygon.getCoordinates()[0].slice(0, 8);
+let newPolygon = new ol.geom.Polygon([cutCoordinates]);*/
+
+let feature = createArcLabelGeom(START_LOCATION, 0.06, degToRad(30), degToRad(30));
+circleLayer.getSource().addFeature(feature);
+
+function degToRad(degree){
+    return (Math.PI / 180) * degree;
+}
+
+function createArcLabelGeom(circleCentre, innerRadius, startAngle, endAngle) {
+    const POLYGON_VERTICES = 32;
+
+    let circle = new ol.geom.Circle(circleCentre, innerRadius).transform('EPSG:4326', 'EPSG:3857');
+    let circlePolygon = ol.geom.Polygon.fromCircle(circle, POLYGON_VERTICES, 0);
+
+    let vertices_per_radian = POLYGON_VERTICES / (2 * Math.PI);
+    let start_vertex_index = startAngle * vertices_per_radian;
+    let end_vertex_index = POLYGON_VERTICES - endAngle * vertices_per_radian;
+
+    let polygonCoordinates = circlePolygon.getCoordinates()[0];
+    let arcCoordinates = polygonCoordinates.slice(end_vertex_index, POLYGON_VERTICES).concat(polygonCoordinates.slice(0, start_vertex_index));
+
+    let arcLineString = new ol.geom.LineString(arcCoordinates);
+    return new ol.Feature(arcLineString);
+}
+
+//TODO test end
 
 
 function addTileLayersToMap(tileEndpoints) {
