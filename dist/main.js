@@ -118,12 +118,9 @@ var circleLayer = new ol.layer.Vector({
 });
 map.addLayer(circleLayer);
 
-let feature = createArcLabelGeom(START_LOCATION, 0.06, deg2Rad(30), deg2Rad(30));
+let feature = createArcLabelGeom(START_LOCATION, 0.06, deg2Rad(160), deg2Rad(-100));
 feature.set("name", "testi1234");
-let feature2 = createArcLabelGeom(START_LOCATION, 0.05, deg2Rad(180), deg2Rad(-90));
-feature2.set("name", "noch ein test");
 circleLayer.getSource().addFeature(feature);
-circleLayer.getSource().addFeature(feature2);
 
 function deg2Rad(degree) {
     return (Math.PI / 180) * degree;
@@ -136,13 +133,43 @@ function createArcLabelGeom(circleCentre, innerRadius, startAngle, endAngle) {
     let circlePolygon = ol.geom.Polygon.fromCircle(circle, POLYGON_VERTICES, 0);
 
     let vertices_per_radian = POLYGON_VERTICES / (2 * Math.PI);
-    let start_vertex_index = startAngle * vertices_per_radian;
-    let end_vertex_index = POLYGON_VERTICES - endAngle * vertices_per_radian;
-
     let polygonCoordinates = circlePolygon.getCoordinates()[0];
-    let arcCoordinates = polygonCoordinates
-        .slice(end_vertex_index, POLYGON_VERTICES)
-        .concat(polygonCoordinates.slice(0, start_vertex_index));
+
+    let vertex_start_index = 0, vertex_end_index = 0;
+
+    if (startAngle >= 0) {
+        vertex_end_index = startAngle * vertices_per_radian;
+    } else {
+        vertex_end_index = POLYGON_VERTICES - Math.abs(startAngle) * vertices_per_radian;
+    }
+
+    if (endAngle >= 0) {
+        vertex_start_index = POLYGON_VERTICES - endAngle * vertices_per_radian;
+    } else {
+        vertex_start_index = Math.abs(endAngle) * vertices_per_radian;
+    }
+
+    vertex_start_index = Math.floor(vertex_start_index);
+    vertex_end_index = Math.floor(vertex_end_index);
+
+    let arcCoordinates = [];
+    let addToList = false;
+
+    for (let i = 0; i <= 2 * (POLYGON_VERTICES - 1); i++) {
+        let localIndex = i % POLYGON_VERTICES;
+
+        if (i === vertex_start_index) {
+            addToList = true;
+        }
+
+        if (addToList) {
+            arcCoordinates.push(polygonCoordinates[localIndex]);
+        }
+
+        if ((localIndex === vertex_end_index) && addToList) {
+            break;
+        }
+    }
 
     let arcLineString = new ol.geom.LineString(arcCoordinates);
     return new ol.Feature(arcLineString);

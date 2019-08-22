@@ -34,8 +34,6 @@ namespace ol.style {
         //Get label name for this feature
         let labelName = feature.get('name') || "";
 
-        console.log("hier!");
-
         //Check name for validity
         if (labelName.trim().length < 2) {
             return EMPTY_STYLE;
