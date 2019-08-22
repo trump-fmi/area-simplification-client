@@ -113,42 +113,19 @@ httpGET(labelCollectionUrl, function (response) {
 
 //TODO test start
 var circleLayer = new ol.layer.Vector({
-    source: new ol.source.Vector({
-        wrapX: false
-    }),
-    style: new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: 'darkgreen',
-            width: 5
-        }),
-        text: new ol.style.Text({
-            font: 'bold 18px "Open Sans", "Arial Unicode MS", "sans-serif"',
-            placement: 'line',
-            stroke: new ol.style.Stroke({
-                color: 'black',
-                width: 2
-            }),
-            fill: new ol.style.Fill({
-                color: 'white'
-            }),
-            rotateWithView: true,
-            text: 'Superlabel Test 12345'
-        })
-    })
+    source: new ol.source.Vector(),
+    style: ol.style.arcLabelStyleFunction
 });
-
 map.addLayer(circleLayer);
 
-/*
-let circle = new ol.geom.Circle(START_LOCATION, 0.06);
-let circlePolygon = ol.geom.Polygon.fromCircle(circle.transform('EPSG:4326', 'EPSG:3857'), 32, 8);
-let cutCoordinates = circlePolygon.getCoordinates()[0].slice(0, 8);
-let newPolygon = new ol.geom.Polygon([cutCoordinates]);*/
-
-let feature = createArcLabelGeom(START_LOCATION, 0.06, degToRad(30), degToRad(30));
+let feature = createArcLabelGeom(START_LOCATION, 0.06, deg2Rad(30), deg2Rad(30));
+feature.set("name", "testi1234");
+let feature2 = createArcLabelGeom(START_LOCATION, 0.05, deg2Rad(180), deg2Rad(-90));
+feature2.set("name", "noch ein test");
 circleLayer.getSource().addFeature(feature);
+circleLayer.getSource().addFeature(feature2);
 
-function degToRad(degree){
+function deg2Rad(degree) {
     return (Math.PI / 180) * degree;
 }
 
@@ -163,7 +140,9 @@ function createArcLabelGeom(circleCentre, innerRadius, startAngle, endAngle) {
     let end_vertex_index = POLYGON_VERTICES - endAngle * vertices_per_radian;
 
     let polygonCoordinates = circlePolygon.getCoordinates()[0];
-    let arcCoordinates = polygonCoordinates.slice(end_vertex_index, POLYGON_VERTICES).concat(polygonCoordinates.slice(0, start_vertex_index));
+    let arcCoordinates = polygonCoordinates
+        .slice(end_vertex_index, POLYGON_VERTICES)
+        .concat(polygonCoordinates.slice(0, start_vertex_index));
 
     let arcLineString = new ol.geom.LineString(arcCoordinates);
     return new ol.Feature(arcLineString);
