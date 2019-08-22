@@ -8,4 +8,5 @@ install:
 script:
   - true # Override script list so that npm test will not be executed
 after_script:
+  # Trigger Docker build of trump-client
   - "curl -H \"Content-Type: application/json\" --data '{\"docker_tag\": \"latest\"}' -X POST https://cloud.docker.com/api/build/v1/source/30e8858d-8a54-4fb5-99e0-0b6e5ea77dc2/trigger/a6ddf4d0-f5d3-4eb4-9aa9-3ffd1b209511/call/"
