@@ -1,28 +1,30 @@
 namespace ol.style {
 
-    //Maps resource names of area types onto arrays of area styles
-    const AREA_STYLES_MAPPING = new TypedMap<string, Array<ol.style.Style>>([
-        ["states", [STYLE_AREA_STATES]],
-        ["towns", [STYLE_AREA_TOWNS]],
-        ["woodland", [STYLE_AREA_WOODLAND]],
-        ["farmland", [STYLE_AREA_FARMLAND]],
-        ["lakes", [STYLE_AREA_LAKES]],
-        ["rivers", [STYLE_LINE_RIVERS]],
-        ["commercial", [STYLE_AREA_COMMERCIAL]],
-        ["residential", [STYLE_AREA_RESIDENTIAL]],
-        ["military", [STYLE_AREA_MILITARY]],
-        ["streets", [STYLE_AREA_STREETS]],
-        ["buildings", [STYLE_AREA_BUILDINGS]]
+    //Mapping from area types to single styles, style lists or StyleFunctions
+    const AREA_STYLES_MAPPING = new TypedMap<string, ol.style.Style | Array<ol.style.Style> | StyleFunction>([
+        ["states", STYLE_STATES],
+        ["towns", STYLE_TOWNS],
+        ["woodland", STYLE_WOODLAND],
+        ["farmland", STYLE_FARMLAND],
+        ["water", STYLE_WATER],
+        ["commercial", STYLE_COMMERCIAL],
+        ["military", STYLE_MILITARY],
+        ["residential", STYLE_RESIDENTIAL],
+        ["buildings", STYLE_BUILDINGS],
+        ["motorways", STYLE_MOTORWAYS],
+        ["main_streets", STYLE_MAIN_STREETS],
+        ["bystreets", STYLE_BYSTREETS],
+        ["railways", STYLE_RAILWAYS]
     ]);
 
     /**
-     * Returns a StyleFunction for a certain area type. This StyleFunction returns an array of styles
+     * Returns a StyleFunction for a certain area type which returns an array of styles
      * that may be used for rendering a given feature at a certain resolution.
      */
     export function areaStyleFunction(areaType: AreaType): StyleFunction {
 
-        //Get styles array for this area type from the map
-        let mappedStyles = AREA_STYLES_MAPPING.get(areaType.resource) || [];
+        //Get style object from map for this area type
+        const MAPPED_STYLE_OBJECT = AREA_STYLES_MAPPING.get(areaType.resource) || [];
 
         /**
          * Returns an array of styles for the given area type.
@@ -31,32 +33,36 @@ namespace ol.style {
          * @param resolution The resolution to use
          */
         return (feature: Feature, resolution: number) => {
-            /*
-            //Get label name for this feature
-            let labelName = feature.get('name');
+            //Holds the list of styles that is finally returned
+            let finalStyles: Array<ol.style.Style> = [];
 
-            //Sanitize it
-            labelName = labelName || "";
+            //Check if mapped style object is a single style, an array of styles or a StyleFunction
+            if (MAPPED_STYLE_OBJECT instanceof ol.style.Style) {
+                //Single style
+                finalStyles.push(MAPPED_STYLE_OBJECT);
+            } else if (MAPPED_STYLE_OBJECT instanceof Array) {
+                //Array of styles
+                MAPPED_STYLE_OBJECT.forEach(style => finalStyles.push(style));
+            } else if (typeof MAPPED_STYLE_OBJECT === 'function') {
+                //StyleFunction, so call it
+                let generatedStyles = MAPPED_STYLE_OBJECT(feature, resolution);
 
-            //Iterate over all mapped styles and update the text accordingly
-            for (let i = 0; i < mappedStyles.length; i++) {
-                //Get text object of style
-                let textObject = mappedStyles[i].getText();
-
-                //Sanity check
-                if (!textObject) {
-                    continue;
+                //Check if StyleFunction returned a single style or a style array
+                if (generatedStyles instanceof ol.style.Style) {
+                    //Single style, push to list
+                    finalStyles.push(generatedStyles);
+                } else if (generatedStyles instanceof Array) {
+                    //Array, push all elements to list
+                    generatedStyles.forEach(style => finalStyles.push(style));
                 }
-
-                //Update text
-                textObject.setText(labelName);
-            }*/
-
-            if(feature.get('highlight')){
-                return mappedStyles.concat([STYLE_AREA_HIGHLIGHT]);
             }
 
-            return mappedStyles;
+            //Add additional highlight style if highlighting is enabled for this feature
+            if (feature.get('highlight')) {
+                return finalStyles.concat([STYLE_OTHER_HIGHLIGHT]);
+            }
+
+            return finalStyles;
         };
     }
 }

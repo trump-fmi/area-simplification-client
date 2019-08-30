@@ -10,7 +10,7 @@ html, body {
 }
 
 .ol-debug-menu {
-  bottom: 0.5em;
+  bottom: 3em;
   left: 0.5em;
   background-color: rgba(255,255,255,.8);
 }

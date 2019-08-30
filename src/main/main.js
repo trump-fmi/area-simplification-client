@@ -11,7 +11,7 @@ const TILE_SERVER_PORT = "80";
 const TILE_SERVER_ENDPOINTS_PORT = "80";
 const LABEL_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const LABEL_SERVER_PORT = "80";
-const AREA_SERVER_URL = "http://" + (DEBUG ? window.location.hostname : window.location.hostname);
+const AREA_SERVER_URL = "http://" + (DEBUG ? "seeigel.informatik.uni-stuttgart.de" : window.location.hostname);
 const AREA_SERVER_PORT = "80";
 const ADDRESS_TYPE = "nominatim";
 const ADDRESS_DATA_PROVIDER = "osm";
@@ -65,7 +65,6 @@ geocoder.element.style.top = '275px';
 
 //Register listener for address choose events
 geocoder.on('addresschosen', function (event) {
-
     //Iterate over all layers of the map
     map.getLayers().forEach(function (layer) {
         //Only consider area layers
@@ -86,6 +85,7 @@ map.addControl(new ol.control.ZoomSlider());
 map.addControl(new ol.control.DebugMenu());
 map.addControl(new ol.control.LayerMenu());
 map.addControl(new ol.control.Rotate());
+map.addControl(new ol.control.ScaleLine());
 map.addControl(geocoder);
 
 //Add select interaction to map

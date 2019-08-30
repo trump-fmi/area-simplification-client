@@ -1089,9 +1089,26 @@ var ol;
     var style;
     (function (style) {
         /**
+         * Internal style template for water areas.
+         */
+        const STYLE_WATER_AREA_TEMPLATE = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(44, 2, 196, 0.8)'
+            })
+        });
+        /**
+         * Internal style template for water lines.
+         */
+        const STYLE_WATER_LINE_TEMPLATE = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'rgba(44, 2, 196, 0.8)',
+                width: 5
+            }),
+        });
+        /**
          * Style for town borders.
          */
-        style.STYLE_AREA_STATES = new ol.style.Style({
+        style.STYLE_STATES = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#d1352a',
                 width: 4
@@ -1100,28 +1117,62 @@ var ol;
         /**
          * Style for town borders.
          */
-        style.STYLE_AREA_TOWNS = new ol.style.Style({
+        style.STYLE_TOWNS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#a34905',
                 width: 3
             })
         });
         /**
-         * Style for lakes.
+         * Style for woodland.
          */
-        style.STYLE_AREA_LAKES = new ol.style.Style({
+        style.STYLE_WOODLAND = new ol.style.Style({
             stroke: new ol.style.Stroke({
-                color: '#210192',
+                color: '#248c26',
                 width: 1
             }),
             fill: new ol.style.Fill({
-                color: 'rgba(44, 2, 196, 0.8)'
+                color: 'rgba(41, 163, 43, 0.6)'
             })
         });
         /**
+         * Style for farmland.
+         */
+        style.STYLE_FARMLAND = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#b5b540',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(204, 204, 110, 0.6)'
+            })
+        });
+        /**
+         * StyleFunction for water (lakes, rivers, ...)
+         * @param feature The feature to style
+         * @param resolution Current resolution (meters/pixel)
+         */
+        style.STYLE_WATER = function (feature, resolution) {
+            //Width of rivers in meters
+            const DEFAULT_RIVER_WIDTH = 20;
+            let geomType = feature.getGeometry().getType();
+            //Decide whether to use the line or the area template
+            if ((geomType === "LineString") || (geomType === "MultiLineString")) {
+                //Use the line template and determine river width
+                let riverWidth = feature.get("zoom") || DEFAULT_RIVER_WIDTH;
+                console.log(riverWidth);
+                //Update line template accordingly
+                const pixelWidth = riverWidth / resolution;
+                STYLE_WATER_LINE_TEMPLATE.getStroke().setWidth(pixelWidth);
+                return STYLE_WATER_LINE_TEMPLATE;
+            }
+            //Use the area template
+            return STYLE_WATER_AREA_TEMPLATE;
+        };
+        /**
          * Style for commercial landuse.
          */
-        style.STYLE_AREA_COMMERCIAL = new ol.style.Style({
+        style.STYLE_COMMERCIAL = new ol.style.Style({
             fill: new ol.style.Fill({
                 color: 'rgb(238, 206, 209)'
             })
@@ -1129,35 +1180,23 @@ var ol;
         /**
          * Style for military landuse.
          */
-        style.STYLE_AREA_MILITARY = new ol.style.Style({
+        style.STYLE_MILITARY = new ol.style.Style({
             fill: new ol.style.Fill({
-                color: '#d11313'
+                color: 'rgba(209, 10, 19, 0.6)'
             })
         });
         /**
          * Style for residential landuse.
          */
-        style.STYLE_AREA_RESIDENTIAL = new ol.style.Style({
+        style.STYLE_RESIDENTIAL = new ol.style.Style({
             fill: new ol.style.Fill({
                 color: 'rgb(218, 218, 218)'
             })
         });
         /**
-         * Style for farmland.
-         */
-        style.STYLE_AREA_FARMLAND = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#b5b540',
-                width: 1
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(204, 204, 110, 1)'
-            })
-        });
-        /**
          * Style for buildings.
          */
-        style.STYLE_AREA_BUILDINGS = new ol.style.Style({
+        style.STYLE_BUILDINGS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#69523f',
                 width: 1
@@ -1167,45 +1206,55 @@ var ol;
             })
         });
         /**
-         * Style for woodland.
+         * Style for motorways.
          */
-        style.STYLE_AREA_WOODLAND = new ol.style.Style({
+        style.STYLE_MOTORWAYS = new ol.style.Style({
             stroke: new ol.style.Stroke({
-                color: '#248c26',
-                width: 1
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(41, 163, 43, 0.6)'
-            })
-            /*
-            , text: new ol.style.Text({
-                font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-                placement: 'point',
-                stroke: new ol.style.Stroke({
-                    color: 'black',
-                    width: 2
-                }),
-                fill: new Fill({
-                    color: 'white'
-                }),
-                rotateWithView: true
-            })*/
-        });
-        style.STYLE_LINE_RIVERS = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#2c02c4',
-                width: 2
-            })
-        });
-        style.STYLE_AREA_STREETS = new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: 'rgba(255, 255, 255, 1)'
+                color: '#E990A0',
+                width: 6
             })
         });
         /**
+         * Style for main streets.
+         */
+        style.STYLE_MAIN_STREETS = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#F6FABB',
+                width: 6
+            })
+        });
+        /**
+         * Style for bystreets.
+         */
+        style.STYLE_BYSTREETS = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#FFFFFF',
+                width: 4,
+                miterLimit: 2
+            })
+        });
+        /**
+         * Style for railways.
+         */
+        style.STYLE_RAILWAYS = [new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: [0, 0, 0, 1.0],
+                    width: 4
+                })
+            }),
+            // Dash white lines (second style, on the top)
+            new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: [255, 255, 255, 1.0],
+                    width: 4,
+                    lineDash: [10, 20, 10, 20]
+                })
+            })
+        ];
+        /**
          * Style for highlighting certain areas.
          */
-        style.STYLE_AREA_HIGHLIGHT = new ol.style.Style({
+        style.STYLE_OTHER_HIGHLIGHT = new ol.style.Style({
             fill: new ol.style.Fill({
                 color: 'rgba(235, 155, 52, 0.6)'
             })
@@ -1214,7 +1263,7 @@ var ol;
          * Style for points that of an area polygon. May be helpful for debugging, should not be used
          * in productive environments however.
          */
-        style.STYLE_AREA_POLYGON_POINTS = new ol.style.Style({
+        style.STYLE_OTHER_POLYGON_POINTS = new ol.style.Style({
             image: new ol.style.Circle({
                 radius: 5,
                 fill: new ol.style.Fill({
@@ -1253,28 +1302,30 @@ var ol;
 var ol;
 (function (ol) {
     var style;
-    (function (style) {
-        //Maps resource names of area types onto arrays of area styles
+    (function (style_1) {
+        //Mapping from area types to single styles, style lists or StyleFunctions
         const AREA_STYLES_MAPPING = new TypedMap([
-            ["states", [style.STYLE_AREA_STATES]],
-            ["towns", [style.STYLE_AREA_TOWNS]],
-            ["woodland", [style.STYLE_AREA_WOODLAND]],
-            ["farmland", [style.STYLE_AREA_FARMLAND]],
-            ["lakes", [style.STYLE_AREA_LAKES]],
-            ["rivers", [style.STYLE_LINE_RIVERS]],
-            ["commercial", [style.STYLE_AREA_COMMERCIAL]],
-            ["residential", [style.STYLE_AREA_RESIDENTIAL]],
-            ["military", [style.STYLE_AREA_MILITARY]],
-            ["streets", [style.STYLE_AREA_STREETS]],
-            ["buildings", [style.STYLE_AREA_BUILDINGS]]
+            ["states", style_1.STYLE_STATES],
+            ["towns", style_1.STYLE_TOWNS],
+            ["woodland", style_1.STYLE_WOODLAND],
+            ["farmland", style_1.STYLE_FARMLAND],
+            ["water", style_1.STYLE_WATER],
+            ["commercial", style_1.STYLE_COMMERCIAL],
+            ["military", style_1.STYLE_MILITARY],
+            ["residential", style_1.STYLE_RESIDENTIAL],
+            ["buildings", style_1.STYLE_BUILDINGS],
+            ["motorways", style_1.STYLE_MOTORWAYS],
+            ["main_streets", style_1.STYLE_MAIN_STREETS],
+            ["bystreets", style_1.STYLE_BYSTREETS],
+            ["railways", style_1.STYLE_RAILWAYS]
         ]);
         /**
-         * Returns a StyleFunction for a certain area type. This StyleFunction returns an array of styles
+         * Returns a StyleFunction for a certain area type which returns an array of styles
          * that may be used for rendering a given feature at a certain resolution.
          */
         function areaStyleFunction(areaType) {
-            //Get styles array for this area type from the map
-            let mappedStyles = AREA_STYLES_MAPPING.get(areaType.resource) || [];
+            //Get style object from map for this area type
+            const MAPPED_STYLE_OBJECT = AREA_STYLES_MAPPING.get(areaType.resource) || [];
             /**
              * Returns an array of styles for the given area type.
              *
@@ -1282,33 +1333,38 @@ var ol;
              * @param resolution The resolution to use
              */
             return (feature, resolution) => {
-                /*
-                //Get label name for this feature
-                let labelName = feature.get('name');
-    
-                //Sanitize it
-                labelName = labelName || "";
-    
-                //Iterate over all mapped styles and update the text accordingly
-                for (let i = 0; i < mappedStyles.length; i++) {
-                    //Get text object of style
-                    let textObject = mappedStyles[i].getText();
-    
-                    //Sanity check
-                    if (!textObject) {
-                        continue;
-                    }
-    
-                    //Update text
-                    textObject.setText(labelName);
-                }*/
-                if (feature.get('highlight')) {
-                    return mappedStyles.concat([style.STYLE_AREA_HIGHLIGHT]);
+                //Holds the list of styles that is finally returned
+                let finalStyles = [];
+                //Check if mapped style object is a single style, an array of styles or a StyleFunction
+                if (MAPPED_STYLE_OBJECT instanceof ol.style.Style) {
+                    //Single style
+                    finalStyles.push(MAPPED_STYLE_OBJECT);
                 }
-                return mappedStyles;
+                else if (MAPPED_STYLE_OBJECT instanceof Array) {
+                    //Array of styles
+                    MAPPED_STYLE_OBJECT.forEach(style => finalStyles.push(style));
+                }
+                else if (typeof MAPPED_STYLE_OBJECT === 'function') {
+                    //StyleFunction, so call it
+                    let generatedStyles = MAPPED_STYLE_OBJECT(feature, resolution);
+                    //Check if StyleFunction returned a single style or a style array
+                    if (generatedStyles instanceof ol.style.Style) {
+                        //Single style, push to list
+                        finalStyles.push(generatedStyles);
+                    }
+                    else if (generatedStyles instanceof Array) {
+                        //Array, push all elements to list
+                        generatedStyles.forEach(style => finalStyles.push(style));
+                    }
+                }
+                //Add additional highlight style if highlighting is enabled for this feature
+                if (feature.get('highlight')) {
+                    return finalStyles.concat([style_1.STYLE_OTHER_HIGHLIGHT]);
+                }
+                return finalStyles;
             };
         }
-        style.areaStyleFunction = areaStyleFunction;
+        style_1.areaStyleFunction = areaStyleFunction;
     })(style = ol.style || (ol.style = {}));
 })(ol || (ol = {}));
 
