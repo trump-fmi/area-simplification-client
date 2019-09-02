@@ -118,9 +118,25 @@ var circleLayer = new ol.layer.Vector({
 });
 map.addLayer(circleLayer);
 
-let feature = createArcLabelGeom(START_LOCATION, 0.06, deg2Rad(160), deg2Rad(-100));
-feature.set("name", "testi1234");
-circleLayer.getSource().addFeature(feature);
+let arcLabelFeature = null;
+createArcLabel(0.06, deg2Rad(90), deg2Rad(-30));
+
+function createArcLabel(innerRadius, startAngle, endAngle, text) {
+    //Sanitize parameters
+    innerRadius = innerRadius || 0.06;
+    startAngle = startAngle || 0;
+    endAngle = endAngle || 0;
+    text = text || "My arc label";
+
+    //Remove existing feature
+    if (arcLabelFeature != null) {
+        circleLayer.getSource().removeFeature(arcLabelFeature);
+    }
+
+    arcLabelFeature = createArcLabelGeom(START_LOCATION, innerRadius, startAngle, endAngle);
+    arcLabelFeature.set("name", text);
+    circleLayer.getSource().addFeature(arcLabelFeature);
+}
 
 function deg2Rad(degree) {
     return (Math.PI / 180) * degree;
@@ -134,6 +150,9 @@ function createArcLabelGeom(circleCentre, innerRadius, startAngle, endAngle) {
 
     let circle = new ol.geom.Circle(circleCentre, innerRadius).transform('EPSG:4326', 'EPSG:3857');
     let circlePolygon = ol.geom.Polygon.fromCircle(circle, POLYGON_VERTICES, 0);
+
+    //Convert end angle
+    endAngle = -endAngle;
 
     let polygonCoordinates = circlePolygon.getCoordinates()[0];
 
@@ -177,7 +196,6 @@ function createArcLabelGeom(circleCentre, innerRadius, startAngle, endAngle) {
     let arcLineString = new ol.geom.LineString(arcCoordinates);
     return new ol.Feature(arcLineString);
 }
-
 //TODO test end
 
 
