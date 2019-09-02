@@ -22,6 +22,29 @@ namespace ol.style {
         }),
     });
 
+    const STYLE_WOODLAND_TEMPLATE = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#248c26',
+            width: 1
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(41, 163, 43, 0.6)'
+        })
+        /*
+        , text: new ol.style.Text({
+            font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            placement: 'point',
+            stroke: new ol.style.Stroke({
+                color: 'black',
+                width: 2
+            }),
+            fill: new Fill({
+                color: 'white'
+            }),
+            rotateWithView: true
+        })*/
+    });
+
     /**
      * Style for town borders.
      */
@@ -43,17 +66,19 @@ namespace ol.style {
     });
 
     /**
-     * Style for woodland.
+     * StyleFunction for woodland.
+     * @param feature The feature to style
+     * @param resolution Current resolution (meters/pixel)
      */
-    export const STYLE_WOODLAND = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: '#248c26',
-            width: 1
-        }),
-        fill: new ol.style.Fill({
-            color: 'rgba(41, 163, 43, 0.6)'
-        })
-    });
+    export const STYLE_WOODLAND = function (feature: Feature, resolution: number) {
+        //Get label name for this feature and sanitize it
+        let labelName = feature.get('name') || "";
+
+        //Adjust style template accordingly
+        STYLE_WOODLAND_TEMPLATE.getText().setText(labelName);
+
+        return STYLE_WOODLAND_TEMPLATE;
+    };
 
     /**
      * Style for farmland.
@@ -69,13 +94,13 @@ namespace ol.style {
     });
 
     /**
-     * StyleFunction for water (lakes, rivers, ...)
+     * StyleFunction for water (lakes, rivers, ...).
      * @param feature The feature to style
      * @param resolution Current resolution (meters/pixel)
      */
     export const STYLE_WATER = function (feature: Feature, resolution: number) {
         //Width of rivers in meters
-        const DEFAULT_RIVER_WIDTH = 20;
+        const DEFAULT_RIVER_WIDTH = 18;
 
         let geomType = feature.getGeometry().getType();
 
@@ -83,8 +108,6 @@ namespace ol.style {
         if ((geomType === "LineString") || (geomType === "MultiLineString")) {
             //Use the line template and determine river width
             let riverWidth = feature.get("width") || DEFAULT_RIVER_WIDTH;
-
-            //console.log(riverWidth);
 
             //Update line template accordingly
             const pixelWidth = riverWidth / resolution;
@@ -143,7 +166,7 @@ namespace ol.style {
     export const STYLE_MOTORWAYS = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: '#E990A0',
-            width: 6
+            width: 7
         })
     });
 
@@ -163,8 +186,7 @@ namespace ol.style {
     export const STYLE_BYSTREETS = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: '#FFFFFF',
-            width: 4,
-            miterLimit: 2
+            width: 4
         })
     });
 
@@ -192,9 +214,15 @@ namespace ol.style {
      * Style for highlighting certain areas.
      */
     export const STYLE_OTHER_HIGHLIGHT = new ol.style.Style({
+        /*
         fill: new ol.style.Fill({
             color: 'rgba(235, 155, 52, 0.6)'
-        })
+        })*/
+        stroke: new ol.style.Stroke({
+            color: 'red',
+            width: 5
+        }),
+        zIndex: 999999
     });
 
     /**

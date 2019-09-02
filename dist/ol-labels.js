@@ -1105,6 +1105,28 @@ var ol;
                 width: 5
             }),
         });
+        const STYLE_WOODLAND_TEMPLATE = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#248c26',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(41, 163, 43, 0.6)'
+            }),
+            text: new ol.style.Text({
+                font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+                placement: 'point',
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 2
+                }),
+                fill: new style.Fill({
+                    color: 'white'
+                }),
+                rotateWithView: true
+            }),
+            zIndex: 999999
+        });
         /**
          * Style for town borders.
          */
@@ -1124,17 +1146,17 @@ var ol;
             })
         });
         /**
-         * Style for woodland.
+         * StyleFunction for woodland.
+         * @param feature The feature to style
+         * @param resolution Current resolution (meters/pixel)
          */
-        style.STYLE_WOODLAND = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#248c26',
-                width: 1
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(41, 163, 43, 0.6)'
-            })
-        });
+        style.STYLE_WOODLAND = function (feature, resolution) {
+            //Get label name for this feature and sanitize it
+            let labelName = feature.get('name') || "";
+            //Adjust style template accordingly
+            STYLE_WOODLAND_TEMPLATE.getText().setText(labelName);
+            return STYLE_WOODLAND_TEMPLATE;
+        };
         /**
          * Style for farmland.
          */
@@ -1148,19 +1170,18 @@ var ol;
             })
         });
         /**
-         * StyleFunction for water (lakes, rivers, ...)
+         * StyleFunction for water (lakes, rivers, ...).
          * @param feature The feature to style
          * @param resolution Current resolution (meters/pixel)
          */
         style.STYLE_WATER = function (feature, resolution) {
             //Width of rivers in meters
-            const DEFAULT_RIVER_WIDTH = 20;
+            const DEFAULT_RIVER_WIDTH = 18;
             let geomType = feature.getGeometry().getType();
             //Decide whether to use the line or the area template
             if ((geomType === "LineString") || (geomType === "MultiLineString")) {
                 //Use the line template and determine river width
-                let riverWidth = feature.get("zoom") || DEFAULT_RIVER_WIDTH;
-                console.log(riverWidth);
+                let riverWidth = feature.get("width") || DEFAULT_RIVER_WIDTH;
                 //Update line template accordingly
                 const pixelWidth = riverWidth / resolution;
                 STYLE_WATER_LINE_TEMPLATE.getStroke().setWidth(pixelWidth);
@@ -1211,7 +1232,7 @@ var ol;
         style.STYLE_MOTORWAYS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#E990A0',
-                width: 6
+                width: 7
             })
         });
         /**
@@ -1229,8 +1250,7 @@ var ol;
         style.STYLE_BYSTREETS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#FFFFFF',
-                width: 4,
-                miterLimit: 2
+                width: 4
             })
         });
         /**
@@ -1255,9 +1275,15 @@ var ol;
          * Style for highlighting certain areas.
          */
         style.STYLE_OTHER_HIGHLIGHT = new ol.style.Style({
+            /*
             fill: new ol.style.Fill({
                 color: 'rgba(235, 155, 52, 0.6)'
-            })
+            })*/
+            stroke: new ol.style.Stroke({
+                color: 'red',
+                width: 5
+            }),
+            zIndex: 999999
         });
         /**
          * Style for points that of an area polygon. May be helpful for debugging, should not be used
