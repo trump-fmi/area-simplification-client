@@ -119,9 +119,9 @@ var circleLayer = new ol.layer.Vector({
 map.addLayer(circleLayer);
 
 let arcLabelFeature = null;
-createArcLabel(0.06, deg2Rad(90), deg2Rad(-30));
+setArcLabel(0.06, deg2Rad(90), deg2Rad(-30));
 
-function createArcLabel(innerRadius, startAngle, endAngle, text) {
+function setArcLabel(innerRadius, startAngle, endAngle, text) {
     //Sanitize parameters
     innerRadius = innerRadius || 0.06;
     startAngle = startAngle || 0;
