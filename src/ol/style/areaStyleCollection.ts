@@ -4,6 +4,28 @@
 
 namespace ol.style {
     /**
+     * Internal style template for towns.
+     */
+    const STYLE_TOWNS_TEMPLATE = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#a34905',
+            width: 3
+        }),
+        text: new ol.style.Text({
+            font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            placement: 'point',
+            stroke: new ol.style.Stroke({
+                color: 'black',
+                width: 2
+            }),
+            fill: new ol.style.Fill({
+                color: 'white'
+            }),
+            rotateWithView: true
+        })
+    });
+
+    /**
      * Internal style template for water areas.
      */
     const STYLE_WATER_AREA_TEMPLATE = new ol.style.Style({
@@ -22,29 +44,6 @@ namespace ol.style {
         }),
     });
 
-    const STYLE_WOODLAND_TEMPLATE = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: '#248c26',
-            width: 1
-        }),
-        fill: new ol.style.Fill({
-            color: 'rgba(41, 163, 43, 0.6)'
-        })
-        /*
-        , text: new ol.style.Text({
-            font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-            placement: 'point',
-            stroke: new ol.style.Stroke({
-                color: 'black',
-                width: 2
-            }),
-            fill: new Fill({
-                color: 'white'
-            }),
-            rotateWithView: true
-        })*/
-    });
-
     /**
      * Style for town borders.
      */
@@ -56,29 +55,32 @@ namespace ol.style {
     });
 
     /**
-     * Style for town borders.
-     */
-    export const STYLE_TOWNS = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: '#a34905',
-            width: 3
-        })
-    });
-
-    /**
-     * StyleFunction for woodland.
+     * StyleFunction for town borders.
      * @param feature The feature to style
      * @param resolution Current resolution (meters/pixel)
      */
-    export const STYLE_WOODLAND = function (feature: Feature, resolution: number) {
+    export const STYLE_TOWNS = function (feature: Feature, resolution: number) {
         //Get label name for this feature and sanitize it
         let labelName = feature.get('name') || "";
 
         //Adjust style template accordingly
-        STYLE_WOODLAND_TEMPLATE.getText().setText(labelName);
+        STYLE_TOWNS_TEMPLATE.getText().setText(labelName);
 
-        return STYLE_WOODLAND_TEMPLATE;
+        return STYLE_TOWNS_TEMPLATE;
     };
+
+    /**
+     * Style for woodland.
+     */
+    export const STYLE_WOODLAND = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#248c26',
+            width: 1
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(41, 163, 43, 0.6)'
+        })
+    });
 
     /**
      * Style for farmland.
@@ -176,7 +178,7 @@ namespace ol.style {
     export const STYLE_MAIN_STREETS = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: '#F6FABB',
-            width: 6
+            width: 5
         })
     });
 
