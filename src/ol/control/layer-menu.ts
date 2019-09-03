@@ -193,6 +193,16 @@ namespace ol.control {
                 //Cast layer to area layer
                 let areaLayer = <ol.layer.Area>layer;
 
+                //Skip if layer is child
+                if (areaLayer.get("parent")) {
+                    return;
+                }
+
+                //Create list of layers that should be affected by operations to this layer
+                let affectedLayers = [areaLayer];
+                let childrenLayers = areaLayer.get("children") || [];
+                affectedLayers.push(...childrenLayers);
+
                 //Create required DOM elements for checkbox and label
                 var listItem = document.createElement('li');
                 var checkboxContainer = document.createElement('label');
@@ -201,14 +211,15 @@ namespace ol.control {
 
                 //Config for checkbox
                 checkbox.setAttribute('type', 'checkbox');
-                checkbox.checked = areaLayer.wantDisplay;
+                checkbox.checked = areaLayer.displayIntention;
 
                 //Display layer name
                 nameSpan.innerHTML = layer.get('title');
 
                 //Add click event listener to container
                 checkbox.addEventListener('click', function (event) {
-                    areaLayer.wantDisplay = !areaLayer.wantDisplay;
+                    //Invert the visibility intention
+                    affectedLayers.forEach(layer => layer.invertDisplayIntention());
                 });
 
                 //Create slider for adjusting layer opacity
@@ -231,8 +242,8 @@ namespace ol.control {
                     let element = <HTMLInputElement>event.target;
                     let value = parseFloat(element.value);
 
-                    //Adjust layer opacity accordingly
-                    layer.setOpacity(value);
+                    //Adjust layer opacity of all affected layxers accordingly
+                    affectedLayers.forEach(layer => layer.setOpacity(value));
 
                     //Update title content
                     element.setAttribute('title', "Opacity: " + Math.round(value * 100) + "%");
@@ -273,7 +284,7 @@ namespace ol.control {
 
                 var title = layer.get('title');
                 var visible = layer.getVisible();
-                // console.log(title, visible);
+
                 var li = document.createElement('li');
                 var label = document.createElement('label');
                 var element = document.createElement('input');

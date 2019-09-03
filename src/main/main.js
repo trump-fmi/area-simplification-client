@@ -98,10 +98,10 @@ httpGET(tileEndpointsUrl, function (response) {
     addTileLayersToMap(tileEndpoints);
 });
 
-//Get all available area types and create layers for them subsequently
+//Get all available area types and create layers for them
 httpGET(areaTypesUrl, function (response) {
-    var areaTypes = JSON.parse(response);
-    addAreaLayersToMap(areaTypes);
+    var areaTypeGroups = JSON.parse(response);
+    addAreaLayersToMap(areaTypeGroups);
 });
 
 //Get all available label collections and create layers for them subsequently
@@ -137,29 +137,44 @@ function addTileLayersToMap(tileEndpoints) {
 }
 
 
-function addAreaLayersToMap(areaTypes) {
+function addAreaLayersToMap(areaTypeGroups) {
     //Sanity check
-    if (!Array.isArray(areaTypes)) {
+    if (!Array.isArray(areaTypeGroups)) {
         return;
     }
 
-    //iterate over all area types
-    for (var i = 0; i < areaTypes.length; i++) {
-        var areaType = areaTypes[i];
+    //iterate over all area type groups
+    areaTypeGroups.forEach(function (group) {
+        //Stores the first layer of each group
+        let firstLayer = null;
 
-        //Create new area layer
-        var areaLayer = new ol.layer.Area({
-            source: new ol.source.Area({
-                url: (areaRetrievalUrl + areaType.resource)
-            }, map),
-            title: areaType.name,
-            visible: true,
-            zIndex: (AREAS_Z_INDEX_BASE + areaType.z_index)
-        }, areaType, map);
+        //Iterate over all area types of this group
+        group.types.forEach(function (type) {
+            //Create new area layer
+            var areaLayer = new ol.layer.Area({
+                source: new ol.source.Area({
+                    url: (areaRetrievalUrl + type.resource)
+                }, map),
+                title: group.name,
+                visible: true,
+                zIndex: (AREAS_Z_INDEX_BASE + type.z_index)
+            }, type, map);
 
-        //Add layer to map
-        map.addLayer(areaLayer)
-    }
+            //Check if first layer of group
+            if (firstLayer == null) {
+                firstLayer = areaLayer;
+            } else {
+                //Not first layer of this group, thus treat this layer as child of first layer
+                let linkedArray = firstLayer.get("children") || [];
+                linkedArray.push(areaLayer);
+                firstLayer.set("children", linkedArray);
+                areaLayer.set("parent", linkedArray);
+            }
+
+            //Add layer to map
+            map.addLayer(areaLayer)
+        });
+    });
 }
 
 

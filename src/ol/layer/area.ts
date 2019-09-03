@@ -12,7 +12,7 @@ namespace ol.layer {
 
         private highlightLocation: ol.Coordinate;
 
-        private _wantDisplay: boolean;
+        private _displayIntention: boolean;
 
         /**
          * Creates a new layer for displaying areas on the map by passing an option object.
@@ -35,7 +35,7 @@ namespace ol.layer {
 
             this.areaType = areaType;
             this.map = map;
-            this._wantDisplay = true;
+            this._displayIntention = true;
 
             //No highlighting yet
             this.highlightLocation = null;
@@ -63,7 +63,7 @@ namespace ol.layer {
         }
 
         /**
-         * Checks the zoom level and wantDisplay property in order to determine whether the layer should
+         * Checks the zoom level and displayIntention property in order to determine whether the layer should
          * be visible or not and updates its visibility subsequently.
          */
         private updateVisibility(): void {
@@ -73,10 +73,15 @@ namespace ol.layer {
             //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
             this.setVisible((zoomLevel >= this.areaType.zoom_min)
                 && (zoomLevel < this.areaType.zoom_max)
-                && this._wantDisplay);
+                && this._displayIntention);
         }
 
+        /**
+         * Highlights features of this layer at a certain location in case the layer allows highlighting.
+         * @param location The location where the features are supposed to be highlighted
+         */
         public highlightFeaturesAt(location: ol.Coordinate) {
+            //Check if highlighting is allowed
             if (!this.areaType.search_highlight) {
                 return;
             }
@@ -96,11 +101,19 @@ namespace ol.layer {
         }
 
         /**
+         * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
+         * is within the zoom range of the area type.
+         */
+        public invertDisplayIntention() {
+            this.displayIntention = !this.displayIntention;
+        }
+
+        /**
          * Returns whether the layer is supposed to be displayed in case the zoom level of the map
          * is within the zoom range of the area type.
          */
-        public get wantDisplay(): boolean {
-            return this._wantDisplay;
+        public get displayIntention(): boolean {
+            return this._displayIntention;
         }
 
         /**
@@ -108,8 +121,8 @@ namespace ol.layer {
          * is within the zoom range of the area type. Subsequently, the visibility of the layer is updated.
          * @param value True, if the layer is supposed to be displayed; false otherwise
          */
-        public set wantDisplay(value: boolean) {
-            this._wantDisplay = value;
+        public set displayIntention(value: boolean) {
+            this._displayIntention = value;
 
             //Display/hide layer if necessary
             this.updateVisibility();

@@ -620,6 +620,14 @@ var ol;
                     }
                     //Cast layer to area layer
                     let areaLayer = layer;
+                    //Skip if layer is child
+                    if (areaLayer.get("parent")) {
+                        return;
+                    }
+                    //Create list of layers that should be affected by operations to this layer
+                    let affectedLayers = [areaLayer];
+                    let childrenLayers = areaLayer.get("children") || [];
+                    affectedLayers.push(...childrenLayers);
                     //Create required DOM elements for checkbox and label
                     var listItem = document.createElement('li');
                     var checkboxContainer = document.createElement('label');
@@ -627,12 +635,13 @@ var ol;
                     var nameSpan = document.createElement('span');
                     //Config for checkbox
                     checkbox.setAttribute('type', 'checkbox');
-                    checkbox.checked = areaLayer.wantDisplay;
+                    checkbox.checked = areaLayer.displayIntention;
                     //Display layer name
                     nameSpan.innerHTML = layer.get('title');
                     //Add click event listener to container
                     checkbox.addEventListener('click', function (event) {
-                        areaLayer.wantDisplay = !areaLayer.wantDisplay;
+                        //Invert the visibility intention
+                        affectedLayers.forEach(layer => layer.invertDisplayIntention());
                     });
                     //Create slider for adjusting layer opacity
                     var opacitySliderContainer = document.createElement('span');
@@ -652,8 +661,8 @@ var ol;
                         //Get slider element and its value
                         let element = event.target;
                         let value = parseFloat(element.value);
-                        //Adjust layer opacity accordingly
-                        layer.setOpacity(value);
+                        //Adjust layer opacity of all affected layxers accordingly
+                        affectedLayers.forEach(layer => layer.setOpacity(value));
                         //Update title content
                         element.setAttribute('title', "Opacity: " + Math.round(value * 100) + "%");
                     });
@@ -685,7 +694,6 @@ var ol;
                     }
                     var title = layer.get('title');
                     var visible = layer.getVisible();
-                    // console.log(title, visible);
                     var li = document.createElement('li');
                     var label = document.createElement('label');
                     var element = document.createElement('input');
@@ -741,7 +749,7 @@ var ol;
                 super(options);
                 this.areaType = areaType;
                 this.map = map;
-                this._wantDisplay = true;
+                this._displayIntention = true;
                 //No highlighting yet
                 this.highlightLocation = null;
                 //Save reference to current scope
@@ -762,7 +770,7 @@ var ol;
                 });
             }
             /**
-             * Checks the zoom level and wantDisplay property in order to determine whether the layer should
+             * Checks the zoom level and displayIntention property in order to determine whether the layer should
              * be visible or not and updates its visibility subsequently.
              */
             updateVisibility() {
@@ -771,9 +779,14 @@ var ol;
                 //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
                 this.setVisible((zoomLevel >= this.areaType.zoom_min)
                     && (zoomLevel < this.areaType.zoom_max)
-                    && this._wantDisplay);
+                    && this._displayIntention);
             }
+            /**
+             * Highlights features of this layer at a certain location in case the layer allows highlighting.
+             * @param location The location where the features are supposed to be highlighted
+             */
             highlightFeaturesAt(location) {
+                //Check if highlighting is allowed
                 if (!this.areaType.search_highlight) {
                     return;
                 }
@@ -788,19 +801,26 @@ var ol;
                 });
             }
             /**
+             * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
+             * is within the zoom range of the area type.
+             */
+            invertDisplayIntention() {
+                this.displayIntention = !this.displayIntention;
+            }
+            /**
              * Returns whether the layer is supposed to be displayed in case the zoom level of the map
              * is within the zoom range of the area type.
              */
-            get wantDisplay() {
-                return this._wantDisplay;
+            get displayIntention() {
+                return this._displayIntention;
             }
             /**
              * Sets whether the layer is supposed to be displayed in case the zoom level of the map
              * is within the zoom range of the area type. Subsequently, the visibility of the layer is updated.
              * @param value True, if the layer is supposed to be displayed; false otherwise
              */
-            set wantDisplay(value) {
-                this._wantDisplay = value;
+            set displayIntention(value) {
+                this._displayIntention = value;
                 //Display/hide layer if necessary
                 this.updateVisibility();
             }
@@ -1089,6 +1109,27 @@ var ol;
     var style;
     (function (style) {
         /**
+         * Internal style template for towns.
+         */
+        const STYLE_TOWNS_TEMPLATE = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#a34905',
+                width: 3
+            }),
+            text: new ol.style.Text({
+                font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
+                placement: 'point',
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                    color: 'white'
+                }),
+                rotateWithView: true
+            })
+        });
+        /**
          * Internal style template for water areas.
          */
         const STYLE_WATER_AREA_TEMPLATE = new ol.style.Style({
@@ -1105,28 +1146,6 @@ var ol;
                 width: 5
             }),
         });
-        const STYLE_WOODLAND_TEMPLATE = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#248c26',
-                width: 1
-            }),
-            fill: new ol.style.Fill({
-                color: 'rgba(41, 163, 43, 0.6)'
-            }),
-            text: new ol.style.Text({
-                font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-                placement: 'point',
-                stroke: new ol.style.Stroke({
-                    color: 'black',
-                    width: 2
-                }),
-                fill: new style.Fill({
-                    color: 'white'
-                }),
-                rotateWithView: true
-            }),
-            zIndex: 999999
-        });
         /**
          * Style for town borders.
          */
@@ -1137,26 +1156,29 @@ var ol;
             })
         });
         /**
-         * Style for town borders.
-         */
-        style.STYLE_TOWNS = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#a34905',
-                width: 3
-            })
-        });
-        /**
-         * StyleFunction for woodland.
+         * StyleFunction for town borders.
          * @param feature The feature to style
          * @param resolution Current resolution (meters/pixel)
          */
-        style.STYLE_WOODLAND = function (feature, resolution) {
+        style.STYLE_TOWNS = function (feature, resolution) {
             //Get label name for this feature and sanitize it
             let labelName = feature.get('name') || "";
             //Adjust style template accordingly
-            STYLE_WOODLAND_TEMPLATE.getText().setText(labelName);
-            return STYLE_WOODLAND_TEMPLATE;
+            STYLE_TOWNS_TEMPLATE.getText().setText(labelName);
+            return STYLE_TOWNS_TEMPLATE;
         };
+        /**
+         * Style for woodland.
+         */
+        style.STYLE_WOODLAND = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#248c26',
+                width: 1
+            }),
+            fill: new ol.style.Fill({
+                color: 'rgba(41, 163, 43, 0.6)'
+            })
+        });
         /**
          * Style for farmland.
          */
@@ -1241,7 +1263,7 @@ var ol;
         style.STYLE_MAIN_STREETS = new ol.style.Style({
             stroke: new ol.style.Stroke({
                 color: '#F6FABB',
-                width: 6
+                width: 5
             })
         });
         /**
@@ -1329,10 +1351,11 @@ var ol;
 (function (ol) {
     var style;
     (function (style_1) {
-        //Mapping from area types to single styles, style lists or StyleFunctions
+        //Mapping from area type sources to single styles, style lists or StyleFunctions
         const AREA_STYLES_MAPPING = new TypedMap([
-            ["states", style_1.STYLE_STATES],
+            ["districts", style_1.STYLE_TOWNS],
             ["towns", style_1.STYLE_TOWNS],
+            ["villages", style_1.STYLE_TOWNS],
             ["woodland", style_1.STYLE_WOODLAND],
             ["farmland", style_1.STYLE_FARMLAND],
             ["water", style_1.STYLE_WATER],

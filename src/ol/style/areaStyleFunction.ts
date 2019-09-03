@@ -1,9 +1,10 @@
 namespace ol.style {
 
-    //Mapping from area types to single styles, style lists or StyleFunctions
+    //Mapping from area type sources to single styles, style lists or StyleFunctions
     const AREA_STYLES_MAPPING = new TypedMap<string, ol.style.Style | Array<ol.style.Style> | StyleFunction>([
-        ["states", STYLE_STATES],
+        ["districts", STYLE_TOWNS],
         ["towns", STYLE_TOWNS],
+        ["villages", STYLE_TOWNS],
         ["woodland", STYLE_WOODLAND],
         ["farmland", STYLE_FARMLAND],
         ["water", STYLE_WATER],
