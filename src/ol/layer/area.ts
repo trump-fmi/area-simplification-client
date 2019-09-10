@@ -1,5 +1,8 @@
 namespace ol.layer {
 
+
+    import ArcLineString = ol.geom.ArcLineString;
+
     /**
      * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
      * given as GeoJSON features. The layer will automatically be hidden if the current map zoom
@@ -59,7 +62,36 @@ namespace ol.layer {
             //Register a feature listener
             source.addFeatureListener(function (feature: Feature) {
                 _this.checkFeatureForHighlight(feature);
+                _this.createLabelForFeature(feature);
             });
+        }
+
+
+        private createLabelForFeature(feature: Feature): void {
+            //Return if labels are not desired for this area type
+            if (!this.areaType.labels) {
+                return;
+            }
+
+            let labelText = feature.get("label") || "";
+            labelText = labelText.trim();
+            if (labelText.length < 2) {
+                return;
+            }
+
+            let circleCentre = feature.get("label_center");
+            let innerRadius = feature.get("inner_radius");
+            let outerRadius = feature.get("outer_radius");
+            let startAngle = feature.get("start_angle");
+            let endAngle = feature.get("end_angle");
+
+            let arcLineString = new ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
+            let arcLabelFeature = new ol.Feature(arcLineString);
+
+            arcLabelFeature.set("text", labelText);
+            arcLabelFeature.setStyle(ol.style.arcLabelStyleFunction);
+
+            this.getSource().addFeature(arcLabelFeature);
         }
 
         /**
@@ -74,6 +106,30 @@ namespace ol.layer {
             this.setVisible((zoomLevel >= this.areaType.zoom_min)
                 && (zoomLevel < this.areaType.zoom_max)
                 && this._displayIntention);
+        }
+
+        /**
+         * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
+         * accordingly.
+         * @param feature The feature to check
+         */
+        private checkFeatureForHighlight(feature: Feature) {
+            //Sanity check
+            if ((this.highlightLocation == null) || (feature == null)) {
+                return;
+            }
+
+            //Get geometry of feature
+            let geometry = feature.getGeometry();
+
+            //Check if highlight location is within the feature geometry
+            if (geometry.intersectsCoordinate(this.highlightLocation)) {
+                //Flag for highlighting
+                feature.set('highlight', true);
+            } else {
+                //Unflag for highlighting
+                feature.unset('highlight');
+            }
         }
 
         /**
@@ -126,30 +182,6 @@ namespace ol.layer {
 
             //Display/hide layer if necessary
             this.updateVisibility();
-        }
-
-        /**
-         * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
-         * accordingly.
-         * @param feature The feature to check
-         */
-        private checkFeatureForHighlight(feature: Feature) {
-            //Sanity check
-            if ((this.highlightLocation == null) || (feature == null)) {
-                return;
-            }
-
-            //Get geometry of feature
-            let geometry = feature.getGeometry();
-
-            //Check if highlight location is within the feature geometry
-            if (geometry.intersectsCoordinate(this.highlightLocation)) {
-                //Flag for highlighting
-                feature.set('highlight', true);
-            } else {
-                //Unflag for highlighting
-                feature.unset('highlight');
-            }
         }
     }
 }

@@ -10,18 +10,6 @@ namespace ol.style {
         stroke: new ol.style.Stroke({
             color: '#a34905',
             width: 3
-        }),
-        text: new ol.style.Text({
-            font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-            placement: 'point',
-            stroke: new ol.style.Stroke({
-                color: 'black',
-                width: 2
-            }),
-            fill: new ol.style.Fill({
-                color: 'white'
-            }),
-            rotateWithView: true
         })
     });
 
@@ -44,15 +32,6 @@ namespace ol.style {
         }),
     });
 
-    /**
-     * Style for town borders.
-     */
-    export const STYLE_STATES = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: '#d1352a',
-            width: 4
-        })
-    });
 
     /**
      * StyleFunction for town borders.
@@ -60,12 +39,6 @@ namespace ol.style {
      * @param resolution Current resolution (meters/pixel)
      */
     export const STYLE_TOWNS = function (feature: Feature, resolution: number) {
-        //Get label name for this feature and sanitize it
-        let labelName = feature.get('name') || "";
-
-        //Adjust style template accordingly
-        STYLE_TOWNS_TEMPLATE.getText().setText(labelName);
-
         return STYLE_TOWNS_TEMPLATE;
     };
 

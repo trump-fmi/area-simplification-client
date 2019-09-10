@@ -722,8 +722,96 @@ var ol;
 
 var ol;
 (function (ol) {
+    var geom;
+    (function (geom) {
+        //Number of vertices to use for an arc line string
+        const VERTICES_NUMBER = 32;
+        /**
+         * Represents line strings geometries that are aligned to an arc. Internally, a circle is created which is then
+         * discretized to a line string with a certain number of vertices.
+         */
+        class ArcLineString extends ol.geom.LineString {
+            constructor(circleCentre, radius, startAngle, endAngle, geometryLayout) {
+                super([], geometryLayout);
+                this._circleCentre = circleCentre;
+                this._radius = radius;
+                this._startAngle = startAngle;
+                this._endAngle = endAngle;
+                this.generateVertices();
+            }
+            generateVertices() {
+                //Calculate vertices/radian ratio on a circle
+                const VERTICES_PER_RADIAN = VERTICES_NUMBER / (2 * Math.PI);
+                let circle = new ol.geom.Circle(this._circleCentre, this._radius).transform('EPSG:4326', 'EPSG:3857');
+                let circlePolygon = ol.geom.Polygon.fromCircle(circle, VERTICES_NUMBER, 0);
+                let polygonCoordinates = circlePolygon.getCoordinates()[0];
+                let vertex_start_index = 0, vertex_end_index = 0;
+                if (this._startAngle >= 0) {
+                    vertex_start_index = Math.abs(this._startAngle) * VERTICES_PER_RADIAN;
+                }
+                else {
+                    vertex_start_index = VERTICES_NUMBER - this._startAngle * VERTICES_PER_RADIAN;
+                }
+                if (this._endAngle >= 0) {
+                    vertex_end_index = this._endAngle * VERTICES_PER_RADIAN;
+                }
+                else {
+                    vertex_end_index = VERTICES_NUMBER - Math.abs(this._endAngle) * VERTICES_PER_RADIAN;
+                }
+                vertex_start_index = Math.floor(vertex_start_index);
+                vertex_end_index = Math.floor(vertex_end_index);
+                let arcCoordinates = [];
+                let addToList = false;
+                //Iterate twice about all polygon vertices to get a transition between end and start
+                for (let i = 0; i <= 2 * (VERTICES_NUMBER - 1); i++) {
+                    let localIndex = i % VERTICES_NUMBER;
+                    if (i === vertex_start_index) {
+                        addToList = true;
+                    }
+                    if (addToList) {
+                        arcCoordinates.push(polygonCoordinates[localIndex]);
+                    }
+                    if ((localIndex === vertex_end_index) && addToList) {
+                        break;
+                    }
+                }
+                let layout = this.getLayout();
+                this.setCoordinates(arcCoordinates, layout);
+            }
+            get circleCentre() {
+                return this._circleCentre;
+            }
+            set circleCentre(value) {
+                this._circleCentre = value;
+            }
+            get radius() {
+                return this._radius;
+            }
+            set radius(value) {
+                this._radius = value;
+            }
+            get startAngle() {
+                return this._startAngle;
+            }
+            set startAngle(value) {
+                this._startAngle = value;
+            }
+            get endAngle() {
+                return this._endAngle;
+            }
+            set endAngle(value) {
+                this._endAngle = value;
+            }
+        }
+        geom.ArcLineString = ArcLineString;
+    })(geom = ol.geom || (ol.geom = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
     var layer;
     (function (layer) {
+        var ArcLineString = ol.geom.ArcLineString;
         /**
          * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
          * given as GeoJSON features. The layer will automatically be hidden if the current map zoom
@@ -767,7 +855,29 @@ var ol;
                 //Register a feature listener
                 source.addFeatureListener(function (feature) {
                     _this.checkFeatureForHighlight(feature);
+                    _this.createLabelForFeature(feature);
                 });
+            }
+            createLabelForFeature(feature) {
+                //Return if labels are not desired for this area type
+                if (!this.areaType.labels) {
+                    return;
+                }
+                let labelText = feature.get("label") || "";
+                labelText = labelText.trim();
+                if (labelText.length < 2) {
+                    return;
+                }
+                let circleCentre = feature.get("label_center");
+                let innerRadius = feature.get("inner_radius");
+                let outerRadius = feature.get("outer_radius");
+                let startAngle = feature.get("start_angle");
+                let endAngle = feature.get("end_angle");
+                let arcLineString = new ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
+                let arcLabelFeature = new ol.Feature(arcLineString);
+                arcLabelFeature.set("text", labelText);
+                arcLabelFeature.setStyle(ol.style.arcLabelStyleFunction);
+                this.getSource().addFeature(arcLabelFeature);
             }
             /**
              * Checks the zoom level and displayIntention property in order to determine whether the layer should
@@ -780,6 +890,28 @@ var ol;
                 this.setVisible((zoomLevel >= this.areaType.zoom_min)
                     && (zoomLevel < this.areaType.zoom_max)
                     && this._displayIntention);
+            }
+            /**
+             * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
+             * accordingly.
+             * @param feature The feature to check
+             */
+            checkFeatureForHighlight(feature) {
+                //Sanity check
+                if ((this.highlightLocation == null) || (feature == null)) {
+                    return;
+                }
+                //Get geometry of feature
+                let geometry = feature.getGeometry();
+                //Check if highlight location is within the feature geometry
+                if (geometry.intersectsCoordinate(this.highlightLocation)) {
+                    //Flag for highlighting
+                    feature.set('highlight', true);
+                }
+                else {
+                    //Unflag for highlighting
+                    feature.unset('highlight');
+                }
             }
             /**
              * Highlights features of this layer at a certain location in case the layer allows highlighting.
@@ -823,28 +955,6 @@ var ol;
                 this._displayIntention = value;
                 //Display/hide layer if necessary
                 this.updateVisibility();
-            }
-            /**
-             * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
-             * accordingly.
-             * @param feature The feature to check
-             */
-            checkFeatureForHighlight(feature) {
-                //Sanity check
-                if ((this.highlightLocation == null) || (feature == null)) {
-                    return;
-                }
-                //Get geometry of feature
-                let geometry = feature.getGeometry();
-                //Check if highlight location is within the feature geometry
-                if (geometry.intersectsCoordinate(this.highlightLocation)) {
-                    //Flag for highlighting
-                    feature.set('highlight', true);
-                }
-                else {
-                    //Unflag for highlighting
-                    feature.unset('highlight');
-                }
             }
         }
         layer.Area = Area;
@@ -1101,6 +1211,55 @@ var ol;
     })(source = ol.source || (ol.source = {}));
 })(ol || (ol = {}));
 
+var ol;
+(function (ol) {
+    var style;
+    (function (style) {
+        //Basic style to use for arc labels
+        const ARC_LABEL_STYLE = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'darkgreen',
+                width: 5
+            }),
+            text: new ol.style.Text({
+                font: 'bold 18px "Open Sans", "Arial Unicode MS", "sans-serif"',
+                placement: 'line',
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                    color: 'white'
+                }),
+                rotateWithView: true,
+                text: ''
+            })
+        });
+        //Empty style which does not do anything
+        const EMPTY_STYLE = new ol.style.Style({});
+        /**
+         * StyleFunction that returns the style to use for a certain arc label at a certain resolution.
+         *
+         * @param feature The feature to return the styles for
+         * @param resolution The resolution to use
+         */
+        function arcLabelStyleFunction(feature, resolution) {
+            //Get label name for this feature
+            let labelName = feature.get("text");
+            //Get style text object
+            let textObject = ARC_LABEL_STYLE.getText();
+            //Sanity check
+            if (textObject == null) {
+                return EMPTY_STYLE;
+            }
+            //Set style text
+            textObject.setText(labelName);
+            return ARC_LABEL_STYLE;
+        }
+        style.arcLabelStyleFunction = arcLabelStyleFunction;
+    })(style = ol.style || (ol.style = {}));
+})(ol || (ol = {}));
+
 /**
  * This file defines style constants that might be used as building blocks for area styles.
  */
@@ -1115,18 +1274,6 @@ var ol;
             stroke: new ol.style.Stroke({
                 color: '#a34905',
                 width: 3
-            }),
-            text: new ol.style.Text({
-                font: 'bold 14px "Open Sans", "Arial Unicode MS", "sans-serif"',
-                placement: 'point',
-                stroke: new ol.style.Stroke({
-                    color: 'black',
-                    width: 2
-                }),
-                fill: new ol.style.Fill({
-                    color: 'white'
-                }),
-                rotateWithView: true
             })
         });
         /**
@@ -1147,24 +1294,11 @@ var ol;
             }),
         });
         /**
-         * Style for town borders.
-         */
-        style.STYLE_STATES = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: '#d1352a',
-                width: 4
-            })
-        });
-        /**
          * StyleFunction for town borders.
          * @param feature The feature to style
          * @param resolution Current resolution (meters/pixel)
          */
         style.STYLE_TOWNS = function (feature, resolution) {
-            //Get label name for this feature and sanitize it
-            let labelName = feature.get('name') || "";
-            //Adjust style template accordingly
-            STYLE_TOWNS_TEMPLATE.getText().setText(labelName);
             return STYLE_TOWNS_TEMPLATE;
         };
         /**
