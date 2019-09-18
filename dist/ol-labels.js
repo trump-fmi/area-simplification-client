@@ -1084,7 +1084,7 @@ var ol;
                 options.style = options.style || ol.style.arcLabelStyleFunction;
                 options.updateWhileAnimating = options.updateWhileAnimating || false;
                 options.updateWhileInteracting = options.updateWhileInteracting || false;
-                options.renderMode = options.renderMode || 'image'; //'vector' is default
+                options.renderMode = options.renderMode || 'vector';
                 options.declutter = true;
                 options.source = options.source || new source.Vector();
                 //Get zoom range from area type
