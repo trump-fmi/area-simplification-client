@@ -16,7 +16,7 @@ namespace ol.style {
             fill: new ol.style.Fill({
                 color: 'white'
             }),
-            rotateWithView: true,
+            rotateWithView: false,
             text: ''
         })
     });

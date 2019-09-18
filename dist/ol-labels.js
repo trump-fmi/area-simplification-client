@@ -811,20 +811,152 @@ var ol;
 (function (ol) {
     var layer;
     (function (layer) {
-        var ArcLineString = ol.geom.ArcLineString;
+        /**
+         * Instances of this class are vector layers that are aware of zoom levels and thus allow to automatically
+         * show and hide the layer depending on the current zoom level.
+         */
+        class ZoomAware extends ol.layer.Vector {
+            /**
+             * Creates a new zoom-aware vector layer by passing layer options, a reference to the map instance to whose
+             * zoom level the layer is supposed to be bound and optionally the minimum and maximum zoom levels.
+             *
+             * @param options An object of options to use within this layer
+             * @param map The map instance to use
+             * @param minZoom Minimum zoom level (inclusive) at which the layer may be visible
+             * @param maxZoom Maximum zoom level (exclusive) at which the layer may be visible
+             */
+            constructor(options, map, minZoom, maxZoom) {
+                //Call vector layer constructor and pass layer options
+                super(options);
+                this._minZoom = 0;
+                this._maxZoom = Number.POSITIVE_INFINITY;
+                this._displayIntention = true;
+                this.map = map;
+                //Update zoom range
+                if (typeof minZoom !== "undefined") {
+                    this._minZoom = minZoom;
+                }
+                if (typeof maxZoom !== "undefined") {
+                    this._maxZoom = maxZoom;
+                }
+                let updateFunc = this.updateVisibility.bind(this);
+                //Register move end event handler on map in order to check for the zoom level
+                this.map.on('moveend', updateFunc);
+            }
+            /**
+             * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
+             * is within the provided zoom range.
+             */
+            invertDisplayIntention() {
+                this._displayIntention = !this._displayIntention;
+                //Update visibility if necessary
+                this.updateVisibility();
+            }
+            /**
+             * Returns whether the layer is supposed to be visible for a given zoom level.
+             * @param zoomLevel THe zoom level to check the visibility for
+             */
+            isVisibleAtZoomLevel(zoomLevel) {
+                //Check display intention and zoom range
+                return (zoomLevel >= this.minZoom)
+                    && (zoomLevel < this.maxZoom)
+                    && this._displayIntention;
+            }
+            /**
+             * Overrides the corresponding method of the vector layer class. As a result, a call of this method will no
+             * longer influence the visibility state of the layer directly. Instead, only the display intention
+             * flag is set, while the actual visibility state still depends on the zoom levels.
+             *
+             * @param visible True, if the layer is supposed to be displayed within the given zoom range; false otherwise
+             */
+            setVisible(visible) {
+                this.displayIntention = visible;
+            }
+            /**
+             * Returns whether the layer is supposed to be displayed in case the zoom level of the map
+             * is within the provided zoom range.
+             *
+             * @return True, if the layer is supposed to be displayed within the given zoom range; false otherwise
+             */
+            get displayIntention() {
+                return this._displayIntention;
+            }
+            /**
+             * Sets whether the layer is supposed to be displayed in case the zoom level of the map
+             * is within the provided zoom range.
+             *
+             * @param display: True, if the layer is supposed to be displayed within the given zoom range; false otherwise
+             */
+            set displayIntention(display) {
+                this._displayIntention = display;
+                //Update visibility if necessary
+                this.updateVisibility();
+            }
+            /**
+             * Returns the minimum zoom level (inclusive) at which the layer may be visible.
+             * @return The minimum zoom level
+             */
+            get minZoom() {
+                return this._minZoom;
+            }
+            /**
+             * Sets the minimum zoom level (inclusive) at which the layer may be visible.
+             * @param value The minimum zoom level to set
+             */
+            set minZoom(value) {
+                this._minZoom = value;
+                //Update visibility if necessary
+                this.updateVisibility();
+            }
+            /**
+             * Returns the maximum zoom level (exclusive) at which the layer may be visible.
+             * @return The maximum zoom level
+             */
+            get maxZoom() {
+                return this._maxZoom;
+            }
+            /**
+             * Sets the maximum zoom level (exclusive) at which the layer may be visible.
+             * @param value The maximum zoom level to set
+             */
+            set maxZoom(value) {
+                this._maxZoom = value;
+            }
+            /**
+             * Checks the zoom level and displayIntention property in order to determine whether the layer should
+             * be visible or not and updates its visibility subsequently.
+             */
+            updateVisibility() {
+                //Get current zoom level
+                let zoomLevel = this.map.getView().getZoom();
+                let visible = this.isVisibleAtZoomLevel(zoomLevel);
+                //Update visibility
+                super.setVisible(visible);
+            }
+        }
+        layer.ZoomAware = ZoomAware;
+    })(layer = ol.layer || (ol.layer = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var layer;
+    (function (layer) {
+        //Z-index of label layer to use
+        const LABEL_LAYER_Z_INDEX = 99999;
         /**
          * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
          * given as GeoJSON features. The layer will automatically be hidden if the current map zoom
          * is no longer within the zoom range of the area type it represents.
          */
-        class Area extends ol.layer.Vector {
+        class Area extends layer.ZoomAware {
             /**
-             * Creates a new layer for displaying areas on the map by passing an option object.
+             * Creates a new layer for displaying areas on the map by passing a vector layer option object,
+             * an area type and a map instance.
              *
              * @param options An object of options to use within this layer
              * @param areaType The area type that is represented by this layer
              * @param map The map instance for which the layer is used
-    
              */
             constructor(options, areaType, map) {
                 //If certain options were not set then provide a default value for them
@@ -833,19 +965,29 @@ var ol;
                 options.updateWhileInteracting = options.updateWhileInteracting || false;
                 options.renderMode = options.renderMode || 'image'; //'vector' is default
                 options.declutter = true;
+                //Get zoom range from area type
+                let minZoom = areaType.zoom_min;
+                let maxZoom = areaType.zoom_max;
                 //Set default options (if necessary) and call vector layer constructor
-                super(options);
+                super(options, map, minZoom, maxZoom);
                 this.areaType = areaType;
-                this.map = map;
-                this._displayIntention = true;
+                //Check if labels are desired for this area type
+                if (this.areaType.labels) {
+                    this._hasLabels = true;
+                    //Create label layer and add it to the map
+                    this.labelLayer = new ol.layer.AreaLabel({
+                        source: new ol.source.Vector(),
+                        zIndex: LABEL_LAYER_Z_INDEX
+                    }, areaType.labels, map);
+                    map.addLayer(this.labelLayer);
+                }
+                else {
+                    this._hasLabels = false;
+                }
                 //No highlighting yet
                 this.highlightLocation = null;
                 //Save reference to current scope
                 let _this = this;
-                //Register move end event handler on map in order to check for the zoom level
-                this.map.on('moveend', function (event) {
-                    _this.updateVisibility();
-                });
                 //Check if area source is used
                 if (!(this.getSource() instanceof ol.source.Area)) {
                     return;
@@ -858,38 +1000,39 @@ var ol;
                     _this.createLabelForFeature(feature);
                 });
             }
-            createLabelForFeature(feature) {
-                //Return if labels are not desired for this area type
-                if (!this.areaType.labels) {
-                    return;
-                }
-                let labelText = feature.get("label") || "";
-                labelText = labelText.trim();
-                if (labelText.length < 2) {
-                    return;
-                }
-                let circleCentre = feature.get("label_center");
-                let innerRadius = feature.get("inner_radius");
-                let outerRadius = feature.get("outer_radius");
-                let startAngle = feature.get("start_angle");
-                let endAngle = feature.get("end_angle");
-                let arcLineString = new ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
-                let arcLabelFeature = new ol.Feature(arcLineString);
-                arcLabelFeature.set("text", labelText);
-                arcLabelFeature.setStyle(ol.style.arcLabelStyleFunction);
-                this.getSource().addFeature(arcLabelFeature);
+            /**
+             * Returns whether labels are associated with this layer.
+             * @return True, if labels are associated; false otherwise
+             */
+            get hasLabels() {
+                return this._hasLabels;
             }
             /**
-             * Checks the zoom level and displayIntention property in order to determine whether the layer should
-             * be visible or not and updates its visibility subsequently.
+             * Highlights features of this layer at a certain location in case the layer allows highlighting.
+             * @param location The location where the features are supposed to be highlighted
              */
-            updateVisibility() {
-                //Get current zoom level
-                let zoomLevel = this.map.getView().getZoom();
-                //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
-                this.setVisible((zoomLevel >= this.areaType.zoom_min)
-                    && (zoomLevel < this.areaType.zoom_max)
-                    && this._displayIntention);
+            highlightFeaturesAt(location) {
+                //Check if highlighting is allowed
+                if (!this.areaType.search_highlight) {
+                    return;
+                }
+                this.highlightLocation = location;
+                //Save reference to current scope
+                let _this = this;
+                //Get source of layer
+                let source = this.getSource();
+                //Iterate over all features of the layer
+                source.getFeatures().forEach(function (feature) {
+                    _this.checkFeatureForHighlight(feature);
+                });
+            }
+            createLabelForFeature(feature) {
+                //Return if labels are not desired for this area type
+                if (!this.hasLabels) {
+                    return;
+                }
+                //Add arc label to label layer
+                this.labelLayer.addLabelForFeature(feature);
             }
             /**
              * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
@@ -913,51 +1056,64 @@ var ol;
                     feature.unset('highlight');
                 }
             }
-            /**
-             * Highlights features of this layer at a certain location in case the layer allows highlighting.
-             * @param location The location where the features are supposed to be highlighted
-             */
-            highlightFeaturesAt(location) {
-                //Check if highlighting is allowed
-                if (!this.areaType.search_highlight) {
-                    return;
-                }
-                this.highlightLocation = location;
-                //Save reference to current scope
-                let _this = this;
-                //Get source of layer
-                let source = this.getSource();
-                //Iterate over all features of the layer
-                source.getFeatures().forEach(function (feature) {
-                    _this.checkFeatureForHighlight(feature);
-                });
-            }
-            /**
-             * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
-             * is within the zoom range of the area type.
-             */
-            invertDisplayIntention() {
-                this.displayIntention = !this.displayIntention;
-            }
-            /**
-             * Returns whether the layer is supposed to be displayed in case the zoom level of the map
-             * is within the zoom range of the area type.
-             */
-            get displayIntention() {
-                return this._displayIntention;
-            }
-            /**
-             * Sets whether the layer is supposed to be displayed in case the zoom level of the map
-             * is within the zoom range of the area type. Subsequently, the visibility of the layer is updated.
-             * @param value True, if the layer is supposed to be displayed; false otherwise
-             */
-            set displayIntention(value) {
-                this._displayIntention = value;
-                //Display/hide layer if necessary
-                this.updateVisibility();
-            }
         }
         layer.Area = Area;
+    })(layer = ol.layer || (ol.layer = {}));
+})(ol || (ol = {}));
+
+var ol;
+(function (ol) {
+    var layer;
+    (function (layer) {
+        /**
+         * Instances of this class represent layer that are used for displaying labels of different kind
+         * of a certain area type on the map. The layer will automatically be hidden if the current map zoom
+         * is no longer within a defined range.
+         */
+        class AreaLabel extends layer.ZoomAware {
+            /**
+             * Creates a new layer for displaying arc labels on the map by passing a vector layer option object,
+             * an label option object and a map instance.
+             *
+             * @param options An object of options to use within this layer
+             * @param labelOptions The label-related options for this layer
+             * @param map The map instance for which the layer is used
+             */
+            constructor(options, labelOptions, map) {
+                //If certain options were not set then provide a default value for them
+                options.style = options.style || ol.style.arcLabelStyleFunction;
+                options.updateWhileAnimating = options.updateWhileAnimating || false;
+                options.updateWhileInteracting = options.updateWhileInteracting || false;
+                options.renderMode = options.renderMode || 'image'; //'vector' is default
+                options.declutter = true;
+                options.source = options.source || new source.Vector();
+                //Get zoom range from area type
+                let minZoom = labelOptions.zoom_min;
+                let maxZoom = labelOptions.zoom_max;
+                //Set default options (if necessary) and call vector layer constructor
+                super(options, map, minZoom, maxZoom);
+                this.labelOptions = labelOptions;
+            }
+            addLabelForFeature(feature) {
+                let labelText = feature.get("label") || "";
+                labelText = labelText.trim();
+                if (labelText.length < 2) {
+                    return;
+                }
+                let circleCentre = feature.get("label_center");
+                let innerRadius = feature.get("inner_radius");
+                let outerRadius = feature.get("outer_radius");
+                let startAngle = feature.get("start_angle");
+                let endAngle = feature.get("end_angle");
+                let arcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
+                let arcLabelFeature = new ol.Feature(arcLineString);
+                arcLabelFeature.set("text", labelText);
+                let featureId = feature.getId();
+                arcLabelFeature.setId(featureId);
+                this.getSource().addFeature(arcLabelFeature);
+            }
+        }
+        layer.AreaLabel = AreaLabel;
     })(layer = ol.layer || (ol.layer = {}));
 })(ol || (ol = {}));
 
@@ -1231,7 +1387,7 @@ var ol;
                 fill: new ol.style.Fill({
                     color: 'white'
                 }),
-                rotateWithView: true,
+                rotateWithView: false,
                 text: ''
             })
         });

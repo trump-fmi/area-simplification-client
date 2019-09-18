@@ -1,29 +1,29 @@
 namespace ol.layer {
-
-
-    import ArcLineString = ol.geom.ArcLineString;
+    //Z-index of label layer to use
+    const LABEL_LAYER_Z_INDEX = 99999;
 
     /**
      * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
      * given as GeoJSON features. The layer will automatically be hidden if the current map zoom
      * is no longer within the zoom range of the area type it represents.
      */
-    export class Area extends ol.layer.Vector {
+    export class Area extends ZoomAware {
 
+        //Internal fields
+        private readonly labelLayer: ol.layer.AreaLabel;
+        private readonly _hasLabels: boolean;
+
+        //Exposed fields
         private readonly areaType: AreaType;
-        private readonly map: ol.Map;
-
         private highlightLocation: ol.Coordinate;
 
-        private _displayIntention: boolean;
-
         /**
-         * Creates a new layer for displaying areas on the map by passing an option object.
+         * Creates a new layer for displaying areas on the map by passing a vector layer option object,
+         * an area type and a map instance.
          *
          * @param options An object of options to use within this layer
          * @param areaType The area type that is represented by this layer
          * @param map The map instance for which the layer is used
-
          */
         constructor(options: olx.layer.VectorOptions, areaType: AreaType, map: ol.Map) {
             //If certain options were not set then provide a default value for them
@@ -33,23 +33,33 @@ namespace ol.layer {
             options.renderMode = options.renderMode || 'image'; //'vector' is default
             options.declutter = true;
 
+            //Get zoom range from area type
+            let minZoom = areaType.zoom_min;
+            let maxZoom = areaType.zoom_max;
+
             //Set default options (if necessary) and call vector layer constructor
-            super(options);
+            super(options, map, minZoom, maxZoom);
 
             this.areaType = areaType;
-            this.map = map;
-            this._displayIntention = true;
+
+            //Check if labels are desired for this area type
+            if (this.areaType.labels) {
+                this._hasLabels = true;
+
+                //Create label layer and add it to the map
+                this.labelLayer = new ol.layer.AreaLabel({
+                    source: new ol.source.Vector(),
+                    zIndex: LABEL_LAYER_Z_INDEX
+                }, areaType.labels, map);
+                map.addLayer(this.labelLayer);
+            } else {
+                this._hasLabels = false;
+            }
 
             //No highlighting yet
             this.highlightLocation = null;
-
             //Save reference to current scope
             let _this = this;
-
-            //Register move end event handler on map in order to check for the zoom level
-            this.map.on('moveend', function (event) {
-                _this.updateVisibility();
-            });
 
             //Check if area source is used
             if (!(this.getSource() instanceof ol.source.Area)) {
@@ -66,70 +76,12 @@ namespace ol.layer {
             });
         }
 
-
-        private createLabelForFeature(feature: Feature): void {
-            //Return if labels are not desired for this area type
-            if (!this.areaType.labels) {
-                return;
-            }
-
-            let labelText = feature.get("label") || "";
-            labelText = labelText.trim();
-            if (labelText.length < 2) {
-                return;
-            }
-
-            let circleCentre = feature.get("label_center");
-            let innerRadius = feature.get("inner_radius");
-            let outerRadius = feature.get("outer_radius");
-            let startAngle = feature.get("start_angle");
-            let endAngle = feature.get("end_angle");
-
-            let arcLineString = new ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
-            let arcLabelFeature = new ol.Feature(arcLineString);
-
-            arcLabelFeature.set("text", labelText);
-            arcLabelFeature.setStyle(ol.style.arcLabelStyleFunction);
-
-            this.getSource().addFeature(arcLabelFeature);
-        }
-
         /**
-         * Checks the zoom level and displayIntention property in order to determine whether the layer should
-         * be visible or not and updates its visibility subsequently.
+         * Returns whether labels are associated with this layer.
+         * @return True, if labels are associated; false otherwise
          */
-        private updateVisibility(): void {
-            //Get current zoom level
-            let zoomLevel = this.map.getView().getZoom();
-
-            //Hide layer if not within desired zoom range or not supposed to be displayed, otherwise show it
-            this.setVisible((zoomLevel >= this.areaType.zoom_min)
-                && (zoomLevel < this.areaType.zoom_max)
-                && this._displayIntention);
-        }
-
-        /**
-         * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
-         * accordingly.
-         * @param feature The feature to check
-         */
-        private checkFeatureForHighlight(feature: Feature) {
-            //Sanity check
-            if ((this.highlightLocation == null) || (feature == null)) {
-                return;
-            }
-
-            //Get geometry of feature
-            let geometry = feature.getGeometry();
-
-            //Check if highlight location is within the feature geometry
-            if (geometry.intersectsCoordinate(this.highlightLocation)) {
-                //Flag for highlighting
-                feature.set('highlight', true);
-            } else {
-                //Unflag for highlighting
-                feature.unset('highlight');
-            }
+        get hasLabels(): boolean {
+            return this._hasLabels;
         }
 
         /**
@@ -156,32 +108,38 @@ namespace ol.layer {
             });
         }
 
-        /**
-         * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
-         * is within the zoom range of the area type.
-         */
-        public invertDisplayIntention() {
-            this.displayIntention = !this.displayIntention;
+        private createLabelForFeature(feature: Feature): void {
+            //Return if labels are not desired for this area type
+            if (!this.hasLabels) {
+                return;
+            }
+
+            //Add arc label to label layer
+            this.labelLayer.addLabelForFeature(feature);
         }
 
         /**
-         * Returns whether the layer is supposed to be displayed in case the zoom level of the map
-         * is within the zoom range of the area type.
+         * Checks if a certain feature is supposed to be highlighted or not and updates its highlight flag
+         * accordingly.
+         * @param feature The feature to check
          */
-        public get displayIntention(): boolean {
-            return this._displayIntention;
-        }
+        private checkFeatureForHighlight(feature: Feature) {
+            //Sanity check
+            if ((this.highlightLocation == null) || (feature == null)) {
+                return;
+            }
 
-        /**
-         * Sets whether the layer is supposed to be displayed in case the zoom level of the map
-         * is within the zoom range of the area type. Subsequently, the visibility of the layer is updated.
-         * @param value True, if the layer is supposed to be displayed; false otherwise
-         */
-        public set displayIntention(value: boolean) {
-            this._displayIntention = value;
+            //Get geometry of feature
+            let geometry = feature.getGeometry();
 
-            //Display/hide layer if necessary
-            this.updateVisibility();
+            //Check if highlight location is within the feature geometry
+            if (geometry.intersectsCoordinate(this.highlightLocation)) {
+                //Flag for highlighting
+                feature.set('highlight', true);
+            } else {
+                //Unflag for highlighting
+                feature.unset('highlight');
+            }
         }
     }
 }
