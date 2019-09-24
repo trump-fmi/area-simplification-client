@@ -88,11 +88,10 @@ map.addControl(new ol.control.Rotate());
 map.addControl(new ol.control.ScaleLine());
 map.addControl(geocoder);
 
-//Add select interaction to map
+//Enable selection of features
 //map.addInteraction(new ol.interaction.Select());
 
-
-//Get all available tile endpoints and create layers for them subsequently
+//Get all available tile endpoints and create layers for them
 httpGET(tileEndpointsUrl, function (response) {
     var tileEndpoints = JSON.parse(response);
     addTileLayersToMap(tileEndpoints);
@@ -104,10 +103,10 @@ httpGET(areaTypesUrl, function (response) {
     addAreaLayersToMap(areaTypeGroups);
 });
 
-//Get all available label collections and create layers for them subsequently
+//Get all available label collections and create layers for them
 httpGET(labelCollectionUrl, function (response) {
-    var labelEndpointsJSON = JSON.parse(response);
-    addLabelLayersToMap(labelEndpointsJSON);
+    var labelEndpoints = JSON.parse(response);
+    addLabelLayersToMap(labelEndpoints);
 });
 
 

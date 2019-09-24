@@ -132,20 +132,6 @@ var ol;
                 let view = map.getView();
                 var rowContainerTemplate = document.createElement('div');
                 rowContainerTemplate.style.margin = '10px';
-                //Checkbox for hiding tiles
-                var hideTilesCheckboxContainer = rowContainerTemplate.cloneNode();
-                var hideTilesCheckbox = document.createElement('input');
-                hideTilesCheckbox.setAttribute('type', 'checkbox');
-                hideTilesCheckbox.id = 'hideTilesCheckbox';
-                var hideTilesLabel = document.createElement('label');
-                hideTilesLabel.htmlFor = hideTilesCheckbox.id;
-                hideTilesLabel.appendChild(hideTilesCheckbox);
-                hideTilesLabel.appendChild(document.createTextNode('Hide tiles'));
-                hideTilesCheckboxContainer.appendChild(hideTilesLabel);
-                //Register event listener for tiles checkbox
-                hideTilesCheckbox.addEventListener('change', function (event) {
-                    _this.toggleHideTiles_(event);
-                });
                 // Checkbox for enabling the drawing of the circles
                 var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
                 var drawCirclesCheckbox = document.createElement('input');
@@ -343,7 +329,6 @@ var ol;
                 demoModeControlContainer.appendChild(demoModeControlBtn);
                 // Create container div for all debug menu entries
                 var menuContent = document.createElement('div');
-                menuContent.appendChild(hideTilesCheckboxContainer);
                 menuContent.appendChild(drawCirclesCheckboxContainer);
                 menuContent.appendChild(labelfactorSliderContainer);
                 menuContent.appendChild(minTFactorSliderContainer);
@@ -366,25 +351,6 @@ var ol;
                 this.getMap().getView().setRotation(rotationRadians);
                 //Update label
                 document.getElementById('rotationLabel').innerHTML = 'Change rotation: (' + rotationDegrees + '&deg;)';
-            }
-            /**
-             * Toggles the display of tiles after the checkbox change event,
-             * depending on the state of the corresponding checkbox. This changes the opacity of
-             * the tile layers, so that there is no interference with the tile selection.
-             *
-             * @param event The checkbox change event
-             */
-            toggleHideTiles_(event) {
-                //Get checkbox element
-                let checkBox = document.getElementById('hideTilesCheckbox');
-                //Determine opacity depending on the checkbox state
-                let opacity = checkBox.checked ? 0.0 : 1.0;
-                //Adjust opacity of the tile layers accordingly
-                this.getMap().getLayers().forEach(layer => {
-                    if (layer instanceof ol.layer.Tile) {
-                        layer.setOpacity(opacity);
-                    }
-                });
             }
             toggleDrawCircles_(event) {
                 event.preventDefault();
@@ -486,8 +452,8 @@ var ol;
         class LayerMenu extends ol.control.Control {
             constructor(opt_options) {
                 opt_options = opt_options || {};
-                var container = document.createElement('div');
-                var options = {
+                let container = document.createElement('div');
+                let options = {
                     element: container,
                     target: opt_options.target
                 };
@@ -498,7 +464,7 @@ var ol;
                 this.btn = document.createElement('button');
                 this.btn.innerHTML = '&#9776;';
                 //Create reference to current scope
-                var _this = this;
+                let _this = this;
                 //Register event listener for button and use current scope
                 this.btn.addEventListener('click', function () {
                     _this.toggleMenu();
@@ -506,118 +472,67 @@ var ol;
                 container.className = 'ol-layer-menu ol-control ol-collapsed';
                 container.appendChild(this.menu);
                 container.appendChild(this.btn);
-                this.state = {
-                    open: false,
-                    layers: new ol.Collection()
-                };
-            }
-            toggleMenu() {
-                if (this.state.open === true) {
-                    this.closeMenu();
-                }
-                else {
-                    this.openMenu();
-                }
-                this.state.open = !this.state.open;
-            }
-            activateLayerLabel(event) {
-                var eventTarget = event.target;
-                if (eventTarget.value == undefined) {
-                    return;
-                }
-                var selectedOpt = eventTarget.value;
-                this.state.layers.getArray()
-                    .filter(layer => layer instanceof ol.layer.Label)
-                    .forEach(layer => {
-                    layer.setVisible(layer.get('title') === selectedOpt);
-                });
-            }
-            activateLayer(event) {
-                var eventTarget = event.target;
-                if (eventTarget.value === undefined) {
-                    return;
-                }
-                var selectedOpt = eventTarget.value;
-                var checked = eventTarget.checked;
-                this.state.layers.getArray()
-                    .filter(layer => (layer instanceof ol.layer.Tile))
-                    .forEach(layer => {
-                    const title = layer.get('title');
-                    if (title === selectedOpt) {
-                        layer.setVisible(true);
-                    }
-                    else {
-                        layer.setVisible(false);
-                    }
-                });
-            }
-            openMenu() {
-                var map = this.getMap();
-                var layers = map.getLayers();
-                this.btn.innerHTML = 'X';
-                this.container.classList.remove('ol-collapsed');
-                if (this.menu.innerHTML == '') {
-                    this.renderMenuContents();
-                }
-            }
-            closeMenu() {
-                var map = this.getMap();
-                var layers = map.getLayers();
-                this.container.classList.add('ol-collapsed');
-                this.btn.innerHTML = '&#9776;';
+                this.menuOpened = false;
+                this.allLayers = [];
             }
             renderMenuContents() {
+                //Get all available layers as array
+                this.allLayers = this.getMap().getLayers().getArray();
                 /*
                 Tiles
                  */
-                var tilesContainer = document.createElement('div');
+                let tilesContainer = document.createElement('div');
                 tilesContainer.innerHTML = '<h5>Tiles</h5>';
-                var tileList = document.createElement('ul');
-                this.state.layers = this.getMap().getLayers();
-                this.state.layers.forEach(function (layer) {
-                    if (!(layer instanceof ol.layer.Tile) || (layer.get('title') == undefined)) {
-                        return;
-                    }
-                    var title = layer.get('title');
-                    var visible = layer.getVisible();
-                    var li = document.createElement('li');
-                    li.setAttribute('title', layer.get('description'));
-                    var label = document.createElement('label');
-                    var element = document.createElement('input');
+                let tilesList = document.createElement('ul');
+                //Checkbox for showing tile layers
+                let showTilesListItem = document.createElement('li');
+                let showTilesCheckbox = document.createElement('input');
+                showTilesCheckbox.setAttribute('type', 'checkbox');
+                showTilesCheckbox.checked = true;
+                let showTilesSpan = document.createElement('span');
+                showTilesSpan.innerHTML = 'Show tiles';
+                let showTilesLabel = document.createElement('label');
+                showTilesLabel.appendChild(showTilesCheckbox);
+                showTilesLabel.appendChild(showTilesSpan);
+                showTilesCheckbox.addEventListener('change', this.toggleLayersByType.bind(this, ol.layer.Tile));
+                showTilesListItem.appendChild(showTilesLabel);
+                tilesList.appendChild(showTilesListItem);
+                //Iterate over all tile layers
+                this.allLayers.filter(layer => layer instanceof ol.layer.Tile)
+                    .forEach(layer => {
+                    let title = layer.get('title');
+                    let visible = layer.getVisible();
+                    let li = document.createElement('li');
+                    let label = document.createElement('label');
+                    let element = document.createElement('input');
                     element.setAttribute('type', 'radio');
                     element.setAttribute('name', 'tiles');
                     element.setAttribute('value', title);
                     element.checked = visible;
                     label.appendChild(element);
-                    var name = document.createElement('span');
+                    let name = document.createElement('span');
                     name.innerHTML = title;
                     label.appendChild(name);
                     li.appendChild(label);
-                    tileList.appendChild(li);
+                    tilesList.appendChild(li);
+                    //Register event listener
+                    let listenerFunction = this.activateLayerXOR.bind(this, layer);
+                    element.addEventListener('click', listenerFunction);
                 });
-                tilesContainer.appendChild(tileList);
+                tilesContainer.appendChild(tilesList);
                 this.menu.appendChild(tilesContainer);
-                //Create reference to current scope
-                var _this = this;
-                //Register event listener for tiles container and use current scope
-                tilesContainer.addEventListener('click', function (event) {
-                    _this.activateLayer(event);
-                });
                 /*
                 Areas
                  */
                 //Create containers
-                var areaContainer = document.createElement('div');
+                let areaContainer = document.createElement('div');
                 areaContainer.innerHTML = '<h5>Areas</h5>';
-                var areaList = document.createElement('ul');
+                let areaList = document.createElement('ul');
                 //Append list to container
                 areaContainer.appendChild(areaList);
                 //Add available areas to area list
-                this.state.layers.forEach(function (layer, idx) {
-                    //Filter for area layers
-                    if (!(layer instanceof ol.layer.Area) || layer.get('title') == undefined) {
-                        return;
-                    }
+                this.allLayers.filter(layer => layer instanceof ol.layer.Area)
+                    .forEach(layer => {
                     //Cast layer to area layer
                     let areaLayer = layer;
                     //Skip if layer is child
@@ -629,10 +544,10 @@ var ol;
                     let childrenLayers = areaLayer.get("children") || [];
                     affectedLayers.push(...childrenLayers);
                     //Create required DOM elements for checkbox and label
-                    var listItem = document.createElement('li');
-                    var checkboxContainer = document.createElement('label');
-                    var checkbox = document.createElement('input');
-                    var nameSpan = document.createElement('span');
+                    let listItem = document.createElement('li');
+                    let checkboxContainer = document.createElement('label');
+                    let checkbox = document.createElement('input');
+                    let nameSpan = document.createElement('span');
                     //Config for checkbox
                     checkbox.setAttribute('type', 'checkbox');
                     checkbox.checked = areaLayer.displayIntention;
@@ -644,10 +559,10 @@ var ol;
                         affectedLayers.forEach(layer => layer.invertDisplayIntention());
                     });
                     //Create slider for adjusting layer opacity
-                    var opacitySliderContainer = document.createElement('span');
+                    let opacitySliderContainer = document.createElement('span');
                     opacitySliderContainer.style.marginLeft = '5px';
                     opacitySliderContainer.style.cssFloat = 'right';
-                    var opacitySlider = document.createElement('input');
+                    let opacitySlider = document.createElement('input');
                     opacitySlider.style.width = '60px';
                     opacitySlider.style.height = '18px';
                     opacitySlider.setAttribute('title', 'Opacity: 100%');
@@ -669,7 +584,7 @@ var ol;
                     //Append slider to its container
                     opacitySliderContainer.appendChild(opacitySlider);
                     //Create empty div for clearing floats
-                    var clearElement = document.createElement('div');
+                    let clearElement = document.createElement('div');
                     clearElement.style.clear = 'both';
                     //Put elements together
                     checkboxContainer.appendChild(checkbox);
@@ -684,35 +599,91 @@ var ol;
                 /*
                 Labels
                  */
-                var labelContainer = document.createElement('div');
+                let labelContainer = document.createElement('div');
                 labelContainer.innerHTML = '<h5>Labels</h5>';
-                var labelList = document.createElement('ul');
+                let labelsList = document.createElement('ul');
+                //Checkbox for showing label layers
+                let showLabelsListItem = document.createElement('li');
+                let showLabelsCheckbox = document.createElement('input');
+                showLabelsCheckbox.setAttribute('type', 'checkbox');
+                showLabelsCheckbox.checked = true;
+                let showLabelsSpan = document.createElement('span');
+                showLabelsSpan.innerHTML = 'Show labels';
+                let showLabelsLabel = document.createElement('label');
+                showLabelsLabel.appendChild(showLabelsCheckbox);
+                showLabelsLabel.appendChild(showLabelsSpan);
+                showLabelsCheckbox.addEventListener('change', this.toggleLayersByType.bind(this, ol.layer.Label));
+                showLabelsListItem.appendChild(showLabelsLabel);
+                labelsList.appendChild(showLabelsListItem);
                 //Render available label endpoints
-                this.state.layers.forEach(function (layer, idx) {
-                    if (!(layer instanceof ol.layer.Label) || layer.get('title') == undefined) {
-                        return;
-                    }
-                    var title = layer.get('title');
-                    var visible = layer.getVisible();
-                    var li = document.createElement('li');
-                    var label = document.createElement('label');
-                    var element = document.createElement('input');
+                this.allLayers.filter(layer => layer instanceof ol.layer.Label)
+                    .forEach(layer => {
+                    let title = layer.get('title');
+                    let visible = layer.getVisible();
+                    let li = document.createElement('li');
+                    let label = document.createElement('label');
+                    let element = document.createElement('input');
                     element.setAttribute('type', 'radio');
                     element.setAttribute('name', 'labels');
                     element.setAttribute('value', title);
                     element.checked = visible;
                     label.appendChild(element);
-                    var name = document.createElement('span');
+                    let name = document.createElement('span');
                     name.innerHTML = title;
                     label.appendChild(name);
                     li.appendChild(label);
-                    labelList.appendChild(li);
+                    labelsList.appendChild(li);
+                    //Register event listener
+                    let listenerFunction = this.activateLayerXOR.bind(this, layer);
+                    element.addEventListener('click', listenerFunction);
                 });
-                labelContainer.appendChild(labelList);
+                labelContainer.appendChild(labelsList);
                 this.menu.appendChild(labelContainer);
-                //Register event listener for label container and use current scope
-                labelContainer.addEventListener('click', function (event) {
-                    _this.activateLayerLabel(event);
+            }
+            toggleMenu() {
+                this.menuOpened ? this.closeMenu() : this.openMenu();
+                this.menuOpened = !this.menuOpened;
+            }
+            activateLayerXOR(activeLayer) {
+                //Get class of the given layer
+                let layerClass = activeLayer.constructor;
+                //Iterate over all layers
+                this.allLayers
+                    .filter(layer => layer instanceof layerClass)
+                    .forEach(layer => layer.setVisible(activeLayer == layer));
+                console.log(this.allLayers);
+            }
+            /**
+             * Opens the layer menu.
+             */
+            openMenu() {
+                this.btn.innerHTML = 'X';
+                this.container.classList.remove('ol-collapsed');
+                //Check if content needs to be rendered
+                if (this.menu.innerHTML == '') {
+                    this.renderMenuContents();
+                }
+            }
+            /**
+             * Closes the layer menu.
+             */
+            closeMenu() {
+                this.container.classList.add('ol-collapsed');
+                this.btn.innerHTML = '&#9776;';
+            }
+            /**
+             * Toggles the visibility of all layers of a certain type by changing their opacity to either 1.0 or 0.0.
+             * This way, here will not be any interference with a possibly available layer selection.
+             */
+            toggleLayersByType(layerType) {
+                //Iterate over all tile layers
+                this.allLayers
+                    //Filter for layers of the given type
+                    .filter(layer => layer instanceof layerType)
+                    .forEach(layer => {
+                    //Invert opacity
+                    let newOpacity = layer.getOpacity() < 1 ? 1 : 0;
+                    layer.setOpacity(newOpacity);
                 });
             }
         }
