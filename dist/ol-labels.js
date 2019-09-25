@@ -696,7 +696,7 @@ var ol;
     var geom;
     (function (geom) {
         //Number of vertices to use for an arc line string
-        const VERTICES_NUMBER = 32;
+        const VERTICES_NUMBER = 64;
         /**
          * Represents line strings geometries that are aligned to an arc. Internally, a circle is created which is then
          * discretized to a line string with a certain number of vertices.
@@ -713,7 +713,7 @@ var ol;
             generateVertices() {
                 //Calculate vertices/radian ratio on a circle
                 const VERTICES_PER_RADIAN = VERTICES_NUMBER / (2 * Math.PI);
-                let circle = new ol.geom.Circle(this._circleCentre, this._radius).transform('EPSG:4326', 'EPSG:3857');
+                let circle = new ol.geom.Circle(this._circleCentre, this._radius);
                 let circlePolygon = ol.geom.Polygon.fromCircle(circle, VERTICES_NUMBER, 0);
                 let polygonCoordinates = circlePolygon.getCoordinates()[0];
                 let vertex_start_index = 0, vertex_end_index = 0;
@@ -1076,12 +1076,23 @@ var ol;
                 let outerRadius = feature.get("outer_radius");
                 let startAngle = feature.get("start_angle");
                 let endAngle = feature.get("end_angle");
-                let arcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
-                let arcLabelFeature = new ol.Feature(arcLineString);
-                arcLabelFeature.set("text", labelText);
                 let featureId = feature.getId();
-                arcLabelFeature.setId(featureId);
-                this.getSource().addFeature(arcLabelFeature);
+                let innerArcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
+                let innerArcLabelFeature = new ol.Feature(innerArcLineString);
+                innerArcLabelFeature.setId(featureId + "_label_in");
+                let middleRadius = (innerRadius + outerRadius) / 2;
+                let middleArcLineString = new ol.geom.ArcLineString(circleCentre, middleRadius, startAngle, endAngle);
+                let middleArcLabelFeature = new ol.Feature(middleArcLineString);
+                middleArcLabelFeature.set("arc_height", outerRadius - innerRadius);
+                middleArcLabelFeature.set("text", labelText);
+                middleArcLabelFeature.setId(featureId + "_label_middle");
+                let outerArcLineString = new ol.geom.ArcLineString(circleCentre, outerRadius, startAngle, endAngle);
+                let outerArcLabelFeature = new ol.Feature(outerArcLineString);
+                outerArcLabelFeature.setId(featureId + "_label_out");
+                let layerSource = this.getSource();
+                layerSource.addFeature(innerArcLabelFeature);
+                layerSource.addFeature(middleArcLabelFeature);
+                layerSource.addFeature(outerArcLabelFeature);
             }
         }
         layer.AreaLabel = AreaLabel;
@@ -1349,7 +1360,7 @@ var ol;
                 width: 5
             }),
             text: new ol.style.Text({
-                font: 'bold 18px "Open Sans", "Arial Unicode MS", "sans-serif"',
+                font: 'bold 50px "Lucida Console", "Courier", "Arial Black"',
                 placement: 'line',
                 stroke: new ol.style.Stroke({
                     color: 'black',
@@ -1381,6 +1392,13 @@ var ol;
             }
             //Set style text
             textObject.setText(labelName);
+            let arcHeight = feature.get("arc_height");
+            if (arcHeight) {
+                let height = arcHeight / resolution;
+                textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
+            }
+            //TODO
+            ARC_LABEL_STYLE.setStroke(null);
             return ARC_LABEL_STYLE;
         }
         style.arcLabelStyleFunction = arcLabelStyleFunction;

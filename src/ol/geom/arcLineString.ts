@@ -1,7 +1,7 @@
 namespace ol.geom {
 
     //Number of vertices to use for an arc line string
-    const VERTICES_NUMBER = 32;
+    const VERTICES_NUMBER = 64;
 
     /**
      * Represents line strings geometries that are aligned to an arc. Internally, a circle is created which is then
@@ -29,8 +29,8 @@ namespace ol.geom {
             //Calculate vertices/radian ratio on a circle
             const VERTICES_PER_RADIAN = VERTICES_NUMBER / (2 * Math.PI);
 
-            let circle = <ol.geom.Circle>new ol.geom.Circle(this._circleCentre, this._radius).transform('EPSG:4326', 'EPSG:3857');
-            let circlePolygon = ol.geom.Polygon.fromCircle(circle, VERTICES_NUMBER, 0);
+            let circle = <ol.geom.Circle>new ol.geom.Circle(this._circleCentre, this._radius);
+            let circlePolygon = <ol.geom.Polygon> ol.geom.Polygon.fromCircle(circle, VERTICES_NUMBER, 0);
 
             let polygonCoordinates = circlePolygon.getCoordinates()[0];
 

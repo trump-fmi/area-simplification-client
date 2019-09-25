@@ -7,7 +7,7 @@ namespace ol.style {
             width: 5
         }),
         text: new ol.style.Text({
-            font: 'bold 18px "Open Sans", "Arial Unicode MS", "sans-serif"',
+            font: 'bold 50px "Lucida Console", "Courier", "Arial Black"',
             placement: 'line',
             stroke: new ol.style.Stroke({
                 color: 'black',
@@ -44,6 +44,15 @@ namespace ol.style {
 
         //Set style text
         textObject.setText(labelName);
+
+        let arcHeight = feature.get("arc_height");
+        if (arcHeight) {
+            let height = arcHeight / resolution;
+            textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
+        }
+
+        //TODO
+        ARC_LABEL_STYLE.setStroke(null);
 
         return ARC_LABEL_STYLE;
     }

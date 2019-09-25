@@ -56,15 +56,28 @@ namespace ol.layer {
             let startAngle = feature.get("start_angle");
             let endAngle = feature.get("end_angle");
 
-            let arcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
-            let arcLabelFeature = new ol.Feature(arcLineString);
-
-            arcLabelFeature.set("text", labelText);
-
             let featureId = feature.getId();
-            arcLabelFeature.setId(featureId);
 
-            this.getSource().addFeature(arcLabelFeature);
+            let innerArcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
+            let innerArcLabelFeature = new ol.Feature(innerArcLineString);
+            innerArcLabelFeature.setId(featureId + "_label_in");
+
+            let middleRadius = (innerRadius + outerRadius) / 2;
+            let middleArcLineString = new ol.geom.ArcLineString(circleCentre, middleRadius, startAngle, endAngle);
+            let middleArcLabelFeature = new ol.Feature(middleArcLineString);
+            middleArcLabelFeature.set("arc_height", outerRadius - innerRadius);
+            middleArcLabelFeature.set("text", labelText);
+            middleArcLabelFeature.setId(featureId + "_label_middle");
+
+            let outerArcLineString = new ol.geom.ArcLineString(circleCentre, outerRadius, startAngle, endAngle);
+            let outerArcLabelFeature = new ol.Feature(outerArcLineString);
+            outerArcLabelFeature.setId(featureId + "_label_out");
+
+            let layerSource = this.getSource();
+
+            layerSource.addFeature(innerArcLabelFeature);
+            layerSource.addFeature(middleArcLabelFeature);
+            layerSource.addFeature(outerArcLabelFeature);
         }
     }
 }
