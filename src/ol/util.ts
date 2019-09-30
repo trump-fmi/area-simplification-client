@@ -28,7 +28,7 @@ namespace ol {
         //@ts-ignore
         var minTCoeff = window.minTCoeff || 1;
         //@ts-ignore
-        var minTFac = window.minTFac || 9;
+        var minTFac = window.minTFac || 22;
 
         var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
         if (zoom <= 3) {
