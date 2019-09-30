@@ -155,12 +155,12 @@ namespace ol.control {
             minTFactorRange.setAttribute('min', '0.0');
             minTFactorRange.setAttribute('max', '100');
             minTFactorRange.setAttribute('step', '0.1');
-            minTFactorRange.defaultValue = '9';
+            minTFactorRange.defaultValue = '22';
 
             var minTLabel = document.createElement('label');
             minTLabel.id = 'minTLabel';
             minTLabel.htmlFor = 'minTFactorRange';
-            minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (9)'));
+            minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (22)'));
 
             //Register event listener for min_t factor range slider
             minTFactorRange.addEventListener('input', function (event) {
@@ -172,7 +172,7 @@ namespace ol.control {
             minTFactorSliderContainer.appendChild(minTFactorRange);
 
             //@ts-ignore
-            window.minTFac = 9;
+            window.minTFac = 22;
 
             var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
             var minTCoeffRange = document.createElement('input');
