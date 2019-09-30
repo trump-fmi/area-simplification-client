@@ -153,7 +153,7 @@ namespace ol.control {
             minTFactorRange.setAttribute('type', 'range');
             minTFactorRange.setAttribute('id', 'minTFactorRange');
             minTFactorRange.setAttribute('min', '0.0');
-            minTFactorRange.setAttribute('max', '20');
+            minTFactorRange.setAttribute('max', '100');
             minTFactorRange.setAttribute('step', '0.1');
             minTFactorRange.defaultValue = '9';
 
@@ -181,7 +181,7 @@ namespace ol.control {
             minTCoeffRange.setAttribute('type', 'range');
             minTCoeffRange.setAttribute('id', 'minTCoeffRange');
             minTCoeffRange.setAttribute('min', '0.0');
-            minTCoeffRange.setAttribute('max', '5');
+            minTCoeffRange.setAttribute('max', '50');
             minTCoeffRange.setAttribute('step', '0.1');
             minTCoeffRange.defaultValue = '1.0';
 
