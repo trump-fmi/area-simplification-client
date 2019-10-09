@@ -20,7 +20,7 @@ namespace ol.style {
     //Stroke style for arc label boundaries
     const ARC_LABEL_BOUNDARY_STROKE = new ol.style.Stroke({
         color: 'darkgreen',
-        width: 5
+        width: 3
     });
 
     //Empty style which does not do anything
