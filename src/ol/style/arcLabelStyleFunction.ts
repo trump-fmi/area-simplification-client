@@ -17,7 +17,8 @@ namespace ol.style {
                 color: 'white'
             }),
             rotateWithView: false,
-            text: ''
+            text: '',
+            textAlign: "center"
         })
     });
 
@@ -31,8 +32,9 @@ namespace ol.style {
      * @param resolution The resolution to use
      */
     export function arcLabelStyleFunction(feature: Feature, resolution: number): ol.style.Style {
-        //Get label name for this feature
+        //Get label name and arc height for this feature
         let labelName = feature.get("text");
+        let arcHeight = feature.get("arc_height");
 
         //Get style text object
         let textObject = ARC_LABEL_STYLE.getText();
@@ -45,9 +47,13 @@ namespace ol.style {
         //Set style text
         textObject.setText(labelName);
 
-        let arcHeight = feature.get("arc_height");
         if (arcHeight) {
-            let height = arcHeight / resolution;
+            let height = Math.floor(arcHeight / resolution);
+
+            if (height < 20) {
+                return EMPTY_STYLE;
+            }
+
             textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
         }
 

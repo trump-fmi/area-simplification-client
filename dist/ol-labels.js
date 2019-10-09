@@ -11,7 +11,7 @@ var ol;
         //@ts-ignore
         var minTCoeff = window.minTCoeff || 1;
         //@ts-ignore
-        var minTFac = window.minTFac || 9;
+        var minTFac = window.minTFac || 22;
         var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
         if (zoom <= 3) {
             return 10000;
@@ -178,13 +178,13 @@ var ol;
                 minTFactorRange.setAttribute('type', 'range');
                 minTFactorRange.setAttribute('id', 'minTFactorRange');
                 minTFactorRange.setAttribute('min', '0.0');
-                minTFactorRange.setAttribute('max', '20');
+                minTFactorRange.setAttribute('max', '100');
                 minTFactorRange.setAttribute('step', '0.1');
-                minTFactorRange.defaultValue = '9';
+                minTFactorRange.defaultValue = '22';
                 var minTLabel = document.createElement('label');
                 minTLabel.id = 'minTLabel';
                 minTLabel.htmlFor = 'minTFactorRange';
-                minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (9)'));
+                minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (22)'));
                 //Register event listener for min_t factor range slider
                 minTFactorRange.addEventListener('input', function (event) {
                     _this.changeMinTFactor_(event);
@@ -193,14 +193,14 @@ var ol;
                 minTFactorSliderContainer.appendChild(document.createElement('br'));
                 minTFactorSliderContainer.appendChild(minTFactorRange);
                 //@ts-ignore
-                window.minTFac = 9;
+                window.minTFac = 22;
                 var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
                 var minTCoeffRange = document.createElement('input');
                 minTCoeffRange.style.width = rangeCSSWidth;
                 minTCoeffRange.setAttribute('type', 'range');
                 minTCoeffRange.setAttribute('id', 'minTCoeffRange');
                 minTCoeffRange.setAttribute('min', '0.0');
-                minTCoeffRange.setAttribute('max', '5');
+                minTCoeffRange.setAttribute('max', '50');
                 minTCoeffRange.setAttribute('step', '0.1');
                 minTCoeffRange.defaultValue = '1.0';
                 var minTCoeffLabel = document.createElement('label');
@@ -1056,7 +1056,7 @@ var ol;
                 options.updateWhileAnimating = options.updateWhileAnimating || false;
                 options.updateWhileInteracting = options.updateWhileInteracting || false;
                 options.renderMode = options.renderMode || 'vector';
-                options.declutter = true;
+                options.declutter = false;
                 options.source = options.source || new source.Vector();
                 //Get zoom range from area type
                 let minZoom = labelOptions.zoom_min;
@@ -1370,7 +1370,8 @@ var ol;
                     color: 'white'
                 }),
                 rotateWithView: false,
-                text: ''
+                text: '',
+                textAlign: "center"
             })
         });
         //Empty style which does not do anything
@@ -1382,8 +1383,9 @@ var ol;
          * @param resolution The resolution to use
          */
         function arcLabelStyleFunction(feature, resolution) {
-            //Get label name for this feature
+            //Get label name and arc height for this feature
             let labelName = feature.get("text");
+            let arcHeight = feature.get("arc_height");
             //Get style text object
             let textObject = ARC_LABEL_STYLE.getText();
             //Sanity check
@@ -1392,9 +1394,11 @@ var ol;
             }
             //Set style text
             textObject.setText(labelName);
-            let arcHeight = feature.get("arc_height");
             if (arcHeight) {
-                let height = arcHeight / resolution;
+                let height = Math.floor(arcHeight / resolution);
+                if (height < 20) {
+                    return EMPTY_STYLE;
+                }
                 textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
             }
             //TODO

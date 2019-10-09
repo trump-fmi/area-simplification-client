@@ -30,7 +30,7 @@ namespace ol.layer {
             options.updateWhileAnimating = options.updateWhileAnimating || false;
             options.updateWhileInteracting = options.updateWhileInteracting || false;
             options.renderMode = options.renderMode || 'vector';
-            options.declutter = true;
+            options.declutter = false;
             options.source = options.source || new source.Vector();
 
             //Get zoom range from area type
