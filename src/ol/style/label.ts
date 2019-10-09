@@ -145,10 +145,7 @@ namespace ol {
                 }
 
             } else if (this.type == LabelType.TEXT) {
-
-                // @ts-ignore
-                var cache_key = window.debugDrawCirc ? this.text + ':debug' : this.text;
-
+                var cache_key = USER_CONFIG.drawLabelCircles ? this.text + ':debug' : this.text;
 
                 if (typeof Label.textCache.get(cache_key) === 'undefined') {
                     var calculatedlabelFactor = ol.calculateLabelFactor(this.feature);
@@ -183,8 +180,7 @@ namespace ol {
                     });
 
                     style = new ol.style.Style({
-                        //@ts-ignore
-                        image: window.debugDrawCirc == true ? debugCircle : null,
+                        image: USER_CONFIG.drawLabelCircles == true ? debugCircle : null,
                         text: label
                     });
 

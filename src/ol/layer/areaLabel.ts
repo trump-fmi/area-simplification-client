@@ -67,7 +67,7 @@ namespace ol.layer {
             let middleArcLabelFeature = new ol.Feature(middleArcLineString);
             middleArcLabelFeature.set("arc_height", outerRadius - innerRadius);
             middleArcLabelFeature.set("text", labelText);
-            middleArcLabelFeature.setId(featureId + "_label_middle");
+            middleArcLabelFeature.setId(featureId + "_label_mid");
 
             let outerArcLineString = new ol.geom.ArcLineString(circleCentre, outerRadius, startAngle, endAngle);
             let outerArcLabelFeature = new ol.Feature(outerArcLineString);

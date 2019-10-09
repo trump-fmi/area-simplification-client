@@ -1,11 +1,6 @@
 namespace ol.style {
-
     //Basic style to use for arc labels
     const ARC_LABEL_STYLE = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-            color: 'darkgreen',
-            width: 5
-        }),
         text: new ol.style.Text({
             font: 'bold 50px "Lucida Console", "Courier", "Arial Black"',
             placement: 'line',
@@ -20,6 +15,12 @@ namespace ol.style {
             text: '',
             textAlign: "center"
         })
+    });
+
+    //Stroke style for arc label boundaries
+    const ARC_LABEL_BOUNDARY_STROKE = new ol.style.Stroke({
+        color: 'darkgreen',
+        width: 5
     });
 
     //Empty style which does not do anything
@@ -57,8 +58,11 @@ namespace ol.style {
             textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
         }
 
-        //TODO
-        ARC_LABEL_STYLE.setStroke(null);
+        if (USER_CONFIG.drawLabelBoundaries) {
+            ARC_LABEL_STYLE.setStroke(ARC_LABEL_BOUNDARY_STROKE);
+        }else{
+            ARC_LABEL_STYLE.setStroke(null);
+        }
 
         return ARC_LABEL_STYLE;
     }

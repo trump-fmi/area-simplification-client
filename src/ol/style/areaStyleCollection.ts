@@ -233,7 +233,6 @@ namespace ol.style {
                         //Add current coordinate to list
                         coordinatesList.push(coordinates[i][0][k]);
                     }
-
                 }
 
                 //Return all coordinates of the multi polygon so that points can be drawn

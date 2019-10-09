@@ -1,3 +1,67 @@
+var ol;
+(function (ol) {
+    /**
+     * Singleton class holding a set of write- and readable configuration parameters with default values
+     * that may be changed by the user during runtime.
+     */
+    class UserConfig {
+        /**
+         * Creates a new configuration with default values.
+         */
+        constructor() {
+            //All config fields with default values
+            this._drawLabelCircles = false;
+            this._drawLabelBoundaries = false;
+            this._labelFactorCoeff = 1.1;
+            this._minTFactor = 22;
+            this._minTCoeff = 1.0;
+        }
+        /**
+         * Returns the current configuration.
+         * @return The configuration
+         */
+        static get() {
+            if (this.instance == null) {
+                this.instance = new UserConfig();
+            }
+            return this.instance;
+        }
+        get drawLabelCircles() {
+            return this._drawLabelCircles;
+        }
+        set drawLabelCircles(value) {
+            this._drawLabelCircles = value;
+        }
+        get drawLabelBoundaries() {
+            return this._drawLabelBoundaries;
+        }
+        set drawLabelBoundaries(value) {
+            this._drawLabelBoundaries = value;
+        }
+        get labelFactorCoeff() {
+            return this._labelFactorCoeff;
+        }
+        set labelFactorCoeff(value) {
+            this._labelFactorCoeff = value;
+        }
+        get minTFactor() {
+            return this._minTFactor;
+        }
+        set minTFactor(value) {
+            this._minTFactor = value;
+        }
+        get minTCoeff() {
+            return this._minTCoeff;
+        }
+        set minTCoeff(value) {
+            this._minTCoeff = value;
+        }
+    }
+    ol.UserConfig = UserConfig;
+})(ol || (ol = {}));
+//Expose user config instance globally
+const USER_CONFIG = ol.UserConfig.get();
+
 //Alias for typescript map
 const TypedMap = Map;
 var ol;
@@ -8,10 +72,9 @@ var ol;
      */
     function resolutionToMinT(resolution) {
         //Read required parameters
-        //@ts-ignore
-        var minTCoeff = window.minTCoeff || 1;
-        //@ts-ignore
-        var minTFac = window.minTFac || 22;
+        var minTCoeff = USER_CONFIG.minTCoeff || 1;
+        var minTFac = USER_CONFIG.minTFactor || 22;
+        //It's a kind of magic?
         var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
         if (zoom <= 3) {
             return 10000;
@@ -24,8 +87,7 @@ var ol;
     function calculateLabelFactor(feature) {
         var labelFactor = feature.get("lbl_fac");
         //Read required parameter
-        //@ts-ignore
-        var labelFacCoeff = window.labelFacCoeff || 1.1;
+        var labelFacCoeff = USER_CONFIG.labelFactorCoeff || 1.1;
         return parseInt(labelFactor) * labelFacCoeff;
     }
     ol.calculateLabelFactor = calculateLabelFactor;
@@ -93,12 +155,8 @@ var ol;
                     closeMenu: 'X'
                 };
                 this.btn.innerHTML = this.btnIcon.openMenu;
-                //Create reference to current scope
-                var _this = this;
                 //Register event listener for button and use current scope
-                this.btn.addEventListener('click', function (event) {
-                    _this.toggleMenu();
-                });
+                this.btn.addEventListener('click', this.toggleMenu.bind(this));
                 this.container.appendChild(this.btn);
                 this.container.appendChild(this.menu);
                 this.state = {
@@ -127,27 +185,34 @@ var ol;
                 this.menu.style.display = "none";
             }
             renderMenuContents() {
+                //Define CSS width
                 const rangeCSSWidth = '300px';
+                //Get map and its view
                 let map = this.getMap();
                 let view = map.getView();
                 var rowContainerTemplate = document.createElement('div');
                 rowContainerTemplate.style.margin = '10px';
-                // Checkbox for enabling the drawing of the circles
+                //Checkbox for enabling circle drawing
                 var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
                 var drawCirclesCheckbox = document.createElement('input');
                 drawCirclesCheckbox.setAttribute('type', 'checkbox');
-                drawCirclesCheckbox.id = 'drawCirclesCheckbox';
+                drawCirclesCheckbox.checked = USER_CONFIG.drawLabelCircles;
                 var drawCircleLabel = document.createElement('label');
-                drawCircleLabel.htmlFor = 'drawCirclesCheckbox';
                 drawCircleLabel.appendChild(drawCirclesCheckbox);
                 drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels'));
                 drawCirclesCheckboxContainer.appendChild(drawCircleLabel);
                 //Register event listener for circle checkbox
-                drawCirclesCheckbox.addEventListener('change', function (event) {
-                    _this.toggleDrawCircles_(event);
-                });
-                //@ts-ignore
-                window.debugDrawCirc = false;
+                drawCirclesCheckbox.addEventListener('change', this.toggleDrawCircles_.bind(this));
+                //Checkbox for enabling drawing of arc label boundaries
+                let drawBoundariesCheckboxContainer = rowContainerTemplate.cloneNode();
+                let drawBoundariesCheckbox = document.createElement('input');
+                drawBoundariesCheckbox.setAttribute('type', 'checkbox');
+                let drawBoundariesLabel = document.createElement('label');
+                drawBoundariesLabel.appendChild(drawBoundariesCheckbox);
+                drawBoundariesLabel.appendChild(document.createTextNode("Draw arc label boundaries"));
+                drawBoundariesCheckboxContainer.appendChild(drawBoundariesLabel);
+                //Register event listener for boundary checkbox
+                drawBoundariesCheckbox.addEventListener('change', this.toggleDrawBoundaries_.bind(this));
                 // Slider for coefficient of labelfactor
                 var labelfactorSliderContainer = rowContainerTemplate.cloneNode();
                 var labelfactorRange = document.createElement('input');
@@ -157,7 +222,7 @@ var ol;
                 labelfactorRange.setAttribute('min', '0.0');
                 labelfactorRange.setAttribute('max', '3.0');
                 labelfactorRange.setAttribute('step', '0.1');
-                labelfactorRange.defaultValue = '1.1';
+                labelfactorRange.defaultValue = USER_CONFIG.labelFactorCoeff.toString();
                 var labelfactorLabel = document.createElement('label');
                 labelfactorLabel.id = 'labelFactorLabel';
                 labelfactorLabel.htmlFor = 'labelfactorRange';
@@ -166,11 +231,7 @@ var ol;
                 labelfactorSliderContainer.appendChild(document.createElement('br'));
                 labelfactorSliderContainer.appendChild(labelfactorRange);
                 //Register event listener for label factor range slider
-                labelfactorRange.addEventListener('input', function (event) {
-                    _this.changeLabelFactor_(event);
-                });
-                //@ts-ignore
-                window.labelFacCoeff = 1.1;
+                labelfactorRange.addEventListener('input', this.changeLabelFactor_.bind(this));
                 // Slider for controlling the calculation of the min_t value
                 var minTFactorSliderContainer = rowContainerTemplate.cloneNode();
                 var minTFactorRange = document.createElement('input');
@@ -180,20 +241,16 @@ var ol;
                 minTFactorRange.setAttribute('min', '0.0');
                 minTFactorRange.setAttribute('max', '100');
                 minTFactorRange.setAttribute('step', '0.1');
-                minTFactorRange.defaultValue = '22';
+                minTFactorRange.defaultValue = USER_CONFIG.minTFactor.toString();
                 var minTLabel = document.createElement('label');
                 minTLabel.id = 'minTLabel';
                 minTLabel.htmlFor = 'minTFactorRange';
                 minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (22)'));
                 //Register event listener for min_t factor range slider
-                minTFactorRange.addEventListener('input', function (event) {
-                    _this.changeMinTFactor_(event);
-                });
+                minTFactorRange.addEventListener('input', this.changeMinTFactor_.bind(this));
                 minTFactorSliderContainer.appendChild(minTLabel);
                 minTFactorSliderContainer.appendChild(document.createElement('br'));
                 minTFactorSliderContainer.appendChild(minTFactorRange);
-                //@ts-ignore
-                window.minTFac = 22;
                 var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
                 var minTCoeffRange = document.createElement('input');
                 minTCoeffRange.style.width = rangeCSSWidth;
@@ -202,22 +259,16 @@ var ol;
                 minTCoeffRange.setAttribute('min', '0.0');
                 minTCoeffRange.setAttribute('max', '50');
                 minTCoeffRange.setAttribute('step', '0.1');
-                minTCoeffRange.defaultValue = '1.0';
+                minTCoeffRange.defaultValue = USER_CONFIG.minTCoeff.toString();
                 var minTCoeffLabel = document.createElement('label');
                 minTCoeffLabel.id = 'minTCoeffLabel';
                 minTCoeffLabel.htmlFor = 'minTCoeffRange';
                 minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t: (1.0)'));
-                //Create reference to current scope
-                var _this = this;
                 //Register event listener for min_t coefficient range slider
-                minTCoeffRange.addEventListener('input', function (event) {
-                    _this.changeMinTCoeff_(event);
-                });
+                minTCoeffRange.addEventListener('input', this.changeMinTCoeff_.bind(this));
                 minTCoeffRangeContainer.appendChild(minTCoeffLabel);
                 minTCoeffRangeContainer.appendChild(document.createElement('br'));
                 minTCoeffRangeContainer.appendChild(minTCoeffRange);
-                //@ts-ignore
-                window.minTCoeff = 1.0;
                 /* Create slider control for zoom level */
                 var zoomSliderContainer = rowContainerTemplate.cloneNode();
                 var zoomLevelDelta = document.createElement('input');
@@ -272,12 +323,8 @@ var ol;
                 rotationLabel.id = 'rotationLabel';
                 rotationLabel.htmlFor = 'rotationRange';
                 rotationLabel.innerHTML = 'Change rotation: (0&deg;)';
-                //Create reference to current scope
-                var _this = this;
                 //Register event listener for min_t coefficient range slider
-                rotationRange.addEventListener('input', function (event) {
-                    _this.changeRotation_(event);
-                });
+                rotationRange.addEventListener('input', this.changeRotation_.bind(this));
                 rotationRangeContainer.appendChild(rotationLabel);
                 rotationRangeContainer.appendChild(document.createElement('br'));
                 rotationRangeContainer.appendChild(rotationRange);
@@ -330,6 +377,7 @@ var ol;
                 // Create container div for all debug menu entries
                 var menuContent = document.createElement('div');
                 menuContent.appendChild(drawCirclesCheckboxContainer);
+                menuContent.appendChild(drawBoundariesCheckboxContainer);
                 menuContent.appendChild(labelfactorSliderContainer);
                 menuContent.appendChild(minTFactorSliderContainer);
                 menuContent.appendChild(minTCoeffRangeContainer);
@@ -353,40 +401,35 @@ var ol;
                 document.getElementById('rotationLabel').innerHTML = 'Change rotation: (' + rotationDegrees + '&deg;)';
             }
             toggleDrawCircles_(event) {
-                event.preventDefault();
-                var checkBox = document.getElementById('drawCirclesCheckbox');
-                // @ts-ignore
-                window.debugDrawCirc = checkBox.checked;
-                this.updateLabelLayer_();
+                USER_CONFIG.drawLabelCircles = event.target.checked;
+                this.updateLabelLayers_();
+            }
+            toggleDrawBoundaries_(event) {
+                USER_CONFIG.drawLabelBoundaries = event.target.checked;
+                this.updateLabelLayers_();
             }
             changeLabelFactor_(event) {
-                event.preventDefault();
                 var range = document.getElementById('labelfactorRange');
                 document.getElementById('labelFactorLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
-                // @ts-ignore
-                window.labelFacCoeff = range.value;
-                this.updateLabelLayer_();
+                USER_CONFIG.labelFactorCoeff = parseFloat(range.value);
+                this.updateLabelLayers_();
             }
             changeMinTFactor_(event) {
-                event.preventDefault();
                 var range = document.getElementById('minTFactorRange');
                 document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')';
-                // @ts-ignore
-                window.minTFac = range.value;
-                this.updateLabelLayer_();
+                USER_CONFIG.minTFactor = parseFloat(range.value);
+                this.updateLabelLayers_();
             }
             changeMinTCoeff_(event) {
-                event.preventDefault();
                 var range = document.getElementById('minTCoeffRange');
                 document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')';
-                // @ts-ignore
-                window.minTCoeff = range.value;
-                this.updateLabelLayer_();
+                USER_CONFIG.minTCoeff = parseFloat(range.value);
+                this.updateLabelLayers_();
             }
-            updateLabelLayer_() {
-                // Refresh layers after updating the draw circle settings
+            updateLabelLayers_() {
+                // Redraw all label layers after settings have been changed
                 this.getMap().getLayers().forEach(function (layer) {
-                    if (layer instanceof ol.layer.Label) {
+                    if ((layer instanceof ol.layer.Label) || (layer instanceof ol.layer.AreaLabel)) {
                         layer.getSource().refresh();
                     }
                 });
@@ -413,6 +456,7 @@ var ol;
                         }
                     }, 1);
                 }
+                //Store current scope
                 var _this = this;
                 var view = this.getMap().getView();
                 var currentZoomLevel = 14;
@@ -1085,7 +1129,7 @@ var ol;
                 let middleArcLabelFeature = new ol.Feature(middleArcLineString);
                 middleArcLabelFeature.set("arc_height", outerRadius - innerRadius);
                 middleArcLabelFeature.set("text", labelText);
-                middleArcLabelFeature.setId(featureId + "_label_middle");
+                middleArcLabelFeature.setId(featureId + "_label_mid");
                 let outerArcLineString = new ol.geom.ArcLineString(circleCentre, outerRadius, startAngle, endAngle);
                 let outerArcLabelFeature = new ol.Feature(outerArcLineString);
                 outerArcLabelFeature.setId(featureId + "_label_out");
@@ -1355,10 +1399,6 @@ var ol;
     (function (style) {
         //Basic style to use for arc labels
         const ARC_LABEL_STYLE = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: 'darkgreen',
-                width: 5
-            }),
             text: new ol.style.Text({
                 font: 'bold 50px "Lucida Console", "Courier", "Arial Black"',
                 placement: 'line',
@@ -1373,6 +1413,11 @@ var ol;
                 text: '',
                 textAlign: "center"
             })
+        });
+        //Stroke style for arc label boundaries
+        const ARC_LABEL_BOUNDARY_STROKE = new ol.style.Stroke({
+            color: 'darkgreen',
+            width: 5
         });
         //Empty style which does not do anything
         const EMPTY_STYLE = new ol.style.Style({});
@@ -1401,8 +1446,12 @@ var ol;
                 }
                 textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
             }
-            //TODO
-            ARC_LABEL_STYLE.setStroke(null);
+            if (USER_CONFIG.drawLabelBoundaries) {
+                ARC_LABEL_STYLE.setStroke(ARC_LABEL_BOUNDARY_STROKE);
+            }
+            else {
+                ARC_LABEL_STYLE.setStroke(null);
+            }
             return ARC_LABEL_STYLE;
         }
         style.arcLabelStyleFunction = arcLabelStyleFunction;
@@ -1828,8 +1877,7 @@ var ol;
                 }
             }
             else if (this.type == LabelType.TEXT) {
-                // @ts-ignore
-                var cache_key = window.debugDrawCirc ? this.text + ':debug' : this.text;
+                var cache_key = USER_CONFIG.drawLabelCircles ? this.text + ':debug' : this.text;
                 if (typeof Label.textCache.get(cache_key) === 'undefined') {
                     var calculatedlabelFactor = ol.calculateLabelFactor(this.feature);
                     var fontConfig = calculatedlabelFactor + "px " + labelFontType;
@@ -1858,8 +1906,7 @@ var ol;
                         })
                     });
                     style = new ol.style.Style({
-                        //@ts-ignore
-                        image: window.debugDrawCirc == true ? debugCircle : null,
+                        image: USER_CONFIG.drawLabelCircles == true ? debugCircle : null,
                         text: label
                     });
                     Label.textCache.set(cache_key, style);
