@@ -1,6 +1,8 @@
 namespace ol.layer {
 
-    //Defines the structure of label option objects
+    /*
+    Defines the structure of label option objects
+     */
     interface LabelOptions {
         "arced": boolean,
         "zoom_min": number,
@@ -30,8 +32,10 @@ namespace ol.layer {
             options.updateWhileAnimating = options.updateWhileAnimating || false;
             options.updateWhileInteracting = options.updateWhileInteracting || false;
             options.renderMode = options.renderMode || 'vector';
-            options.declutter = false;
             options.source = options.source || new source.Vector();
+
+            //No decluttering as it would hide labels randomly
+            options.declutter = false;
 
             //Get zoom range from area type
             let minZoom = labelOptions.zoom_min;
@@ -58,26 +62,27 @@ namespace ol.layer {
 
             let featureId = feature.getId();
 
+            let guideRadius = (innerRadius + outerRadius) / 2;
+            let guideArcLineString = new ol.geom.ArcLineString(circleCentre, guideRadius, startAngle, endAngle);
+            let guideArcLabelFeature = new ol.Feature(guideArcLineString);
+            guideArcLabelFeature.set("arc_height", outerRadius - innerRadius);
+            guideArcLabelFeature.set("text", labelText);
+            guideArcLabelFeature.setId(featureId + "_label_guide");
+
             let innerArcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
-            let innerArcLabelFeature = new ol.Feature(innerArcLineString);
-            innerArcLabelFeature.setId(featureId + "_label_in");
-
-            let middleRadius = (innerRadius + outerRadius) / 2;
-            let middleArcLineString = new ol.geom.ArcLineString(circleCentre, middleRadius, startAngle, endAngle);
-            let middleArcLabelFeature = new ol.Feature(middleArcLineString);
-            middleArcLabelFeature.set("arc_height", outerRadius - innerRadius);
-            middleArcLabelFeature.set("text", labelText);
-            middleArcLabelFeature.setId(featureId + "_label_mid");
-
             let outerArcLineString = new ol.geom.ArcLineString(circleCentre, outerRadius, startAngle, endAngle);
-            let outerArcLabelFeature = new ol.Feature(outerArcLineString);
-            outerArcLabelFeature.setId(featureId + "_label_out");
+            let leftClosingLine = new ol.geom.LineString([circleCentre, outerArcLineString.getFirstCoordinate()]);
+            let rightClosingLine = new ol.geom.LineString([circleCentre, outerArcLineString.getLastCoordinate()]);
 
+            let boundaryGeometry = new ol.geom.GeometryCollection([innerArcLineString, outerArcLineString, leftClosingLine, rightClosingLine]);
+            let boundaryFeature = new ol.Feature(boundaryGeometry);
+            boundaryFeature.setId(featureId + "_label_boundary");
+
+            //Get source of this layer
             let layerSource = this.getSource();
 
-            layerSource.addFeature(innerArcLabelFeature);
-            layerSource.addFeature(middleArcLabelFeature);
-            layerSource.addFeature(outerArcLabelFeature);
+            //Add guide and boundary features
+            layerSource.addFeatures([guideArcLabelFeature, boundaryFeature]);
         }
     }
 }
