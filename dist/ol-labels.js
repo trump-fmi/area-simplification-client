@@ -957,8 +957,8 @@ var ol;
 (function (ol) {
     var layer;
     (function (layer) {
-        //Z-index of label layer to use
-        const LABEL_LAYER_Z_INDEX = 99999;
+        //Base z-index for layers holding the area arc labels
+        const LABEL_LAYER_Z_INDEX = 1000;
         /**
          * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
          * given as GeoJSON features. The layer will automatically be hidden if the current map zoom
@@ -992,8 +992,9 @@ var ol;
                     //Create label layer and add it to the map
                     this.labelLayer = new ol.layer.AreaLabel({
                         source: new ol.source.Vector(),
-                        zIndex: LABEL_LAYER_Z_INDEX
+                        zIndex: this.areaType.z_index + LABEL_LAYER_Z_INDEX
                     }, areaType.labels, map);
+                    //Add label layer to map
                     map.addLayer(this.labelLayer);
                 }
                 else {
@@ -1041,6 +1042,10 @@ var ol;
                     _this.checkFeatureForHighlight(feature);
                 });
             }
+            /**
+             * Creates a label feature for a given area feature and adds it to the dedicated label layer.
+             * @param feature The area feature to create a label for
+             */
             createLabelForFeature(feature) {
                 //Return if labels are not desired for this area type
                 if (!this.hasLabels) {
@@ -1100,8 +1105,9 @@ var ol;
                 options.updateWhileAnimating = options.updateWhileAnimating || false;
                 options.updateWhileInteracting = options.updateWhileInteracting || false;
                 options.renderMode = options.renderMode || 'vector';
-                options.declutter = false;
                 options.source = options.source || new source.Vector();
+                //No decluttering as it would hide labels randomly
+                options.declutter = false;
                 //Get zoom range from area type
                 let minZoom = labelOptions.zoom_min;
                 let maxZoom = labelOptions.zoom_max;
@@ -1121,22 +1127,23 @@ var ol;
                 let startAngle = feature.get("start_angle");
                 let endAngle = feature.get("end_angle");
                 let featureId = feature.getId();
+                let guideRadius = (innerRadius + outerRadius) / 2;
+                let guideArcLineString = new ol.geom.ArcLineString(circleCentre, guideRadius, startAngle, endAngle);
+                let guideArcLabelFeature = new ol.Feature(guideArcLineString);
+                guideArcLabelFeature.set("arc_height", outerRadius - innerRadius);
+                guideArcLabelFeature.set("text", labelText);
+                guideArcLabelFeature.setId(featureId + "_label_guide");
                 let innerArcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
-                let innerArcLabelFeature = new ol.Feature(innerArcLineString);
-                innerArcLabelFeature.setId(featureId + "_label_in");
-                let middleRadius = (innerRadius + outerRadius) / 2;
-                let middleArcLineString = new ol.geom.ArcLineString(circleCentre, middleRadius, startAngle, endAngle);
-                let middleArcLabelFeature = new ol.Feature(middleArcLineString);
-                middleArcLabelFeature.set("arc_height", outerRadius - innerRadius);
-                middleArcLabelFeature.set("text", labelText);
-                middleArcLabelFeature.setId(featureId + "_label_mid");
                 let outerArcLineString = new ol.geom.ArcLineString(circleCentre, outerRadius, startAngle, endAngle);
-                let outerArcLabelFeature = new ol.Feature(outerArcLineString);
-                outerArcLabelFeature.setId(featureId + "_label_out");
+                let leftClosingLine = new ol.geom.LineString([circleCentre, outerArcLineString.getFirstCoordinate()]);
+                let rightClosingLine = new ol.geom.LineString([circleCentre, outerArcLineString.getLastCoordinate()]);
+                let boundaryGeometry = new ol.geom.GeometryCollection([innerArcLineString, outerArcLineString, leftClosingLine, rightClosingLine]);
+                let boundaryFeature = new ol.Feature(boundaryGeometry);
+                boundaryFeature.setId(featureId + "_label_boundary");
+                //Get source of this layer
                 let layerSource = this.getSource();
-                layerSource.addFeature(innerArcLabelFeature);
-                layerSource.addFeature(middleArcLabelFeature);
-                layerSource.addFeature(outerArcLabelFeature);
+                //Add guide and boundary features
+                layerSource.addFeatures([guideArcLabelFeature, boundaryFeature]);
             }
         }
         layer.AreaLabel = AreaLabel;
@@ -1397,10 +1404,14 @@ var ol;
 (function (ol) {
     var style;
     (function (style) {
+        //Minimum allowable label height
+        const MIN_LABEL_HEIGHT = 20;
+        //Generator for the arc labels font with parameter for text height
+        const LABEL_FONT = (height) => `bold ${height}px "Lucida Console", "Courier", "Arial Black"`;
         //Basic style to use for arc labels
-        const ARC_LABEL_STYLE = new ol.style.Style({
+        const LABEL_STYLE = new ol.style.Style({
             text: new ol.style.Text({
-                font: 'bold 50px "Lucida Console", "Courier", "Arial Black"',
+                font: '',
                 placement: 'line',
                 stroke: new ol.style.Stroke({
                     color: 'black',
@@ -1414,10 +1425,12 @@ var ol;
                 textAlign: "center"
             })
         });
-        //Stroke style for arc label boundaries
-        const ARC_LABEL_BOUNDARY_STROKE = new ol.style.Stroke({
-            color: 'darkgreen',
-            width: 3
+        //Stroke style for label boundaries
+        const BOUNDARY_STYLE = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'darkgreen',
+                width: 2
+            })
         });
         //Empty style which does not do anything
         const EMPTY_STYLE = new ol.style.Style({});
@@ -1428,31 +1441,33 @@ var ol;
          * @param resolution The resolution to use
          */
         function arcLabelStyleFunction(feature, resolution) {
+            let featureGeometry = feature.getGeometry();
+            if (featureGeometry instanceof ol.geom.GeometryCollection) {
+                //Return boundary style or empty style depending on user configuration
+                return USER_CONFIG.drawLabelBoundaries ? BOUNDARY_STYLE : EMPTY_STYLE;
+            }
+            else if (!(featureGeometry instanceof ol.geom.ArcLineString)) {
+                return EMPTY_STYLE;
+            }
             //Get label name and arc height for this feature
             let labelName = feature.get("text");
             let arcHeight = feature.get("arc_height");
             //Get style text object
-            let textObject = ARC_LABEL_STYLE.getText();
-            //Sanity check
-            if (textObject == null) {
-                return EMPTY_STYLE;
-            }
+            let textObject = LABEL_STYLE.getText();
             //Set style text
             textObject.setText(labelName);
+            //Check if height parameter is available
             if (arcHeight) {
+                //Calculate font height
                 let height = Math.floor(arcHeight / resolution);
-                if (height < 20) {
+                //Do not draw too small labels
+                if (height < MIN_LABEL_HEIGHT) {
                     return EMPTY_STYLE;
                 }
-                textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
+                //Update font accordingly
+                textObject.setFont(LABEL_FONT(height));
             }
-            if (USER_CONFIG.drawLabelBoundaries) {
-                ARC_LABEL_STYLE.setStroke(ARC_LABEL_BOUNDARY_STROKE);
-            }
-            else {
-                ARC_LABEL_STYLE.setStroke(null);
-            }
-            return ARC_LABEL_STYLE;
+            return LABEL_STYLE;
         }
         style.arcLabelStyleFunction = arcLabelStyleFunction;
     })(style = ol.style || (ol.style = {}));
