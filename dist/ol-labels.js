@@ -572,8 +572,40 @@ var ol;
                 let areaContainer = document.createElement('div');
                 areaContainer.innerHTML = '<h5>Areas</h5>';
                 let areaList = document.createElement('ul');
-                //Append list to container
-                areaContainer.appendChild(areaList);
+                //Get all area label layers
+                let areaLabelLayers = this.allLayers.filter(l => (l instanceof ol.layer.AreaLabel));
+                //Checkbox and slider for adjusting area label layers
+                let showArcLabelsListItem = document.createElement('li');
+                let showArcLabelsCheckbox = document.createElement('input');
+                showArcLabelsCheckbox.setAttribute('type', 'checkbox');
+                showArcLabelsCheckbox.checked = true;
+                let showArcLabelsSpan = document.createElement('span');
+                showArcLabelsSpan.innerHTML = 'Area labels';
+                let showArcLabelsLabel = document.createElement('label');
+                showArcLabelsLabel.appendChild(showArcLabelsCheckbox);
+                showArcLabelsLabel.appendChild(showArcLabelsSpan);
+                showArcLabelsCheckbox.addEventListener('change', this._toggleLayersDisplayIntention.bind(this, areaLabelLayers));
+                showArcLabelsListItem.appendChild(showArcLabelsLabel);
+                let opacitySliderContainer = document.createElement('span');
+                opacitySliderContainer.style.marginLeft = '5px';
+                opacitySliderContainer.style.cssFloat = 'right';
+                let opacitySlider = document.createElement('input');
+                opacitySlider.style.width = '60px';
+                opacitySlider.style.height = '18px';
+                opacitySlider.setAttribute('title', 'Opacity: 100%');
+                opacitySlider.setAttribute('type', 'range');
+                opacitySlider.setAttribute('min', '0.0');
+                opacitySlider.setAttribute('max', '1.0');
+                opacitySlider.setAttribute('step', '0.01');
+                opacitySlider.defaultValue = '1.0';
+                let onOpacityChange = this._updateLayersOpacity.bind(this, areaLabelLayers, opacitySlider);
+                opacitySlider.addEventListener('input', onOpacityChange);
+                opacitySliderContainer.appendChild(opacitySlider);
+                showArcLabelsListItem.appendChild(opacitySliderContainer);
+                let clearElement = document.createElement('div');
+                clearElement.style.clear = 'both';
+                showArcLabelsListItem.appendChild(clearElement);
+                areaList.appendChild(showArcLabelsListItem);
                 //Add available areas to area list
                 this.allLayers.filter(layer => layer instanceof ol.layer.Area)
                     .forEach(layer => {
@@ -598,10 +630,7 @@ var ol;
                     //Display layer name
                     nameSpan.innerHTML = layer.get('title');
                     //Add click event listener to container
-                    checkbox.addEventListener('click', function (event) {
-                        //Invert the visibility intention
-                        affectedLayers.forEach(layer => layer.invertDisplayIntention());
-                    });
+                    checkbox.addEventListener('click', this._toggleLayersDisplayIntention.bind(this, affectedLayers));
                     //Create slider for adjusting layer opacity
                     let opacitySliderContainer = document.createElement('span');
                     opacitySliderContainer.style.marginLeft = '5px';
@@ -615,16 +644,10 @@ var ol;
                     opacitySlider.setAttribute('max', '1.0');
                     opacitySlider.setAttribute('step', '0.01');
                     opacitySlider.defaultValue = '1.0';
+                    //Prepare event handler for slider
+                    let onOpacityChange = this._updateLayersOpacity.bind(this, affectedLayers, opacitySlider);
                     //Register input event listener for slider
-                    opacitySlider.addEventListener('input', function (event) {
-                        //Get slider element and its value
-                        let element = event.target;
-                        let value = parseFloat(element.value);
-                        //Adjust layer opacity of all affected layxers accordingly
-                        affectedLayers.forEach(layer => layer.setOpacity(value));
-                        //Update title content
-                        element.setAttribute('title', "Opacity: " + Math.round(value * 100) + "%");
-                    });
+                    opacitySlider.addEventListener('input', onOpacityChange);
                     //Append slider to its container
                     opacitySliderContainer.appendChild(opacitySlider);
                     //Create empty div for clearing floats
@@ -638,6 +661,8 @@ var ol;
                     listItem.appendChild(clearElement);
                     areaList.appendChild(listItem);
                 });
+                //Append list to container
+                areaContainer.appendChild(areaList);
                 //Add container to menu container
                 this.menu.appendChild(areaContainer);
                 /*
@@ -646,7 +671,7 @@ var ol;
                 let labelContainer = document.createElement('div');
                 labelContainer.innerHTML = '<h5>Labels</h5>';
                 let labelsList = document.createElement('ul');
-                //Checkbox for showing label layers
+                //Checkbox for showing point label layers
                 let showLabelsListItem = document.createElement('li');
                 let showLabelsCheckbox = document.createElement('input');
                 showLabelsCheckbox.setAttribute('type', 'checkbox');
@@ -729,6 +754,18 @@ var ol;
                     let newOpacity = layer.getOpacity() < 1 ? 1 : 0;
                     layer.setOpacity(newOpacity);
                 });
+            }
+            _toggleLayersDisplayIntention(layers) {
+                layers.forEach(layer => layer.toggleDisplayIntention());
+            }
+            _updateLayersOpacity(layers, sliderElement) {
+                //Get and parse slider value
+                let opacity = parseFloat(sliderElement.value);
+                //Adjust layer opacity of all affected layers accordingly
+                layers.forEach(layer => layer.setOpacity(opacity));
+                //Update title of slider
+                let roundedValue = Math.round(opacity * 100);
+                sliderElement.setAttribute('title', "Opacity: " + roundedValue + "%");
             }
         }
         control.LayerMenu = LayerMenu;
@@ -862,7 +899,7 @@ var ol;
              * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
              * is within the provided zoom range.
              */
-            invertDisplayIntention() {
+            toggleDisplayIntention() {
                 this._displayIntention = !this._displayIntention;
                 //Update visibility if necessary
                 this.updateVisibility();
