@@ -1,3 +1,67 @@
+var ol;
+(function (ol) {
+    /**
+     * Singleton class holding a set of write- and readable configuration parameters with default values
+     * that may be changed by the user during runtime.
+     */
+    class UserConfig {
+        /**
+         * Creates a new configuration with default values.
+         */
+        constructor() {
+            //All config fields with default values
+            this._drawLabelCircles = false;
+            this._drawLabelBoundaries = false;
+            this._labelFactorCoeff = 1.1;
+            this._minTFactor = 22;
+            this._minTCoeff = 1.0;
+        }
+        /**
+         * Returns the current configuration.
+         * @return The configuration
+         */
+        static get() {
+            if (this.instance == null) {
+                this.instance = new UserConfig();
+            }
+            return this.instance;
+        }
+        get drawLabelCircles() {
+            return this._drawLabelCircles;
+        }
+        set drawLabelCircles(value) {
+            this._drawLabelCircles = value;
+        }
+        get drawLabelBoundaries() {
+            return this._drawLabelBoundaries;
+        }
+        set drawLabelBoundaries(value) {
+            this._drawLabelBoundaries = value;
+        }
+        get labelFactorCoeff() {
+            return this._labelFactorCoeff;
+        }
+        set labelFactorCoeff(value) {
+            this._labelFactorCoeff = value;
+        }
+        get minTFactor() {
+            return this._minTFactor;
+        }
+        set minTFactor(value) {
+            this._minTFactor = value;
+        }
+        get minTCoeff() {
+            return this._minTCoeff;
+        }
+        set minTCoeff(value) {
+            this._minTCoeff = value;
+        }
+    }
+    ol.UserConfig = UserConfig;
+})(ol || (ol = {}));
+//Expose user config instance globally
+const USER_CONFIG = ol.UserConfig.get();
+
 //Alias for typescript map
 const TypedMap = Map;
 var ol;
@@ -8,10 +72,9 @@ var ol;
      */
     function resolutionToMinT(resolution) {
         //Read required parameters
-        //@ts-ignore
-        var minTCoeff = window.minTCoeff || 1;
-        //@ts-ignore
-        var minTFac = window.minTFac || 9;
+        var minTCoeff = USER_CONFIG.minTCoeff || 1;
+        var minTFac = USER_CONFIG.minTFactor || 22;
+        //It's a kind of magic?
         var zoom = Math.log2(156543.03390625) - Math.log2(resolution);
         if (zoom <= 3) {
             return 10000;
@@ -24,8 +87,7 @@ var ol;
     function calculateLabelFactor(feature) {
         var labelFactor = feature.get("lbl_fac");
         //Read required parameter
-        //@ts-ignore
-        var labelFacCoeff = window.labelFacCoeff || 1.1;
+        var labelFacCoeff = USER_CONFIG.labelFactorCoeff || 1.1;
         return parseInt(labelFactor) * labelFacCoeff;
     }
     ol.calculateLabelFactor = calculateLabelFactor;
@@ -93,12 +155,8 @@ var ol;
                     closeMenu: 'X'
                 };
                 this.btn.innerHTML = this.btnIcon.openMenu;
-                //Create reference to current scope
-                var _this = this;
                 //Register event listener for button and use current scope
-                this.btn.addEventListener('click', function (event) {
-                    _this.toggleMenu();
-                });
+                this.btn.addEventListener('click', this.toggleMenu.bind(this));
                 this.container.appendChild(this.btn);
                 this.container.appendChild(this.menu);
                 this.state = {
@@ -127,27 +185,34 @@ var ol;
                 this.menu.style.display = "none";
             }
             renderMenuContents() {
+                //Define CSS width
                 const rangeCSSWidth = '300px';
+                //Get map and its view
                 let map = this.getMap();
                 let view = map.getView();
                 var rowContainerTemplate = document.createElement('div');
                 rowContainerTemplate.style.margin = '10px';
-                // Checkbox for enabling the drawing of the circles
+                //Checkbox for enabling circle drawing
                 var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
                 var drawCirclesCheckbox = document.createElement('input');
                 drawCirclesCheckbox.setAttribute('type', 'checkbox');
-                drawCirclesCheckbox.id = 'drawCirclesCheckbox';
+                drawCirclesCheckbox.checked = USER_CONFIG.drawLabelCircles;
                 var drawCircleLabel = document.createElement('label');
-                drawCircleLabel.htmlFor = 'drawCirclesCheckbox';
                 drawCircleLabel.appendChild(drawCirclesCheckbox);
                 drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels'));
                 drawCirclesCheckboxContainer.appendChild(drawCircleLabel);
                 //Register event listener for circle checkbox
-                drawCirclesCheckbox.addEventListener('change', function (event) {
-                    _this.toggleDrawCircles_(event);
-                });
-                //@ts-ignore
-                window.debugDrawCirc = false;
+                drawCirclesCheckbox.addEventListener('change', this.toggleDrawCircles_.bind(this));
+                //Checkbox for enabling drawing of arc label boundaries
+                let drawBoundariesCheckboxContainer = rowContainerTemplate.cloneNode();
+                let drawBoundariesCheckbox = document.createElement('input');
+                drawBoundariesCheckbox.setAttribute('type', 'checkbox');
+                let drawBoundariesLabel = document.createElement('label');
+                drawBoundariesLabel.appendChild(drawBoundariesCheckbox);
+                drawBoundariesLabel.appendChild(document.createTextNode("Draw arc label boundaries"));
+                drawBoundariesCheckboxContainer.appendChild(drawBoundariesLabel);
+                //Register event listener for boundary checkbox
+                drawBoundariesCheckbox.addEventListener('change', this.toggleDrawBoundaries_.bind(this));
                 // Slider for coefficient of labelfactor
                 var labelfactorSliderContainer = rowContainerTemplate.cloneNode();
                 var labelfactorRange = document.createElement('input');
@@ -157,7 +222,7 @@ var ol;
                 labelfactorRange.setAttribute('min', '0.0');
                 labelfactorRange.setAttribute('max', '3.0');
                 labelfactorRange.setAttribute('step', '0.1');
-                labelfactorRange.defaultValue = '1.1';
+                labelfactorRange.defaultValue = USER_CONFIG.labelFactorCoeff.toString();
                 var labelfactorLabel = document.createElement('label');
                 labelfactorLabel.id = 'labelFactorLabel';
                 labelfactorLabel.htmlFor = 'labelfactorRange';
@@ -166,11 +231,7 @@ var ol;
                 labelfactorSliderContainer.appendChild(document.createElement('br'));
                 labelfactorSliderContainer.appendChild(labelfactorRange);
                 //Register event listener for label factor range slider
-                labelfactorRange.addEventListener('input', function (event) {
-                    _this.changeLabelFactor_(event);
-                });
-                //@ts-ignore
-                window.labelFacCoeff = 1.1;
+                labelfactorRange.addEventListener('input', this.changeLabelFactor_.bind(this));
                 // Slider for controlling the calculation of the min_t value
                 var minTFactorSliderContainer = rowContainerTemplate.cloneNode();
                 var minTFactorRange = document.createElement('input');
@@ -178,46 +239,36 @@ var ol;
                 minTFactorRange.setAttribute('type', 'range');
                 minTFactorRange.setAttribute('id', 'minTFactorRange');
                 minTFactorRange.setAttribute('min', '0.0');
-                minTFactorRange.setAttribute('max', '20');
+                minTFactorRange.setAttribute('max', '100');
                 minTFactorRange.setAttribute('step', '0.1');
-                minTFactorRange.defaultValue = '9';
+                minTFactorRange.defaultValue = USER_CONFIG.minTFactor.toString();
                 var minTLabel = document.createElement('label');
                 minTLabel.id = 'minTLabel';
                 minTLabel.htmlFor = 'minTFactorRange';
-                minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (9)'));
+                minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (22)'));
                 //Register event listener for min_t factor range slider
-                minTFactorRange.addEventListener('input', function (event) {
-                    _this.changeMinTFactor_(event);
-                });
+                minTFactorRange.addEventListener('input', this.changeMinTFactor_.bind(this));
                 minTFactorSliderContainer.appendChild(minTLabel);
                 minTFactorSliderContainer.appendChild(document.createElement('br'));
                 minTFactorSliderContainer.appendChild(minTFactorRange);
-                //@ts-ignore
-                window.minTFac = 9;
                 var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
                 var minTCoeffRange = document.createElement('input');
                 minTCoeffRange.style.width = rangeCSSWidth;
                 minTCoeffRange.setAttribute('type', 'range');
                 minTCoeffRange.setAttribute('id', 'minTCoeffRange');
                 minTCoeffRange.setAttribute('min', '0.0');
-                minTCoeffRange.setAttribute('max', '5');
+                minTCoeffRange.setAttribute('max', '50');
                 minTCoeffRange.setAttribute('step', '0.1');
-                minTCoeffRange.defaultValue = '1.0';
+                minTCoeffRange.defaultValue = USER_CONFIG.minTCoeff.toString();
                 var minTCoeffLabel = document.createElement('label');
                 minTCoeffLabel.id = 'minTCoeffLabel';
                 minTCoeffLabel.htmlFor = 'minTCoeffRange';
                 minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t: (1.0)'));
-                //Create reference to current scope
-                var _this = this;
                 //Register event listener for min_t coefficient range slider
-                minTCoeffRange.addEventListener('input', function (event) {
-                    _this.changeMinTCoeff_(event);
-                });
+                minTCoeffRange.addEventListener('input', this.changeMinTCoeff_.bind(this));
                 minTCoeffRangeContainer.appendChild(minTCoeffLabel);
                 minTCoeffRangeContainer.appendChild(document.createElement('br'));
                 minTCoeffRangeContainer.appendChild(minTCoeffRange);
-                //@ts-ignore
-                window.minTCoeff = 1.0;
                 /* Create slider control for zoom level */
                 var zoomSliderContainer = rowContainerTemplate.cloneNode();
                 var zoomLevelDelta = document.createElement('input');
@@ -272,12 +323,8 @@ var ol;
                 rotationLabel.id = 'rotationLabel';
                 rotationLabel.htmlFor = 'rotationRange';
                 rotationLabel.innerHTML = 'Change rotation: (0&deg;)';
-                //Create reference to current scope
-                var _this = this;
                 //Register event listener for min_t coefficient range slider
-                rotationRange.addEventListener('input', function (event) {
-                    _this.changeRotation_(event);
-                });
+                rotationRange.addEventListener('input', this.changeRotation_.bind(this));
                 rotationRangeContainer.appendChild(rotationLabel);
                 rotationRangeContainer.appendChild(document.createElement('br'));
                 rotationRangeContainer.appendChild(rotationRange);
@@ -330,6 +377,7 @@ var ol;
                 // Create container div for all debug menu entries
                 var menuContent = document.createElement('div');
                 menuContent.appendChild(drawCirclesCheckboxContainer);
+                menuContent.appendChild(drawBoundariesCheckboxContainer);
                 menuContent.appendChild(labelfactorSliderContainer);
                 menuContent.appendChild(minTFactorSliderContainer);
                 menuContent.appendChild(minTCoeffRangeContainer);
@@ -353,40 +401,35 @@ var ol;
                 document.getElementById('rotationLabel').innerHTML = 'Change rotation: (' + rotationDegrees + '&deg;)';
             }
             toggleDrawCircles_(event) {
-                event.preventDefault();
-                var checkBox = document.getElementById('drawCirclesCheckbox');
-                // @ts-ignore
-                window.debugDrawCirc = checkBox.checked;
-                this.updateLabelLayer_();
+                USER_CONFIG.drawLabelCircles = event.target.checked;
+                this.updateLabelLayers_();
+            }
+            toggleDrawBoundaries_(event) {
+                USER_CONFIG.drawLabelBoundaries = event.target.checked;
+                this.updateLabelLayers_();
             }
             changeLabelFactor_(event) {
-                event.preventDefault();
                 var range = document.getElementById('labelfactorRange');
                 document.getElementById('labelFactorLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
-                // @ts-ignore
-                window.labelFacCoeff = range.value;
-                this.updateLabelLayer_();
+                USER_CONFIG.labelFactorCoeff = parseFloat(range.value);
+                this.updateLabelLayers_();
             }
             changeMinTFactor_(event) {
-                event.preventDefault();
                 var range = document.getElementById('minTFactorRange');
                 document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')';
-                // @ts-ignore
-                window.minTFac = range.value;
-                this.updateLabelLayer_();
+                USER_CONFIG.minTFactor = parseFloat(range.value);
+                this.updateLabelLayers_();
             }
             changeMinTCoeff_(event) {
-                event.preventDefault();
                 var range = document.getElementById('minTCoeffRange');
                 document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')';
-                // @ts-ignore
-                window.minTCoeff = range.value;
-                this.updateLabelLayer_();
+                USER_CONFIG.minTCoeff = parseFloat(range.value);
+                this.updateLabelLayers_();
             }
-            updateLabelLayer_() {
-                // Refresh layers after updating the draw circle settings
+            updateLabelLayers_() {
+                // Redraw all label layers after settings have been changed
                 this.getMap().getLayers().forEach(function (layer) {
-                    if (layer instanceof ol.layer.Label) {
+                    if ((layer instanceof ol.layer.Label) || (layer instanceof ol.layer.AreaLabel)) {
                         layer.getSource().refresh();
                     }
                 });
@@ -413,6 +456,7 @@ var ol;
                         }
                     }, 1);
                 }
+                //Store current scope
                 var _this = this;
                 var view = this.getMap().getView();
                 var currentZoomLevel = 14;
@@ -528,8 +572,40 @@ var ol;
                 let areaContainer = document.createElement('div');
                 areaContainer.innerHTML = '<h5>Areas</h5>';
                 let areaList = document.createElement('ul');
-                //Append list to container
-                areaContainer.appendChild(areaList);
+                //Get all area label layers
+                let areaLabelLayers = this.allLayers.filter(l => (l instanceof ol.layer.AreaLabel));
+                //Checkbox and slider for adjusting area label layers
+                let showArcLabelsListItem = document.createElement('li');
+                let showArcLabelsCheckbox = document.createElement('input');
+                showArcLabelsCheckbox.setAttribute('type', 'checkbox');
+                showArcLabelsCheckbox.checked = true;
+                let showArcLabelsSpan = document.createElement('span');
+                showArcLabelsSpan.innerHTML = 'Area labels';
+                let showArcLabelsLabel = document.createElement('label');
+                showArcLabelsLabel.appendChild(showArcLabelsCheckbox);
+                showArcLabelsLabel.appendChild(showArcLabelsSpan);
+                showArcLabelsCheckbox.addEventListener('change', this._toggleLayersDisplayIntention.bind(this, areaLabelLayers));
+                showArcLabelsListItem.appendChild(showArcLabelsLabel);
+                let opacitySliderContainer = document.createElement('span');
+                opacitySliderContainer.style.marginLeft = '5px';
+                opacitySliderContainer.style.cssFloat = 'right';
+                let opacitySlider = document.createElement('input');
+                opacitySlider.style.width = '60px';
+                opacitySlider.style.height = '18px';
+                opacitySlider.setAttribute('title', 'Opacity: 100%');
+                opacitySlider.setAttribute('type', 'range');
+                opacitySlider.setAttribute('min', '0.0');
+                opacitySlider.setAttribute('max', '1.0');
+                opacitySlider.setAttribute('step', '0.01');
+                opacitySlider.defaultValue = '1.0';
+                let onOpacityChange = this._updateLayersOpacity.bind(this, areaLabelLayers, opacitySlider);
+                opacitySlider.addEventListener('input', onOpacityChange);
+                opacitySliderContainer.appendChild(opacitySlider);
+                showArcLabelsListItem.appendChild(opacitySliderContainer);
+                let clearElement = document.createElement('div');
+                clearElement.style.clear = 'both';
+                showArcLabelsListItem.appendChild(clearElement);
+                areaList.appendChild(showArcLabelsListItem);
                 //Add available areas to area list
                 this.allLayers.filter(layer => layer instanceof ol.layer.Area)
                     .forEach(layer => {
@@ -554,10 +630,7 @@ var ol;
                     //Display layer name
                     nameSpan.innerHTML = layer.get('title');
                     //Add click event listener to container
-                    checkbox.addEventListener('click', function (event) {
-                        //Invert the visibility intention
-                        affectedLayers.forEach(layer => layer.invertDisplayIntention());
-                    });
+                    checkbox.addEventListener('click', this._toggleLayersDisplayIntention.bind(this, affectedLayers));
                     //Create slider for adjusting layer opacity
                     let opacitySliderContainer = document.createElement('span');
                     opacitySliderContainer.style.marginLeft = '5px';
@@ -571,16 +644,10 @@ var ol;
                     opacitySlider.setAttribute('max', '1.0');
                     opacitySlider.setAttribute('step', '0.01');
                     opacitySlider.defaultValue = '1.0';
+                    //Prepare event handler for slider
+                    let onOpacityChange = this._updateLayersOpacity.bind(this, affectedLayers, opacitySlider);
                     //Register input event listener for slider
-                    opacitySlider.addEventListener('input', function (event) {
-                        //Get slider element and its value
-                        let element = event.target;
-                        let value = parseFloat(element.value);
-                        //Adjust layer opacity of all affected layxers accordingly
-                        affectedLayers.forEach(layer => layer.setOpacity(value));
-                        //Update title content
-                        element.setAttribute('title', "Opacity: " + Math.round(value * 100) + "%");
-                    });
+                    opacitySlider.addEventListener('input', onOpacityChange);
                     //Append slider to its container
                     opacitySliderContainer.appendChild(opacitySlider);
                     //Create empty div for clearing floats
@@ -594,6 +661,8 @@ var ol;
                     listItem.appendChild(clearElement);
                     areaList.appendChild(listItem);
                 });
+                //Append list to container
+                areaContainer.appendChild(areaList);
                 //Add container to menu container
                 this.menu.appendChild(areaContainer);
                 /*
@@ -602,7 +671,7 @@ var ol;
                 let labelContainer = document.createElement('div');
                 labelContainer.innerHTML = '<h5>Labels</h5>';
                 let labelsList = document.createElement('ul');
-                //Checkbox for showing label layers
+                //Checkbox for showing point label layers
                 let showLabelsListItem = document.createElement('li');
                 let showLabelsCheckbox = document.createElement('input');
                 showLabelsCheckbox.setAttribute('type', 'checkbox');
@@ -685,6 +754,18 @@ var ol;
                     let newOpacity = layer.getOpacity() < 1 ? 1 : 0;
                     layer.setOpacity(newOpacity);
                 });
+            }
+            _toggleLayersDisplayIntention(layers) {
+                layers.forEach(layer => layer.toggleDisplayIntention());
+            }
+            _updateLayersOpacity(layers, sliderElement) {
+                //Get and parse slider value
+                let opacity = parseFloat(sliderElement.value);
+                //Adjust layer opacity of all affected layers accordingly
+                layers.forEach(layer => layer.setOpacity(opacity));
+                //Update title of slider
+                let roundedValue = Math.round(opacity * 100);
+                sliderElement.setAttribute('title', "Opacity: " + roundedValue + "%");
             }
         }
         control.LayerMenu = LayerMenu;
@@ -818,7 +899,7 @@ var ol;
              * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
              * is within the provided zoom range.
              */
-            invertDisplayIntention() {
+            toggleDisplayIntention() {
                 this._displayIntention = !this._displayIntention;
                 //Update visibility if necessary
                 this.updateVisibility();
@@ -913,8 +994,8 @@ var ol;
 (function (ol) {
     var layer;
     (function (layer) {
-        //Z-index of label layer to use
-        const LABEL_LAYER_Z_INDEX = 99999;
+        //Base z-index for layers holding the area arc labels
+        const LABEL_LAYER_Z_INDEX = 1000;
         /**
          * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
          * given as GeoJSON features. The layer will automatically be hidden if the current map zoom
@@ -948,8 +1029,9 @@ var ol;
                     //Create label layer and add it to the map
                     this.labelLayer = new ol.layer.AreaLabel({
                         source: new ol.source.Vector(),
-                        zIndex: LABEL_LAYER_Z_INDEX
+                        zIndex: this.areaType.z_index + LABEL_LAYER_Z_INDEX
                     }, areaType.labels, map);
+                    //Add label layer to map
                     map.addLayer(this.labelLayer);
                 }
                 else {
@@ -997,6 +1079,10 @@ var ol;
                     _this.checkFeatureForHighlight(feature);
                 });
             }
+            /**
+             * Creates a label feature for a given area feature and adds it to the dedicated label layer.
+             * @param feature The area feature to create a label for
+             */
             createLabelForFeature(feature) {
                 //Return if labels are not desired for this area type
                 if (!this.hasLabels) {
@@ -1056,8 +1142,9 @@ var ol;
                 options.updateWhileAnimating = options.updateWhileAnimating || false;
                 options.updateWhileInteracting = options.updateWhileInteracting || false;
                 options.renderMode = options.renderMode || 'vector';
-                options.declutter = true;
                 options.source = options.source || new source.Vector();
+                //No decluttering as it would hide labels randomly
+                options.declutter = false;
                 //Get zoom range from area type
                 let minZoom = labelOptions.zoom_min;
                 let maxZoom = labelOptions.zoom_max;
@@ -1077,22 +1164,23 @@ var ol;
                 let startAngle = feature.get("start_angle");
                 let endAngle = feature.get("end_angle");
                 let featureId = feature.getId();
+                let guideRadius = (innerRadius + outerRadius) / 2;
+                let guideArcLineString = new ol.geom.ArcLineString(circleCentre, guideRadius, startAngle, endAngle);
+                let guideArcLabelFeature = new ol.Feature(guideArcLineString);
+                guideArcLabelFeature.set("arc_height", outerRadius - innerRadius);
+                guideArcLabelFeature.set("text", labelText);
+                guideArcLabelFeature.setId(featureId + "_label_guide");
                 let innerArcLineString = new ol.geom.ArcLineString(circleCentre, innerRadius, startAngle, endAngle);
-                let innerArcLabelFeature = new ol.Feature(innerArcLineString);
-                innerArcLabelFeature.setId(featureId + "_label_in");
-                let middleRadius = (innerRadius + outerRadius) / 2;
-                let middleArcLineString = new ol.geom.ArcLineString(circleCentre, middleRadius, startAngle, endAngle);
-                let middleArcLabelFeature = new ol.Feature(middleArcLineString);
-                middleArcLabelFeature.set("arc_height", outerRadius - innerRadius);
-                middleArcLabelFeature.set("text", labelText);
-                middleArcLabelFeature.setId(featureId + "_label_middle");
                 let outerArcLineString = new ol.geom.ArcLineString(circleCentre, outerRadius, startAngle, endAngle);
-                let outerArcLabelFeature = new ol.Feature(outerArcLineString);
-                outerArcLabelFeature.setId(featureId + "_label_out");
+                let leftClosingLine = new ol.geom.LineString([circleCentre, outerArcLineString.getFirstCoordinate()]);
+                let rightClosingLine = new ol.geom.LineString([circleCentre, outerArcLineString.getLastCoordinate()]);
+                let boundaryGeometry = new ol.geom.GeometryCollection([innerArcLineString, outerArcLineString, leftClosingLine, rightClosingLine]);
+                let boundaryFeature = new ol.Feature(boundaryGeometry);
+                boundaryFeature.setId(featureId + "_label_boundary");
+                //Get source of this layer
                 let layerSource = this.getSource();
-                layerSource.addFeature(innerArcLabelFeature);
-                layerSource.addFeature(middleArcLabelFeature);
-                layerSource.addFeature(outerArcLabelFeature);
+                //Add guide and boundary features
+                layerSource.addFeatures([guideArcLabelFeature, boundaryFeature]);
             }
         }
         layer.AreaLabel = AreaLabel;
@@ -1353,14 +1441,14 @@ var ol;
 (function (ol) {
     var style;
     (function (style) {
+        //Minimum allowable label height
+        const MIN_LABEL_HEIGHT = 20;
+        //Generator for the arc labels font with parameter for text height
+        const LABEL_FONT = (height) => `bold ${height}px "Lucida Console", "Courier", "Arial Black"`;
         //Basic style to use for arc labels
-        const ARC_LABEL_STYLE = new ol.style.Style({
-            stroke: new ol.style.Stroke({
-                color: 'darkgreen',
-                width: 5
-            }),
+        const LABEL_STYLE = new ol.style.Style({
             text: new ol.style.Text({
-                font: 'bold 50px "Lucida Console", "Courier", "Arial Black"',
+                font: '',
                 placement: 'line',
                 stroke: new ol.style.Stroke({
                     color: 'black',
@@ -1370,7 +1458,15 @@ var ol;
                     color: 'white'
                 }),
                 rotateWithView: false,
-                text: ''
+                text: '',
+                textAlign: "center"
+            })
+        });
+        //Stroke style for label boundaries
+        const BOUNDARY_STYLE = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: 'darkgreen',
+                width: 2
             })
         });
         //Empty style which does not do anything
@@ -1382,24 +1478,33 @@ var ol;
          * @param resolution The resolution to use
          */
         function arcLabelStyleFunction(feature, resolution) {
-            //Get label name for this feature
-            let labelName = feature.get("text");
-            //Get style text object
-            let textObject = ARC_LABEL_STYLE.getText();
-            //Sanity check
-            if (textObject == null) {
+            let featureGeometry = feature.getGeometry();
+            if (featureGeometry instanceof ol.geom.GeometryCollection) {
+                //Return boundary style or empty style depending on user configuration
+                return USER_CONFIG.drawLabelBoundaries ? BOUNDARY_STYLE : EMPTY_STYLE;
+            }
+            else if (!(featureGeometry instanceof ol.geom.ArcLineString)) {
                 return EMPTY_STYLE;
             }
+            //Get label name and arc height for this feature
+            let labelName = feature.get("text");
+            let arcHeight = feature.get("arc_height");
+            //Get style text object
+            let textObject = LABEL_STYLE.getText();
             //Set style text
             textObject.setText(labelName);
-            let arcHeight = feature.get("arc_height");
+            //Check if height parameter is available
             if (arcHeight) {
-                let height = arcHeight / resolution;
-                textObject.setFont('bold ' + height + 'px "Lucida Console", "Courier", "Arial Black"');
+                //Calculate font height
+                let height = Math.floor(arcHeight / resolution);
+                //Do not draw too small labels
+                if (height < MIN_LABEL_HEIGHT) {
+                    return EMPTY_STYLE;
+                }
+                //Update font accordingly
+                textObject.setFont(LABEL_FONT(height));
             }
-            //TODO
-            ARC_LABEL_STYLE.setStroke(null);
-            return ARC_LABEL_STYLE;
+            return LABEL_STYLE;
         }
         style.arcLabelStyleFunction = arcLabelStyleFunction;
     })(style = ol.style || (ol.style = {}));
@@ -1824,8 +1929,7 @@ var ol;
                 }
             }
             else if (this.type == LabelType.TEXT) {
-                // @ts-ignore
-                var cache_key = window.debugDrawCirc ? this.text + ':debug' : this.text;
+                var cache_key = USER_CONFIG.drawLabelCircles ? this.text + ':debug' : this.text;
                 if (typeof Label.textCache.get(cache_key) === 'undefined') {
                     var calculatedlabelFactor = ol.calculateLabelFactor(this.feature);
                     var fontConfig = calculatedlabelFactor + "px " + labelFontType;
@@ -1854,8 +1958,7 @@ var ol;
                         })
                     });
                     style = new ol.style.Style({
-                        //@ts-ignore
-                        image: window.debugDrawCirc == true ? debugCircle : null,
+                        image: USER_CONFIG.drawLabelCircles == true ? debugCircle : null,
                         text: label
                     });
                     Label.textCache.set(cache_key, style);

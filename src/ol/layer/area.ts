@@ -1,6 +1,6 @@
 namespace ol.layer {
-    //Z-index of label layer to use
-    const LABEL_LAYER_Z_INDEX = 99999;
+    //Base z-index for layers holding the area arc labels
+    const LABEL_LAYER_Z_INDEX = 1000;
 
     /**
      * Instances of this class represent area layers that are used for displaying areas of a certain type on the map,
@@ -49,8 +49,10 @@ namespace ol.layer {
                 //Create label layer and add it to the map
                 this.labelLayer = new ol.layer.AreaLabel({
                     source: new ol.source.Vector(),
-                    zIndex: LABEL_LAYER_Z_INDEX
+                    zIndex: this.areaType.z_index + LABEL_LAYER_Z_INDEX
                 }, areaType.labels, map);
+
+                //Add label layer to map
                 map.addLayer(this.labelLayer);
             } else {
                 this._hasLabels = false;
@@ -58,6 +60,7 @@ namespace ol.layer {
 
             //No highlighting yet
             this.highlightLocation = null;
+
             //Save reference to current scope
             let _this = this;
 
@@ -108,6 +111,10 @@ namespace ol.layer {
             });
         }
 
+        /**
+         * Creates a label feature for a given area feature and adds it to the dedicated label layer.
+         * @param feature The area feature to create a label for
+         */
         private createLabelForFeature(feature: Feature): void {
             //Return if labels are not desired for this area type
             if (!this.hasLabels) {

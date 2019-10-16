@@ -45,7 +45,7 @@ namespace ol.layer {
          * Inverts whether the layer is supposed to be displayed in case the zoom level of the map
          * is within the provided zoom range.
          */
-        public invertDisplayIntention(): void {
+        public toggleDisplayIntention(): void {
             this._displayIntention = !this._displayIntention;
 
             //Update visibility if necessary
