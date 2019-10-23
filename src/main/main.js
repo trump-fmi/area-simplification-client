@@ -20,7 +20,7 @@ const ADDRESS_SUGGESTIONS = 5;
 
 const TILES_Z_INDEX = 0;
 const AREAS_Z_INDEX_BASE = 10;
-const LABEL_Z_INDEX = 999999;
+const POINT_LABEL_Z_INDEX = 999999;
 //***************************************
 
 //Container that holds the map
@@ -193,7 +193,7 @@ function addLabelLayersToMap(endpointsObject) {
             style: null,
             title: labelName,
             visible: isLayerVisible,
-            zIndex: LABEL_Z_INDEX
+            zIndex: POINT_LABEL_Z_INDEX
         });
 
         //Add layer to map

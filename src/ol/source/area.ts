@@ -70,37 +70,53 @@ namespace ol.source {
          * @param features An array of features that are supposed to be added to the map
          */
         public addFeatures(features: Feature[]) {
-            //Iterate over all passed features
-            for (var i = 0; i < features.length; i++) {
-                //Get current feature and the corresponding old version that is already part of the layer
-                var newFeature = features[i];
-                var oldFeature = this.getFeatureById(newFeature.getId());
+            let timestamp = performance.now();
 
-                //Notify listeners
-                this.notifyFeatureListeners(newFeature);
+            //Bind process function for new features to current scope
+            let processFunction = this.processNewFeature.bind(this);
 
-                //Check if old version of the feature exists
-                if (oldFeature == null) {
-                    continue;
-                }
+            //Call process function for each new feature
+            features.forEach(processFunction);
 
-                //Retrieve geometry of both features
-                var newPolygon = <ol.geom.Polygon>newFeature.getGeometry();
-                var oldPolygon = <ol.geom.Polygon>oldFeature.getGeometry();
+            let time = performance.now() - timestamp;
+            console.log("Time: " + time);
+        }
 
-                //Get number of coordinates of each feature version
-                var newCoordNumber = newPolygon.getCoordinates()[0].length;
-                var oldCoordNumber = oldPolygon.getCoordinates()[0].length;
+        /**
+         * Processes a new feature and adds it to the layer this source is bound to. Furthermore, it deals with old
+         * versions of the new feature by deleting them from the index, if necessary. The zoom level field
+         * of the features is used as decision criterion for this purpose.
+         *
+         * @param newFeature The new feature to process
+         */
+        private processNewFeature(newFeature: Feature) {
+            //Notify listeners
+            this.notifyFeatureListeners(newFeature);
 
-                //Compare coordinate numbers
-                if (newCoordNumber != oldCoordNumber) {
-                    //New feature is an updated version, thus remove old version from index
-                    this.removeFeature(oldFeature);
-                }
+            //Get corresponding old version of the feature
+            let oldFeature = this.getFeatureById(newFeature.getId());
+
+            //Check if old version of the feature exists
+            if (oldFeature == null) {
+                super.addFeature(newFeature);
+                return;
             }
 
-            //Finally proceed as usual
-            return super.addFeatures(features);
+            //Get new and old zoom level of the feature
+            let newZoom = newFeature.get("zoom");
+            let oldZoom = oldFeature.get("zoom");
+
+            //Check if zoom field of new and old feature differ
+            if (newZoom != oldZoom) {
+                //remove old feature and add the new one
+                super.removeFeature(oldFeature);
+                super.addFeature(newFeature);
+
+                //Check if a console log about this action is desired
+                if (USER_CONFIG.featureUpdateLog) {
+                    console.log("Updated feature \"" + newFeature.getId() + "\"");
+                }
+            }
         }
 
         /**
@@ -112,30 +128,26 @@ namespace ol.source {
          */
         private static createFeatureLoader(areaServerUrl: string, map: ol.Map): ol.FeatureUrlFunction {
             //Define feature loader
-            let featureLoader: ol.FeatureUrlFunction =
-                (extent: ol.Extent, resolution: number, projection: ol.proj.Projection) => {
-                    //Split extend in order to get min and max coordinates
-                    var min = ol.proj.toLonLat(<ol.Coordinate>extent.slice(0, 2));
-                    var max = ol.proj.toLonLat(<ol.Coordinate>extent.slice(2, 4));
+            return (extent: ol.Extent, resolution: number, projection: ol.proj.Projection) => {
+                //Split extend in order to get min and max coordinates
+                var min = ol.proj.toLonLat(<ol.Coordinate>extent.slice(0, 2));
+                var max = ol.proj.toLonLat(<ol.Coordinate>extent.slice(2, 4));
 
-                    //Get current zoom from map
-                    var zoom = map.getView().getZoom();
+                //Get current zoom from map
+                var zoom = map.getView().getZoom();
 
-                    //Create parameters object for server request
-                    var parameters = {
-                        x_min: min[0],
-                        x_max: max[0],
-                        y_min: min[1],
-                        y_max: max[1],
-                        zoom: zoom
-                    };
-
-                    //Build query and return it
-                    return Area.buildQuery(areaServerUrl, parameters);
+                //Create parameters object for server request
+                var parameters = {
+                    x_min: min[0],
+                    x_max: max[0],
+                    y_min: min[1],
+                    y_max: max[1],
+                    zoom: zoom
                 };
 
-
-            return featureLoader;
+                //Build query and return it
+                return Area.buildQuery(areaServerUrl, parameters);
+            };
         }
 
         /**

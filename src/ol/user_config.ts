@@ -9,6 +9,7 @@ namespace ol {
         private static instance: UserConfig;
 
         //All config fields with default values
+        private _featureUpdateLog: boolean = false;
         private _drawLabelCircles: boolean = false;
         private _drawLabelBoundaries: boolean = false;
         private _labelFactorCoeff: number = 1.1;
@@ -30,6 +31,14 @@ namespace ol {
                 this.instance = new UserConfig();
             }
             return this.instance;
+        }
+
+        get featureUpdateLog(): boolean {
+            return this._featureUpdateLog;
+        }
+
+        set featureUpdateLog(value: boolean) {
+            this._featureUpdateLog = value;
         }
 
         get drawLabelCircles(): boolean {

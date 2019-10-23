@@ -10,6 +10,7 @@ var ol;
          */
         constructor() {
             //All config fields with default values
+            this._featureUpdateLog = false;
             this._drawLabelCircles = false;
             this._drawLabelBoundaries = false;
             this._labelFactorCoeff = 1.1;
@@ -25,6 +26,12 @@ var ol;
                 this.instance = new UserConfig();
             }
             return this.instance;
+        }
+        get featureUpdateLog() {
+            return this._featureUpdateLog;
+        }
+        set featureUpdateLog(value) {
+            this._featureUpdateLog = value;
         }
         get drawLabelCircles() {
             return this._drawLabelCircles;
@@ -1268,31 +1275,44 @@ var ol;
              * @param features An array of features that are supposed to be added to the map
              */
             addFeatures(features) {
-                //Iterate over all passed features
-                for (var i = 0; i < features.length; i++) {
-                    //Get current feature and the corresponding old version that is already part of the layer
-                    var newFeature = features[i];
-                    var oldFeature = this.getFeatureById(newFeature.getId());
-                    //Notify listeners
-                    this.notifyFeatureListeners(newFeature);
-                    //Check if old version of the feature exists
-                    if (oldFeature == null) {
-                        continue;
-                    }
-                    //Retrieve geometry of both features
-                    var newPolygon = newFeature.getGeometry();
-                    var oldPolygon = oldFeature.getGeometry();
-                    //Get number of coordinates of each feature version
-                    var newCoordNumber = newPolygon.getCoordinates()[0].length;
-                    var oldCoordNumber = oldPolygon.getCoordinates()[0].length;
-                    //Compare coordinate numbers
-                    if (newCoordNumber != oldCoordNumber) {
-                        //New feature is an updated version, thus remove old version from index
-                        this.removeFeature(oldFeature);
+                let timestamp = performance.now();
+                //Bind process function for new features to current scope
+                let processFunction = this.processNewFeature.bind(this);
+                //Call process function for each new feature
+                features.forEach(processFunction);
+                let time = performance.now() - timestamp;
+                console.log("Time: " + time);
+            }
+            /**
+             * Processes a new feature and adds it to the layer this source is bound to. Furthermore, it deals with old
+             * versions of the new feature by deleting them from the index, if necessary. The zoom level field
+             * of the features is used as decision criterion for this purpose.
+             *
+             * @param newFeature The new feature to process
+             */
+            processNewFeature(newFeature) {
+                //Notify listeners
+                this.notifyFeatureListeners(newFeature);
+                //Get corresponding old version of the feature
+                let oldFeature = this.getFeatureById(newFeature.getId());
+                //Check if old version of the feature exists
+                if (oldFeature == null) {
+                    super.addFeature(newFeature);
+                    return;
+                }
+                //Get new and old zoom level of the feature
+                let newZoom = newFeature.get("zoom");
+                let oldZoom = oldFeature.get("zoom");
+                //Check if zoom field of new and old feature differ
+                if (newZoom != oldZoom) {
+                    //remove old feature and add the new one
+                    super.removeFeature(oldFeature);
+                    super.addFeature(newFeature);
+                    //Check if a console log about this action is desired
+                    if (USER_CONFIG.featureUpdateLog) {
+                        console.log("Updated feature \"" + newFeature.getId() + "\"");
                     }
                 }
-                //Finally proceed as usual
-                return super.addFeatures(features);
             }
             /**
              * Creates and returns a feature loader object for this source by taking the URL of the desired area server
@@ -1303,7 +1323,7 @@ var ol;
              */
             static createFeatureLoader(areaServerUrl, map) {
                 //Define feature loader
-                let featureLoader = (extent, resolution, projection) => {
+                return (extent, resolution, projection) => {
                     //Split extend in order to get min and max coordinates
                     var min = ol.proj.toLonLat(extent.slice(0, 2));
                     var max = ol.proj.toLonLat(extent.slice(2, 4));
@@ -1320,7 +1340,6 @@ var ol;
                     //Build query and return it
                     return Area.buildQuery(areaServerUrl, parameters);
                 };
-                return featureLoader;
             }
             /**
              * Builds a query string that may be used for retrieving areas at a certain map section from an area server.

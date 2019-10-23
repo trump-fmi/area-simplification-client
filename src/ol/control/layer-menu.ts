@@ -337,7 +337,6 @@ namespace ol.control {
             //Update title of slider
             let roundedValue = Math.round(opacity * 100);
             sliderElement.setAttribute('title', "Opacity: " + roundedValue + "%");
-
         }
     }
 }
