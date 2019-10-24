@@ -153,7 +153,7 @@ function addAreaLayersToMap(areaTypeGroups) {
             var areaLayer = new ol.layer.Area({
                 source: new ol.source.Area({
                     url: (areaRetrievalUrl + type.resource)
-                }, map),
+                }, map, group.name),
                 title: group.name,
                 visible: true,
                 zIndex: (AREAS_Z_INDEX_BASE + type.z_index)

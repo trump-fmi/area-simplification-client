@@ -12,25 +12,27 @@ namespace ol.source {
         private readonly featureListeners: Array<Function>;
 
         private readonly map: ol.Map;
-
+        private readonly areaTypeName: AreaType;
 
         /**
-         * Creates a new area source by passing a options object and a map instance to which the source belongs.
+         * Creates a new area source by passing a options object, a map instance to which the source belongs
+         * and the name of an area type to which the source is dedicated.
          *
          * @param org_options The options object
          * @param map The map instance for which the source is used
+         * @param areaTypeName The name of the area type to which the source is dedicated
          */
-        constructor(org_options: olx.source.VectorOptions, map: ol.Map) {
+        constructor(org_options: olx.source.VectorOptions, map: ol.Map, areaTypeName: AreaType) {
             //Read url of the area server and create feature loader from it
-            var areaServerUrl: string = org_options.url.toString();
-            var featureLoader: ol.FeatureUrlFunction = Area.createFeatureLoader(areaServerUrl, map);
+            let areaServerUrl: string = org_options.url.toString();
+            let featureLoader: ol.FeatureUrlFunction = Area.createFeatureLoader(areaServerUrl, map);
 
             //Overwrite required options
             org_options.format = new ol.format.GeoJSON();
 
-            var oldZoom = 0;
+            let oldZoom = 0;
             org_options.strategy = function (extent: Extent, resolution: number) {
-                var currentZoom = _this.map.getView().getZoom();
+                let currentZoom = _this.map.getView().getZoom();
                 if (Math.abs(oldZoom - currentZoom) > 0.2) {
                     // @ts-ignore
                     _this.loadedExtentsRtree_.clear();
@@ -42,13 +44,14 @@ namespace ol.source {
 
             super(org_options);
 
-            var _this = this;
+            let _this = this;
 
             //Set internal fields
             this.areaServerUrl = areaServerUrl;
             this.featureLoader = featureLoader;
             this.featureListeners = new Array<Function>();
             this.map = map;
+            this.areaTypeName = areaTypeName;
         }
 
         /**
@@ -78,8 +81,11 @@ namespace ol.source {
             //Call process function for each new feature
             features.forEach(processFunction);
 
-            let time = performance.now() - timestamp;
-            console.log("Time: " + time);
+            //Check if processing log in console is desired
+            if (USER_CONFIG.logProcessingTimes) {
+                let timeDiff = Math.round(performance.now() - timestamp);
+                console.log("[" + this.areaTypeName + "] Processed " + features.length + " features in " + timeDiff + " ms");
+            }
         }
 
         /**
@@ -114,7 +120,7 @@ namespace ol.source {
 
                 //Check if a console log about this action is desired
                 if (USER_CONFIG.featureUpdateLog) {
-                    console.log("Updated feature \"" + newFeature.getId() + "\"");
+                    console.log("[" + this.areaTypeName + "] Updated feature \"" + newFeature.getId() + "\"");
                 }
             }
         }
@@ -130,14 +136,14 @@ namespace ol.source {
             //Define feature loader
             return (extent: ol.Extent, resolution: number, projection: ol.proj.Projection) => {
                 //Split extend in order to get min and max coordinates
-                var min = ol.proj.toLonLat(<ol.Coordinate>extent.slice(0, 2));
-                var max = ol.proj.toLonLat(<ol.Coordinate>extent.slice(2, 4));
+                let min = ol.proj.toLonLat(<ol.Coordinate>extent.slice(0, 2));
+                let max = ol.proj.toLonLat(<ol.Coordinate>extent.slice(2, 4));
 
                 //Get current zoom from map
-                var zoom = map.getView().getZoom();
+                let zoom = map.getView().getZoom();
 
                 //Create parameters object for server request
-                var parameters = {
+                let parameters = {
                     x_min: min[0],
                     x_max: max[0],
                     y_min: min[1],
@@ -165,19 +171,19 @@ namespace ol.source {
             }
 
             //Start building the query
-            var parametersString = '?';
-            var first = true;
+            let parametersString = '?';
+            let first = true;
 
             //Iterate over all fields of the parameters object
-            for (var property in params) {
+            for (let property in params) {
                 //Sanity check for each field
                 if (!params.hasOwnProperty(property)) {
                     continue;
                 }
 
                 //Read parameter
-                var param = property;
-                var value = params[property];
+                let param = property;
+                let value = params[property];
 
                 //Add separator depending on whether the current parameter is the first one
                 if (first) {

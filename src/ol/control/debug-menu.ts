@@ -21,9 +21,9 @@ namespace ol.control {
         constructor(opt_options: olx.control.ControlOptions) {
             opt_options = opt_options || {};
 
-            var container = document.createElement('div');
+            let container = document.createElement('div');
 
-            var options: olx.control.ControlOptions = {
+            let options: olx.control.ControlOptions = {
                 element: container,
                 target: opt_options.target
             };
@@ -92,36 +92,45 @@ namespace ol.control {
             let map = this.getMap();
             let view = map.getView();
 
-            var rowContainerTemplate = document.createElement('div');
+            let rowContainerTemplate = document.createElement('div');
             rowContainerTemplate.style.margin = '10px';
 
+            //Container for boolean options
+            let optionsContainer = rowContainerTemplate.cloneNode();
+
             //Checkbox for enabling circle drawing
-            var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
-            var drawCirclesCheckbox = document.createElement('input');
+            let drawCirclesCheckbox = document.createElement('input');
             drawCirclesCheckbox.setAttribute('type', 'checkbox');
             drawCirclesCheckbox.checked = USER_CONFIG.drawLabelCircles;
-            var drawCircleLabel = document.createElement('label');
+            let drawCircleLabel = document.createElement('label');
             drawCircleLabel.appendChild(drawCirclesCheckbox);
-            drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels'));
-            drawCirclesCheckboxContainer.appendChild(drawCircleLabel);
-            //Register event listener for circle checkbox
+            drawCircleLabel.appendChild(document.createTextNode('Draw label circles'));
             drawCirclesCheckbox.addEventListener('change', this.toggleDrawCircles_.bind(this));
-
+            optionsContainer.appendChild(drawCircleLabel);
 
             //Checkbox for enabling drawing of arc label boundaries
-            let drawBoundariesCheckboxContainer = rowContainerTemplate.cloneNode();
             let drawBoundariesCheckbox = document.createElement('input');
             drawBoundariesCheckbox.setAttribute('type', 'checkbox');
             let drawBoundariesLabel = document.createElement('label');
+            drawBoundariesLabel.style.marginLeft = '15px';
             drawBoundariesLabel.appendChild(drawBoundariesCheckbox);
             drawBoundariesLabel.appendChild(document.createTextNode("Draw arc label boundaries"));
-            drawBoundariesCheckboxContainer.appendChild(drawBoundariesLabel);
-            //Register event listener for boundary checkbox
             drawBoundariesCheckbox.addEventListener('change', this.toggleDrawBoundaries_.bind(this));
+            optionsContainer.appendChild(drawBoundariesLabel);
+
+            //Checkbox for enabling logging of processing times to the console
+            let logProcessingTimesCheckbox = document.createElement('input');
+            logProcessingTimesCheckbox.setAttribute('type', 'checkbox');
+            let logProcessingTimesLabel = document.createElement('label');
+            logProcessingTimesLabel.style.marginLeft = '15px';
+            logProcessingTimesLabel.appendChild(logProcessingTimesCheckbox);
+            logProcessingTimesLabel.appendChild(document.createTextNode("Log processing times"));
+            logProcessingTimesCheckbox.addEventListener('change', this.toggleLogProcessingTimes_.bind(this));
+            optionsContainer.appendChild(logProcessingTimesLabel);
 
             // Slider for coefficient of label factor
-            var labelfactorSliderContainer = rowContainerTemplate.cloneNode();
-            var labelfactorRange = document.createElement('input');
+            let labelfactorSliderContainer = rowContainerTemplate.cloneNode();
+            let labelfactorRange = document.createElement('input');
             labelfactorRange.style.width = rangeCSSWidth;
             labelfactorRange.setAttribute('type', 'range');
             labelfactorRange.setAttribute('id', 'labelfactorRange');
@@ -129,7 +138,7 @@ namespace ol.control {
             labelfactorRange.setAttribute('max', '3.0');
             labelfactorRange.setAttribute('step', '0.1');
             labelfactorRange.defaultValue = USER_CONFIG.labelFactorCoeff.toString();
-            var labelfactorLabel = document.createElement('label');
+            let labelfactorLabel = document.createElement('label');
             labelfactorLabel.id = 'labelFactorLabel';
             labelfactorLabel.htmlFor = 'labelfactorRange';
             labelfactorLabel.appendChild(document.createTextNode('Set the coefficient of the labelFactor: (1.1)'));
@@ -141,8 +150,8 @@ namespace ol.control {
             labelfactorRange.addEventListener('input', this.changeLabelFactor_.bind(this));
 
             // Slider for controlling the calculation of the min_t value
-            var minTFactorSliderContainer = rowContainerTemplate.cloneNode();
-            var minTFactorRange = document.createElement('input');
+            let minTFactorSliderContainer = rowContainerTemplate.cloneNode();
+            let minTFactorRange = document.createElement('input');
             minTFactorRange.style.width = rangeCSSWidth;
             minTFactorRange.setAttribute('type', 'range');
             minTFactorRange.setAttribute('id', 'minTFactorRange');
@@ -150,7 +159,7 @@ namespace ol.control {
             minTFactorRange.setAttribute('max', '100');
             minTFactorRange.setAttribute('step', '0.1');
             minTFactorRange.defaultValue = USER_CONFIG.minTFactor.toString();
-            var minTLabel = document.createElement('label');
+            let minTLabel = document.createElement('label');
             minTLabel.id = 'minTLabel';
             minTLabel.htmlFor = 'minTFactorRange';
             minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (22)'));
@@ -161,8 +170,8 @@ namespace ol.control {
             minTFactorSliderContainer.appendChild(minTLabel);
             minTFactorSliderContainer.appendChild(document.createElement('br'));
             minTFactorSliderContainer.appendChild(minTFactorRange);
-            var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
-            var minTCoeffRange = document.createElement('input');
+            let minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
+            let minTCoeffRange = document.createElement('input');
             minTCoeffRange.style.width = rangeCSSWidth;
             minTCoeffRange.setAttribute('type', 'range');
             minTCoeffRange.setAttribute('id', 'minTCoeffRange');
@@ -170,7 +179,7 @@ namespace ol.control {
             minTCoeffRange.setAttribute('max', '50');
             minTCoeffRange.setAttribute('step', '0.1');
             minTCoeffRange.defaultValue = USER_CONFIG.minTCoeff.toString();
-            var minTCoeffLabel = document.createElement('label');
+            let minTCoeffLabel = document.createElement('label');
             minTCoeffLabel.id = 'minTCoeffLabel';
             minTCoeffLabel.htmlFor = 'minTCoeffRange';
             minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t: (1.0)'));
@@ -181,8 +190,8 @@ namespace ol.control {
             minTCoeffRangeContainer.appendChild(minTCoeffRange);
 
             /* Create slider control for zoom level */
-            var zoomSliderContainer = rowContainerTemplate.cloneNode();
-            var zoomLevelDelta = document.createElement('input');
+            let zoomSliderContainer = rowContainerTemplate.cloneNode();
+            let zoomLevelDelta = document.createElement('input');
             zoomLevelDelta.style.marginLeft = '10px';
             zoomLevelDelta.style.width = '50px';
 
@@ -193,7 +202,7 @@ namespace ol.control {
             zoomLevelDelta.setAttribute('step', '0.1');
             zoomLevelDelta.setAttribute('value', '1.0');
 
-            var zoomSliderInput = document.createElement('input');
+            let zoomSliderInput = document.createElement('input');
             zoomSliderInput.style.marginTop = '10px';
             zoomSliderInput.style.width = '600px';
             zoomSliderInput.setAttribute('type', 'range');
@@ -203,12 +212,12 @@ namespace ol.control {
             zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
             zoomSliderInput.defaultValue = map.getView().getZoom().toString();
 
-            var zoomSliderLabel = document.createElement('label');
+            let zoomSliderLabel = document.createElement('label');
             zoomSliderLabel.id = 'zoomSliderLabel';
             zoomSliderLabel.htmlFor = 'zoomSliderInput';
             zoomSliderLabel.appendChild(document.createTextNode('Change the zoom level with defined zoom delta:'));
 
-            var zoomLevelLabel = document.createElement('label');
+            let zoomLevelLabel = document.createElement('label');
 
             zoomLevelLabel.style.marginLeft = '10px';
             zoomLevelLabel.style.position = 'relative';
@@ -225,15 +234,15 @@ namespace ol.control {
 
             //Register event listener for zoom slider
             zoomSliderInput.addEventListener('input', function () {
-                var zoomValue = parseFloat(zoomSliderInput.value);
+                let zoomValue = parseFloat(zoomSliderInput.value);
 
                 document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + zoomSliderInput.value;
                 map.getView().setZoom(zoomValue);
             });
 
 
-            var rotationRangeContainer = rowContainerTemplate.cloneNode();
-            var rotationRange = document.createElement('input');
+            let rotationRangeContainer = rowContainerTemplate.cloneNode();
+            let rotationRange = document.createElement('input');
             rotationRange.style.width = '600px';
 
             rotationRange.setAttribute('type', 'range');
@@ -243,7 +252,7 @@ namespace ol.control {
             rotationRange.setAttribute('step', '1');
             rotationRange.defaultValue = '0';
 
-            var rotationLabel = document.createElement('label');
+            let rotationLabel = document.createElement('label');
             rotationLabel.id = 'rotationLabel';
             rotationLabel.htmlFor = 'rotationRange';
             rotationLabel.innerHTML = 'Change rotation: (0&deg;)';
@@ -323,8 +332,7 @@ namespace ol.control {
 
             // Create container div for all debug menu entries
             let menuContent = document.createElement('div');
-            menuContent.appendChild(drawCirclesCheckboxContainer);
-            menuContent.appendChild(drawBoundariesCheckboxContainer);
+            menuContent.appendChild(optionsContainer);
             menuContent.appendChild(labelfactorSliderContainer);
             menuContent.appendChild(minTFactorSliderContainer);
             menuContent.appendChild(minTCoeffRangeContainer);
@@ -363,22 +371,26 @@ namespace ol.control {
             this.updateLabelLayers_();
         }
 
+        private toggleLogProcessingTimes_(event: Event) {
+            USER_CONFIG.logProcessingTimes = (<HTMLInputElement>event.target).checked;
+        }
+
         private changeLabelFactor_(event: Event) {
-            var range = <HTMLInputElement>document.getElementById('labelfactorRange');
+            let range = <HTMLInputElement>document.getElementById('labelfactorRange');
             document.getElementById('labelFactorLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
             USER_CONFIG.labelFactorCoeff = parseFloat(range.value);
             this.updateLabelLayers_();
         }
 
         private changeMinTFactor_(event: Event) {
-            var range = <HTMLInputElement>document.getElementById('minTFactorRange');
+            let range = <HTMLInputElement>document.getElementById('minTFactorRange');
             document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')';
             USER_CONFIG.minTFactor = parseFloat(range.value);
             this.updateLabelLayers_();
         }
 
         private changeMinTCoeff_(event: Event) {
-            var range = <HTMLInputElement>document.getElementById('minTCoeffRange');
+            let range = <HTMLInputElement>document.getElementById('minTCoeffRange');
             document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')';
             USER_CONFIG.minTCoeff = parseFloat(range.value);
             this.updateLabelLayers_();
@@ -404,11 +416,11 @@ namespace ol.control {
             }
 
             function getRandomLocationInGermany() {
-                var rangeLong = [8.0, 12.0]; // More exactly = [6.0, 15.0]
-                var rangeLat = [48.0, 54.0]; // More exactly = [47.5, 54.8]
+                let rangeLong = [8.0, 12.0]; // More exactly = [6.0, 15.0]
+                let rangeLat = [48.0, 54.0]; // More exactly = [47.5, 54.8]
 
-                var randomLong = (Math.random() * (rangeLong[1] - rangeLong[0] + 1)) + rangeLong[0];
-                var randomLat = (Math.random() * (rangeLat[1] - rangeLat[0] + 1)) + rangeLat[0];
+                let randomLong = (Math.random() * (rangeLong[1] - rangeLong[0] + 1)) + rangeLong[0];
+                let randomLat = (Math.random() * (rangeLat[1] - rangeLat[0] + 1)) + rangeLat[0];
                 return ol.proj.fromLonLat([randomLong, randomLat]);
             }
 
@@ -421,18 +433,18 @@ namespace ol.control {
             }
 
             //Store current scope
-            var _this = this;
+            let _this = this;
 
-            var view = this.getMap().getView();
-            var currentZoomLevel = 14;
+            let view = this.getMap().getView();
+            let currentZoomLevel = 14;
 
             // Calculate the animation duration in dependence of the zoom lebel difference
-            var newZoomLevel = getRandomZoom();
-            var zoomLevelDifference = Math.abs(currentZoomLevel - newZoomLevel);
-            var animationDuration = 3000 * zoomLevelDifference;
+            let newZoomLevel = getRandomZoom();
+            let zoomLevelDifference = Math.abs(currentZoomLevel - newZoomLevel);
+            let animationDuration = 3000 * zoomLevelDifference;
 
-            var newLocation = getRandomLocationInGermany();
-            var newRotation = getRandomRotation();
+            let newLocation = getRandomLocationInGermany();
+            let newRotation = getRandomRotation();
 
             view.animate({
                 center: newLocation,

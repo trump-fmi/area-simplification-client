@@ -9,9 +9,10 @@ namespace ol {
         private static instance: UserConfig;
 
         //All config fields with default values
-        private _featureUpdateLog: boolean = false;
         private _drawLabelCircles: boolean = false;
         private _drawLabelBoundaries: boolean = false;
+        private _logProcessingTimes: boolean = false;
+        private _featureUpdateLog: boolean = false;
         private _labelFactorCoeff: number = 1.1;
         private _minTFactor: number = 22;
         private _minTCoeff: number = 1.0;
@@ -33,14 +34,6 @@ namespace ol {
             return this.instance;
         }
 
-        get featureUpdateLog(): boolean {
-            return this._featureUpdateLog;
-        }
-
-        set featureUpdateLog(value: boolean) {
-            this._featureUpdateLog = value;
-        }
-
         get drawLabelCircles(): boolean {
             return this._drawLabelCircles;
         }
@@ -55,6 +48,22 @@ namespace ol {
 
         set drawLabelBoundaries(value: boolean) {
             this._drawLabelBoundaries = value;
+        }
+
+        get logProcessingTimes(): boolean {
+            return this._logProcessingTimes;
+        }
+
+        set logProcessingTimes(value: boolean) {
+            this._logProcessingTimes = value;
+        }
+
+        get featureUpdateLog(): boolean {
+            return this._featureUpdateLog;
+        }
+
+        set featureUpdateLog(value: boolean) {
+            this._featureUpdateLog = value;
         }
 
         get labelFactorCoeff(): number {

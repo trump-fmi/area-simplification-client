@@ -10,9 +10,10 @@ var ol;
          */
         constructor() {
             //All config fields with default values
-            this._featureUpdateLog = false;
             this._drawLabelCircles = false;
             this._drawLabelBoundaries = false;
+            this._logProcessingTimes = false;
+            this._featureUpdateLog = false;
             this._labelFactorCoeff = 1.1;
             this._minTFactor = 22;
             this._minTCoeff = 1.0;
@@ -27,12 +28,6 @@ var ol;
             }
             return this.instance;
         }
-        get featureUpdateLog() {
-            return this._featureUpdateLog;
-        }
-        set featureUpdateLog(value) {
-            this._featureUpdateLog = value;
-        }
         get drawLabelCircles() {
             return this._drawLabelCircles;
         }
@@ -44,6 +39,18 @@ var ol;
         }
         set drawLabelBoundaries(value) {
             this._drawLabelBoundaries = value;
+        }
+        get logProcessingTimes() {
+            return this._logProcessingTimes;
+        }
+        set logProcessingTimes(value) {
+            this._logProcessingTimes = value;
+        }
+        get featureUpdateLog() {
+            return this._featureUpdateLog;
+        }
+        set featureUpdateLog(value) {
+            this._featureUpdateLog = value;
         }
         get labelFactorCoeff() {
             return this._labelFactorCoeff;
@@ -143,8 +150,8 @@ var ol;
         class DebugMenu extends ol.control.Control {
             constructor(opt_options) {
                 opt_options = opt_options || {};
-                var container = document.createElement('div');
-                var options = {
+                let container = document.createElement('div');
+                let options = {
                     element: container,
                     target: opt_options.target
                 };
@@ -199,32 +206,40 @@ var ol;
                 //Get map and its view
                 let map = this.getMap();
                 let view = map.getView();
-                var rowContainerTemplate = document.createElement('div');
+                let rowContainerTemplate = document.createElement('div');
                 rowContainerTemplate.style.margin = '10px';
+                //Container for boolean options
+                let optionsContainer = rowContainerTemplate.cloneNode();
                 //Checkbox for enabling circle drawing
-                var drawCirclesCheckboxContainer = rowContainerTemplate.cloneNode();
-                var drawCirclesCheckbox = document.createElement('input');
+                let drawCirclesCheckbox = document.createElement('input');
                 drawCirclesCheckbox.setAttribute('type', 'checkbox');
                 drawCirclesCheckbox.checked = USER_CONFIG.drawLabelCircles;
-                var drawCircleLabel = document.createElement('label');
+                let drawCircleLabel = document.createElement('label');
                 drawCircleLabel.appendChild(drawCirclesCheckbox);
-                drawCircleLabel.appendChild(document.createTextNode('Draw circles around the labels'));
-                drawCirclesCheckboxContainer.appendChild(drawCircleLabel);
-                //Register event listener for circle checkbox
+                drawCircleLabel.appendChild(document.createTextNode('Draw label circles'));
                 drawCirclesCheckbox.addEventListener('change', this.toggleDrawCircles_.bind(this));
+                optionsContainer.appendChild(drawCircleLabel);
                 //Checkbox for enabling drawing of arc label boundaries
-                let drawBoundariesCheckboxContainer = rowContainerTemplate.cloneNode();
                 let drawBoundariesCheckbox = document.createElement('input');
                 drawBoundariesCheckbox.setAttribute('type', 'checkbox');
                 let drawBoundariesLabel = document.createElement('label');
+                drawBoundariesLabel.style.marginLeft = '15px';
                 drawBoundariesLabel.appendChild(drawBoundariesCheckbox);
                 drawBoundariesLabel.appendChild(document.createTextNode("Draw arc label boundaries"));
-                drawBoundariesCheckboxContainer.appendChild(drawBoundariesLabel);
-                //Register event listener for boundary checkbox
                 drawBoundariesCheckbox.addEventListener('change', this.toggleDrawBoundaries_.bind(this));
+                optionsContainer.appendChild(drawBoundariesLabel);
+                //Checkbox for enabling logging of processing times to the console
+                let logProcessingTimesCheckbox = document.createElement('input');
+                logProcessingTimesCheckbox.setAttribute('type', 'checkbox');
+                let logProcessingTimesLabel = document.createElement('label');
+                logProcessingTimesLabel.style.marginLeft = '15px';
+                logProcessingTimesLabel.appendChild(logProcessingTimesCheckbox);
+                logProcessingTimesLabel.appendChild(document.createTextNode("Log processing times"));
+                logProcessingTimesCheckbox.addEventListener('change', this.toggleLogProcessingTimes_.bind(this));
+                optionsContainer.appendChild(logProcessingTimesLabel);
                 // Slider for coefficient of label factor
-                var labelfactorSliderContainer = rowContainerTemplate.cloneNode();
-                var labelfactorRange = document.createElement('input');
+                let labelfactorSliderContainer = rowContainerTemplate.cloneNode();
+                let labelfactorRange = document.createElement('input');
                 labelfactorRange.style.width = rangeCSSWidth;
                 labelfactorRange.setAttribute('type', 'range');
                 labelfactorRange.setAttribute('id', 'labelfactorRange');
@@ -232,7 +247,7 @@ var ol;
                 labelfactorRange.setAttribute('max', '3.0');
                 labelfactorRange.setAttribute('step', '0.1');
                 labelfactorRange.defaultValue = USER_CONFIG.labelFactorCoeff.toString();
-                var labelfactorLabel = document.createElement('label');
+                let labelfactorLabel = document.createElement('label');
                 labelfactorLabel.id = 'labelFactorLabel';
                 labelfactorLabel.htmlFor = 'labelfactorRange';
                 labelfactorLabel.appendChild(document.createTextNode('Set the coefficient of the labelFactor: (1.1)'));
@@ -242,8 +257,8 @@ var ol;
                 //Register event listener for label factor range slider
                 labelfactorRange.addEventListener('input', this.changeLabelFactor_.bind(this));
                 // Slider for controlling the calculation of the min_t value
-                var minTFactorSliderContainer = rowContainerTemplate.cloneNode();
-                var minTFactorRange = document.createElement('input');
+                let minTFactorSliderContainer = rowContainerTemplate.cloneNode();
+                let minTFactorRange = document.createElement('input');
                 minTFactorRange.style.width = rangeCSSWidth;
                 minTFactorRange.setAttribute('type', 'range');
                 minTFactorRange.setAttribute('id', 'minTFactorRange');
@@ -251,7 +266,7 @@ var ol;
                 minTFactorRange.setAttribute('max', '100');
                 minTFactorRange.setAttribute('step', '0.1');
                 minTFactorRange.defaultValue = USER_CONFIG.minTFactor.toString();
-                var minTLabel = document.createElement('label');
+                let minTLabel = document.createElement('label');
                 minTLabel.id = 'minTLabel';
                 minTLabel.htmlFor = 'minTFactorRange';
                 minTLabel.appendChild(document.createTextNode('Set the offset for the calculation of the min_t: (22)'));
@@ -260,8 +275,8 @@ var ol;
                 minTFactorSliderContainer.appendChild(minTLabel);
                 minTFactorSliderContainer.appendChild(document.createElement('br'));
                 minTFactorSliderContainer.appendChild(minTFactorRange);
-                var minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
-                var minTCoeffRange = document.createElement('input');
+                let minTCoeffRangeContainer = rowContainerTemplate.cloneNode();
+                let minTCoeffRange = document.createElement('input');
                 minTCoeffRange.style.width = rangeCSSWidth;
                 minTCoeffRange.setAttribute('type', 'range');
                 minTCoeffRange.setAttribute('id', 'minTCoeffRange');
@@ -269,7 +284,7 @@ var ol;
                 minTCoeffRange.setAttribute('max', '50');
                 minTCoeffRange.setAttribute('step', '0.1');
                 minTCoeffRange.defaultValue = USER_CONFIG.minTCoeff.toString();
-                var minTCoeffLabel = document.createElement('label');
+                let minTCoeffLabel = document.createElement('label');
                 minTCoeffLabel.id = 'minTCoeffLabel';
                 minTCoeffLabel.htmlFor = 'minTCoeffRange';
                 minTCoeffLabel.appendChild(document.createTextNode('Set the coefficient for the calculation of the min_t: (1.0)'));
@@ -279,8 +294,8 @@ var ol;
                 minTCoeffRangeContainer.appendChild(document.createElement('br'));
                 minTCoeffRangeContainer.appendChild(minTCoeffRange);
                 /* Create slider control for zoom level */
-                var zoomSliderContainer = rowContainerTemplate.cloneNode();
-                var zoomLevelDelta = document.createElement('input');
+                let zoomSliderContainer = rowContainerTemplate.cloneNode();
+                let zoomLevelDelta = document.createElement('input');
                 zoomLevelDelta.style.marginLeft = '10px';
                 zoomLevelDelta.style.width = '50px';
                 zoomLevelDelta.setAttribute('type', 'number');
@@ -289,7 +304,7 @@ var ol;
                 zoomLevelDelta.setAttribute('max', '10.0');
                 zoomLevelDelta.setAttribute('step', '0.1');
                 zoomLevelDelta.setAttribute('value', '1.0');
-                var zoomSliderInput = document.createElement('input');
+                let zoomSliderInput = document.createElement('input');
                 zoomSliderInput.style.marginTop = '10px';
                 zoomSliderInput.style.width = '600px';
                 zoomSliderInput.setAttribute('type', 'range');
@@ -298,11 +313,11 @@ var ol;
                 zoomSliderInput.setAttribute('max', view.getMaxZoom().toString());
                 zoomSliderInput.setAttribute('step', zoomLevelDelta.value);
                 zoomSliderInput.defaultValue = map.getView().getZoom().toString();
-                var zoomSliderLabel = document.createElement('label');
+                let zoomSliderLabel = document.createElement('label');
                 zoomSliderLabel.id = 'zoomSliderLabel';
                 zoomSliderLabel.htmlFor = 'zoomSliderInput';
                 zoomSliderLabel.appendChild(document.createTextNode('Change the zoom level with defined zoom delta:'));
-                var zoomLevelLabel = document.createElement('label');
+                let zoomLevelLabel = document.createElement('label');
                 zoomLevelLabel.style.marginLeft = '10px';
                 zoomLevelLabel.style.position = 'relative';
                 zoomLevelLabel.style.top = '-6px';
@@ -315,12 +330,12 @@ var ol;
                 });
                 //Register event listener for zoom slider
                 zoomSliderInput.addEventListener('input', function () {
-                    var zoomValue = parseFloat(zoomSliderInput.value);
+                    let zoomValue = parseFloat(zoomSliderInput.value);
                     document.getElementById('zoomLevelLabel').innerHTML = "zoom: " + zoomSliderInput.value;
                     map.getView().setZoom(zoomValue);
                 });
-                var rotationRangeContainer = rowContainerTemplate.cloneNode();
-                var rotationRange = document.createElement('input');
+                let rotationRangeContainer = rowContainerTemplate.cloneNode();
+                let rotationRange = document.createElement('input');
                 rotationRange.style.width = '600px';
                 rotationRange.setAttribute('type', 'range');
                 rotationRange.setAttribute('id', 'rotationRange');
@@ -328,7 +343,7 @@ var ol;
                 rotationRange.setAttribute('max', '359');
                 rotationRange.setAttribute('step', '1');
                 rotationRange.defaultValue = '0';
-                var rotationLabel = document.createElement('label');
+                let rotationLabel = document.createElement('label');
                 rotationLabel.id = 'rotationLabel';
                 rotationLabel.htmlFor = 'rotationRange';
                 rotationLabel.innerHTML = 'Change rotation: (0&deg;)';
@@ -395,8 +410,7 @@ var ol;
                 buttonContainer.appendChild(renderTimeContainer);
                 // Create container div for all debug menu entries
                 let menuContent = document.createElement('div');
-                menuContent.appendChild(drawCirclesCheckboxContainer);
-                menuContent.appendChild(drawBoundariesCheckboxContainer);
+                menuContent.appendChild(optionsContainer);
                 menuContent.appendChild(labelfactorSliderContainer);
                 menuContent.appendChild(minTFactorSliderContainer);
                 menuContent.appendChild(minTCoeffRangeContainer);
@@ -427,20 +441,23 @@ var ol;
                 USER_CONFIG.drawLabelBoundaries = event.target.checked;
                 this.updateLabelLayers_();
             }
+            toggleLogProcessingTimes_(event) {
+                USER_CONFIG.logProcessingTimes = event.target.checked;
+            }
             changeLabelFactor_(event) {
-                var range = document.getElementById('labelfactorRange');
+                let range = document.getElementById('labelfactorRange');
                 document.getElementById('labelFactorLabel').innerHTML = 'Set the coefficient of the labelFactor. (' + range.value + ')';
                 USER_CONFIG.labelFactorCoeff = parseFloat(range.value);
                 this.updateLabelLayers_();
             }
             changeMinTFactor_(event) {
-                var range = document.getElementById('minTFactorRange');
+                let range = document.getElementById('minTFactorRange');
                 document.getElementById('minTLabel').innerHTML = 'Set the offset for the calculation of the min_t. (' + range.value + ')';
                 USER_CONFIG.minTFactor = parseFloat(range.value);
                 this.updateLabelLayers_();
             }
             changeMinTCoeff_(event) {
-                var range = document.getElementById('minTCoeffRange');
+                let range = document.getElementById('minTCoeffRange');
                 document.getElementById('minTCoeffLabel').innerHTML = 'Set the coefficient for the calculation of the min_t. (' + range.value + ')';
                 USER_CONFIG.minTCoeff = parseFloat(range.value);
                 this.updateLabelLayers_();
@@ -462,10 +479,10 @@ var ol;
                     return Math.round(Math.random() * 6) + 4;
                 }
                 function getRandomLocationInGermany() {
-                    var rangeLong = [8.0, 12.0]; // More exactly = [6.0, 15.0]
-                    var rangeLat = [48.0, 54.0]; // More exactly = [47.5, 54.8]
-                    var randomLong = (Math.random() * (rangeLong[1] - rangeLong[0] + 1)) + rangeLong[0];
-                    var randomLat = (Math.random() * (rangeLat[1] - rangeLat[0] + 1)) + rangeLat[0];
+                    let rangeLong = [8.0, 12.0]; // More exactly = [6.0, 15.0]
+                    let rangeLat = [48.0, 54.0]; // More exactly = [47.5, 54.8]
+                    let randomLong = (Math.random() * (rangeLong[1] - rangeLong[0] + 1)) + rangeLong[0];
+                    let randomLat = (Math.random() * (rangeLat[1] - rangeLat[0] + 1)) + rangeLat[0];
                     return ol.proj.fromLonLat([randomLong, randomLat]);
                 }
                 function callback() {
@@ -476,15 +493,15 @@ var ol;
                     }, 1);
                 }
                 //Store current scope
-                var _this = this;
-                var view = this.getMap().getView();
-                var currentZoomLevel = 14;
+                let _this = this;
+                let view = this.getMap().getView();
+                let currentZoomLevel = 14;
                 // Calculate the animation duration in dependence of the zoom lebel difference
-                var newZoomLevel = getRandomZoom();
-                var zoomLevelDifference = Math.abs(currentZoomLevel - newZoomLevel);
-                var animationDuration = 3000 * zoomLevelDifference;
-                var newLocation = getRandomLocationInGermany();
-                var newRotation = getRandomRotation();
+                let newZoomLevel = getRandomZoom();
+                let zoomLevelDifference = Math.abs(currentZoomLevel - newZoomLevel);
+                let animationDuration = 3000 * zoomLevelDifference;
+                let newLocation = getRandomLocationInGermany();
+                let newRotation = getRandomRotation();
                 view.animate({
                     center: newLocation,
                     duration: (animationDuration * 2),
@@ -1312,20 +1329,22 @@ var ol;
          */
         class Area extends source.Vector {
             /**
-             * Creates a new area source by passing a options object and a map instance to which the source belongs.
+             * Creates a new area source by passing a options object, a map instance to which the source belongs
+             * and the name of an area type to which the source is dedicated.
              *
              * @param org_options The options object
              * @param map The map instance for which the source is used
+             * @param areaTypeName The name of the area type to which the source is dedicated
              */
-            constructor(org_options, map) {
+            constructor(org_options, map, areaTypeName) {
                 //Read url of the area server and create feature loader from it
-                var areaServerUrl = org_options.url.toString();
-                var featureLoader = Area.createFeatureLoader(areaServerUrl, map);
+                let areaServerUrl = org_options.url.toString();
+                let featureLoader = Area.createFeatureLoader(areaServerUrl, map);
                 //Overwrite required options
                 org_options.format = new ol.format.GeoJSON();
-                var oldZoom = 0;
+                let oldZoom = 0;
                 org_options.strategy = function (extent, resolution) {
-                    var currentZoom = _this.map.getView().getZoom();
+                    let currentZoom = _this.map.getView().getZoom();
                     if (Math.abs(oldZoom - currentZoom) > 0.2) {
                         // @ts-ignore
                         _this.loadedExtentsRtree_.clear();
@@ -1335,12 +1354,13 @@ var ol;
                 };
                 org_options.url = featureLoader;
                 super(org_options);
-                var _this = this;
+                let _this = this;
                 //Set internal fields
                 this.areaServerUrl = areaServerUrl;
                 this.featureLoader = featureLoader;
                 this.featureListeners = new Array();
                 this.map = map;
+                this.areaTypeName = areaTypeName;
             }
             /**
              * Registers a callback function at the source that is called in case a new feature is added.
@@ -1365,8 +1385,11 @@ var ol;
                 let processFunction = this.processNewFeature.bind(this);
                 //Call process function for each new feature
                 features.forEach(processFunction);
-                let time = performance.now() - timestamp;
-                console.log("Time: " + time);
+                //Check if processing log in console is desired
+                if (USER_CONFIG.logProcessingTimes) {
+                    let timeDiff = Math.round(performance.now() - timestamp);
+                    console.log("[" + this.areaTypeName + "] Processed " + features.length + " features in " + timeDiff + " ms");
+                }
             }
             /**
              * Processes a new feature and adds it to the layer this source is bound to. Furthermore, it deals with old
@@ -1395,7 +1418,7 @@ var ol;
                     super.addFeature(newFeature);
                     //Check if a console log about this action is desired
                     if (USER_CONFIG.featureUpdateLog) {
-                        console.log("Updated feature \"" + newFeature.getId() + "\"");
+                        console.log("[" + this.areaTypeName + "] Updated feature \"" + newFeature.getId() + "\"");
                     }
                 }
             }
@@ -1410,12 +1433,12 @@ var ol;
                 //Define feature loader
                 return (extent, resolution, projection) => {
                     //Split extend in order to get min and max coordinates
-                    var min = ol.proj.toLonLat(extent.slice(0, 2));
-                    var max = ol.proj.toLonLat(extent.slice(2, 4));
+                    let min = ol.proj.toLonLat(extent.slice(0, 2));
+                    let max = ol.proj.toLonLat(extent.slice(2, 4));
                     //Get current zoom from map
-                    var zoom = map.getView().getZoom();
+                    let zoom = map.getView().getZoom();
                     //Create parameters object for server request
-                    var parameters = {
+                    let parameters = {
                         x_min: min[0],
                         x_max: max[0],
                         y_min: min[1],
@@ -1440,17 +1463,17 @@ var ol;
                     params = {};
                 }
                 //Start building the query
-                var parametersString = '?';
-                var first = true;
+                let parametersString = '?';
+                let first = true;
                 //Iterate over all fields of the parameters object
-                for (var property in params) {
+                for (let property in params) {
                     //Sanity check for each field
                     if (!params.hasOwnProperty(property)) {
                         continue;
                     }
                     //Read parameter
-                    var param = property;
-                    var value = params[property];
+                    let param = property;
+                    let value = params[property];
                     //Add separator depending on whether the current parameter is the first one
                     if (first) {
                         parametersString += param + '=' + value;
