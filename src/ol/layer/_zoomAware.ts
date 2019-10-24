@@ -75,6 +75,17 @@ namespace ol.layer {
         }
 
         /**
+         * Returns whether the layer is currently displayed.
+         */
+        public isCurrentlyDisplayed() {
+            //Get current zoom level
+            let zoomLevel = this.map.getView().getZoom();
+
+            //Check visibility
+            return this.isVisibleAtZoomLevel(zoomLevel);
+        }
+
+        /**
          * Returns whether the layer is supposed to be displayed in case the zoom level of the map
          * is within the provided zoom range.
          *

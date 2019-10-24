@@ -168,7 +168,7 @@ var ol;
                 this.container.appendChild(this.menu);
                 this.state = {
                     open: false,
-                    isDemoModeRunning: false
+                    demoRunning: false
                 };
             }
             toggleMenu() {
@@ -192,6 +192,8 @@ var ol;
                 this.menu.style.display = "none";
             }
             renderMenuContents() {
+                //Store current scope
+                let _this = this;
                 //Define CSS width
                 const rangeCSSWidth = '300px';
                 //Get map and its view
@@ -220,7 +222,7 @@ var ol;
                 drawBoundariesCheckboxContainer.appendChild(drawBoundariesLabel);
                 //Register event listener for boundary checkbox
                 drawBoundariesCheckbox.addEventListener('change', this.toggleDrawBoundaries_.bind(this));
-                // Slider for coefficient of labelfactor
+                // Slider for coefficient of label factor
                 var labelfactorSliderContainer = rowContainerTemplate.cloneNode();
                 var labelfactorRange = document.createElement('input');
                 labelfactorRange.style.width = rangeCSSWidth;
@@ -356,33 +358,43 @@ var ol;
                 zoomSliderContainer.appendChild(document.createElement('br'));
                 zoomSliderContainer.appendChild(zoomSliderInput);
                 zoomSliderContainer.appendChild(zoomLevelLabel);
-                var demoModeControlContainer = rowContainerTemplate.cloneNode();
-                var demoModeControlBtn = document.createElement('button');
-                demoModeControlBtn.className = 'demo-mode-button';
-                demoModeControlBtn.id = 'demoModeControlBtn';
-                demoModeControlBtn.innerHTML = '&#9658';
-                var demoModeControlLabel = document.createElement('label');
-                demoModeControlLabel.id = 'demoModeControlLabel';
-                demoModeControlLabel.htmlFor = 'demoModeControlBtn';
-                demoModeControlLabel.innerHTML = 'Demo mode: ';
-                //Store current scope
-                var _this = this;
-                //Register event listener for demo mode control button
-                demoModeControlBtn.addEventListener('click', function () {
-                    if (_this.state.isDemoModeRunning) { // Demo is currently running
-                        demoModeControlBtn.innerHTML = '&#9658;'; // Play icon
-                        _this.stopDemoMode_();
+                //Container for additional buttons
+                let buttonContainer = rowContainerTemplate.cloneNode();
+                //Container for demo mode
+                let demoModeContainer = document.createElement('span');
+                demoModeContainer.style.cssFloat = 'left';
+                let demoModeLabel = document.createElement('label');
+                demoModeLabel.innerHTML = 'Demo mode: ';
+                demoModeContainer.appendChild(demoModeLabel);
+                let demoModeButton = document.createElement('button');
+                demoModeButton.innerHTML = '&#9658';
+                demoModeButton.addEventListener('click', () => {
+                    if (_this.state.demoRunning) { // Demo is currently running
+                        demoModeButton.innerHTML = '&#9658;'; // Play icon
+                        _this.stopDemoMode();
                     }
                     else { // Demo mode is not running, start it
-                        demoModeControlBtn.innerHTML = '&#10074;&#10074;'; // Stop icon
-                        _this.startDemoMode_();
+                        demoModeButton.innerHTML = '&#10074;&#10074;'; // Stop icon
+                        _this.startDemoMode();
                     }
-                    _this.state.isDemoModeRunning = !_this.state.isDemoModeRunning;
+                    _this.state.demoRunning = !_this.state.demoRunning;
                 });
-                demoModeControlContainer.appendChild(demoModeControlLabel);
-                demoModeControlContainer.appendChild(demoModeControlBtn);
+                demoModeContainer.appendChild(demoModeButton);
+                //Container for timing measure
+                let renderTimeContainer = document.createElement('span');
+                renderTimeContainer.style.cssFloat = 'right';
+                let renderTimeLabel = document.createElement('label');
+                renderTimeLabel.innerHTML = 'Measure render time: ';
+                renderTimeContainer.appendChild(renderTimeLabel);
+                let renderTimeButton = document.createElement('button');
+                renderTimeButton.innerHTML = '&#8986;';
+                renderTimeButton.addEventListener('click', this.measureRenderTime.bind(this, renderTimeButton));
+                renderTimeContainer.appendChild(renderTimeButton);
+                //Append elements to button container
+                buttonContainer.appendChild(demoModeContainer);
+                buttonContainer.appendChild(renderTimeContainer);
                 // Create container div for all debug menu entries
-                var menuContent = document.createElement('div');
+                let menuContent = document.createElement('div');
                 menuContent.appendChild(drawCirclesCheckboxContainer);
                 menuContent.appendChild(drawBoundariesCheckboxContainer);
                 menuContent.appendChild(labelfactorSliderContainer);
@@ -390,7 +402,7 @@ var ol;
                 menuContent.appendChild(minTCoeffRangeContainer);
                 menuContent.appendChild(zoomSliderContainer);
                 menuContent.appendChild(rotationRangeContainer);
-                menuContent.appendChild(demoModeControlContainer);
+                menuContent.appendChild(buttonContainer);
                 this.menu.appendChild(menuContent);
             }
             /**
@@ -441,7 +453,7 @@ var ol;
                     }
                 });
             }
-            startDemoMode_() {
+            startDemoMode() {
                 function getRandomRotation() {
                     return (Math.random() * (Math.PI * 2));
                 }
@@ -458,8 +470,8 @@ var ol;
                 }
                 function callback() {
                     window.setTimeout(function () {
-                        if (_this.state.isDemoModeRunning) {
-                            _this.startDemoMode_();
+                        if (_this.state.demoRunning) {
+                            _this.startDemoMode();
                         }
                     }, 1);
                 }
@@ -486,10 +498,74 @@ var ol;
                     duration: animationDuration
                 });
             }
-            stopDemoMode_() {
-                var view = this.getMap().getView();
+            stopDemoMode() {
+                let view = this.getMap().getView();
                 //Stop demo mode animation
                 view.cancelAnimations();
+            }
+            /**
+             * Measures the time that is needed by OpenLayers in order to render each area layer and displays
+             * the result.
+             */
+            /**
+             * Measures the time that is needed by OpenLayers in order to render each area layer and displays
+             * the result. Optionally, a HTML element may be passed that is supposed to be animated during the
+             * duration of the measurement.
+             *
+             * @param animationElement An optional HTML element to animate during the mesaurement
+             */
+            measureRenderTime(animationElement) {
+                //Animation desired?
+                let animate = ((typeof animationElement) !== "undefined");
+                //Start animation if needed
+                if (animate) {
+                    animationElement.classList.add("rotate");
+                }
+                //Start measure procedure delayed so that UI may update
+                window.setTimeout(() => {
+                    //Get map
+                    let map = this.getMap();
+                    //Array holding the measure results
+                    let measureResults = [];
+                    //Holds the sum of all measured rendering times
+                    let timesSum = 0;
+                    //Get all visible area layers
+                    let areaLayers = map.getLayers().getArray()
+                        .filter(layer => (layer instanceof ol.layer.Area))
+                        .map(layer => {
+                        return layer;
+                    })
+                        .filter(layer => (layer.isCurrentlyDisplayed()));
+                    //Iterate over all area layers
+                    areaLayers.forEach(layer => {
+                        //Get layer name and source
+                        let layerName = layer.get("title");
+                        let source = layer.getSource();
+                        //Store references to all features and clear the source
+                        let features = source.getFeatures();
+                        source.clear();
+                        source.refresh();
+                        map.renderSync();
+                        //Start timestamp
+                        let measureStart = performance.now();
+                        //Add features again to source und refresh
+                        source.addFeatures(features);
+                        source.refresh();
+                        //Calculate time difference
+                        let timeDiff = performance.now() - measureStart;
+                        //Save result
+                        measureResults.push(layerName + ": " + Math.round(timeDiff) + " ms");
+                        timesSum += timeDiff;
+                    });
+                    //Stop animation if needed
+                    if (animate) {
+                        animationElement.classList.remove("rotate");
+                    }
+                    //Output result delayed so that UI may update
+                    window.setTimeout(() => {
+                        alert("Measured rendering times:\n\n" + measureResults.join("\n") + "\n\nSum: " + Math.round(timesSum) + " ms");
+                    }, 100);
+                }, 100);
             }
         }
         control.DebugMenu = DebugMenu;
@@ -930,6 +1006,15 @@ var ol;
              */
             setVisible(visible) {
                 this.displayIntention = visible;
+            }
+            /**
+             * Returns whether the layer is currently displayed.
+             */
+            isCurrentlyDisplayed() {
+                //Get current zoom level
+                let zoomLevel = this.map.getView().getZoom();
+                //Check visibility
+                return this.isVisibleAtZoomLevel(zoomLevel);
             }
             /**
              * Returns whether the layer is supposed to be displayed in case the zoom level of the map
